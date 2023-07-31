@@ -73,6 +73,8 @@ dmeasure = jax.vmap(dmeas, (None,0,None))
 dmeasures = jax.vmap(dmeas, (None,0,0))
 
 
+
+
 '''
 def rproc(state, theta, key, covar):
     S, I, Y, Mn, Rs = state[0], state[1], state[2], state[3], state[4:]
@@ -107,6 +109,8 @@ def rproc(state, theta, key, covar):
     dt = 1/240
     deaths = 0
     nrstage = 3
+    clin = 1 # HARDCODED SEIR
+    rho = 0 # HARDCODED INAPPARENT INFECTIONS
     
     neps = eps*nrstage
     rdeaths = np.zeros(nrstage)
@@ -117,7 +121,7 @@ def rproc(state, theta, key, covar):
         dw = jax.random.normal(subkey)*onp.sqrt(dt)
         beta = np.exp(beta_trend*trend + np.dot(bs, seas))
         
-        effI = I/pop;
+        effI = I/pop
         births = dpopdt + delta*pop # births
         passages = passages.at[0].set(gamma*I) #recovery
         ideaths = delta*I #natural i deaths
@@ -138,6 +142,9 @@ def rproc(state, theta, key, covar):
         for j in range(nrstage):
             pts = pts.at[j].add((passages[j] - passages[j+1] - rdeaths[j])*dt)
         deaths += disease*dt # cumulative deaths due to disease
+        
+        S = np.clip(S, a_min=0); I = np.clip(I, a_min=0); Y = np.clip(Y, a_min=0)
+        pts = np.clip(pts, a_min=0); deaths = np.clip(deaths, a_min=0)
 
         
     return np.hstack([np.array([S, I, Y, deaths]), pts])

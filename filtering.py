@@ -61,14 +61,17 @@ else:
 '''
 
 def pfilter_helper(t, inputs):
-    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh = inputs
+    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key = inputs
     J = len(particlesF)
-    keys = np.array([jax.random.PRNGKey(onp.random.choice(10000)) for j in range(J)])
+    
+    key, *keys = jax.random.split(key, num=J+1)
+    keys = np.array(keys)
+        
     # Get prediction particles 
     if covars is not None:
         particlesP = rprocess(particlesF, theta, keys, covars[t])# if t>0 else particlesF
     else:
-        particlesP = rprocess(particlesF, theta, keys)
+        particlesP = rprocess(particlesF, theta, keys, None)
 
     oddr = np.exp(np.max(norm_weights))/np.exp(np.min(norm_weights))
     # Systematic resampling
@@ -77,10 +80,8 @@ def pfilter_helper(t, inputs):
                                                no_resampler, 
                                                counts, particlesP, norm_weights)
 
-
-
     # Multiply weights by measurement model result
-    weights += dmeasure(ys[t], particlesP, theta, keys=keys) #shape (Np,)
+    weights += dmeasure(ys[t], particlesP, theta) #shape (Np,)
 
     # Obtain normalized weights
     norm_weights, loglik_t = normalize_weights(weights)
@@ -88,28 +89,32 @@ def pfilter_helper(t, inputs):
     # Sum up loglik
     loglik += loglik_t
     #jax.debug.print(loglik, loglik_t)
-    return [particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh]
+    return [particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key]
     
+# test on linear gaussian toy model again
 @partial(jit, static_argnums=2)
-def pfilter(theta, ys, J, covars=None, thresh=100):
+def pfilter(theta, ys, J, covars=None, thresh=100, key=None):
+    if key is None:
+        key = jax.random.PRNGKey(onp.random.choice(10000))
     
     particlesF = rinit(theta, J, covars=covars)
     weights = np.log(np.ones(J)/J)
     norm_weights = np.log(np.ones(J)/J)
     counts = np.ones(J).astype(int)
-    
     loglik = 0
     
-    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh = jax.lax.fori_loop(
+    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key = jax.lax.fori_loop(
                 lower=0, upper=len(ys), body_fun=pfilter_helper, 
-                 init_val=[particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh])
+                 init_val=[particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key])
     
     return -loglik
 
 def perfilter_helper(t, inputs):
-    particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh = inputs
+    particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh, key = inputs
     J = len(particlesF)
-    keys = np.array([jax.random.PRNGKey(onp.random.choice(10000)) for j in range(J)])
+    
+    key, *keys = jax.random.split(key, num=J+1)
+    keys = np.array(keys)
     
     # Perturb parameters
     thetas += sigmas*np.array(onp.random.normal(size=thetas.shape))
@@ -135,11 +140,11 @@ def perfilter_helper(t, inputs):
     # Sum up loglik
     loglik += loglik_t
     
-    return [particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh]
+    return [particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh, key]
 
 
 @partial(jit, static_argnums=2)
-def perfilter(theta, ys, J, sigmas, covars=None, a=0.9, thresh=100):
+def perfilter(theta, ys, J, sigmas, covars=None, a=0.9, thresh=100, key=None):
     
     loglik = 0
     thetas = theta + sigmas*onp.random.normal(size=(J, theta.shape[-1]))
@@ -148,9 +153,12 @@ def perfilter(theta, ys, J, sigmas, covars=None, a=0.9, thresh=100):
     norm_weights = np.log(np.ones(J)/J)
     counts = np.ones(J).astype(int)
     
-    particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh = jax.lax.fori_loop(
+    if key is None:
+        key = jax.random.PRNGKey(onp.random.choice(10000))
+    
+    particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh, key = jax.lax.fori_loop(
                 lower=0, upper=len(ys), body_fun=perfilter_helper, 
-                 init_val=[particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh])
+                 init_val=[particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh, key])
     
     return -loglik, thetas
 

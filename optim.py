@@ -33,16 +33,21 @@ MONITORS = 1
 
 
 @partial(jit, static_argnums=2)
-def jgrad(theta_ests, ys, J, covars, thresh):
-    return jax.grad(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh)
+def jgrad(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.grad(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
 @partial(jit, static_argnums=2)
-def jvg(theta_ests, ys, J, covars, thresh):
-    return jax.value_and_grad(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh)
+def jvg(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.value_and_grad(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
 @partial(jit, static_argnums=2)
-def jhess(theta_ests, ys, J, covars, thresh):
-    return jax.hessian(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh)
+def jhess(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.hessian(pfilter)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+
+@partial(jit, static_argnums=2)
+def jpgrad(thetas, ys, J, sigmas, covars, a, thresh, key=None):
+    return jax.grad(perfilter, has_aux=True)(
+        thetas, ys, J, sigmas, covars=covars, a=a,thresh=thresh, key=key)
 
 # From https://arxiv.org/pdf/1909.01238.pdf
 def line_search(obj, curr_obj, pt, grad, direction, k=1, eta=0.9, xi=10, tau = 10, c=0.1, frac=0.5, stoch=False):
@@ -68,26 +73,26 @@ def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20
     
     
     for i in tqdm(range(itns)):
+        
+        key = jax.random.PRNGKey(onp.random.choice(10000))
         if MONITORS == 1:
-            loglik, grad = jvg(theta_ests, ys, J, covars=covars, thresh=thresh)
+            loglik, grad = jvg(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
         else:
-            grad = jgrad(theta_ests, ys, J, covars=covars, thresh=thresh)
-            loglik = np.mean(np.array([pfilter(theta_ests, ys, J, covars=covars, thresh=thresh) for i in range(MONITORS)]))
+            grad = jgrad(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+            loglik = np.mean(np.array([pfilter(theta_ests, ys, J, covars=covars, thresh=thresh, key=key) for i in range(MONITORS)]))
         
         if method=='Newton':
-            hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh)
+            hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh, key=key)
             direction = -np.linalg.pinv(hess) @ grad
             #hess here is hessian
         elif method == 'WeightedNewton':
             if i == 0:
-                hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh)
+                hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh, key=key)
                 direction = -np.linalg.pinv(hess) @ grad
             else:
-                hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh)
-                weights = np.array([((i+1)**(onp.log(i+1))) for i in range(len(hesses))])
-                direction = -np.linalg.pinv(
-                                       np.einsum('ijk,i->jk', np.array(hesses), weights) 
-                                        + ((i+1)**(onp.log(i+1)))*hess) @ grad
+                hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh, key=key)
+                wt = (i**onp.log(i))/((i+1)**(onp.log(i+1)))
+                direction = -np.linalg.pinv(wt * hesses[-1] + (1-wt) * hess) @ grad
             #hess here is hessian, but we update according to (t+1)^log(t+1) weights
         elif method=='BFGS' and i > 1:
             s_k = eta * direction
@@ -110,7 +115,7 @@ def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20
         if scale:
             direction = direction/np.linalg.norm(direction)
             
-        eta = line_search(partial(pfilter, ys=ys, J=J, covars=covars, thresh=thresh), 
+        eta = line_search(partial(pfilter, ys=ys, J=J, covars=covars, thresh=thresh, key=key), 
                           loglik, theta_ests, grad, direction, k=i+1, eta=beta, c=c, tau=max_ls_itn) if ls else eta
 
         if i%1==0 and verbose:
@@ -173,7 +178,7 @@ def newtif(theta, ys, sigmas, sigmas_init, covars=None, M=10,
         loglik = np.mean(np.array([pfilter(thetas.mean(0), ys, J, covars=covars, thresh=thresh) for i in range(MONITORS)]))
         logliks.append(loglik)
         
-    jpgrad = jax.jit(jax.grad(perfilter, has_aux=True))
+    
     # outer iterative loop 
     for m in tqdm(range(M)):
         # annealing pertubations
