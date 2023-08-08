@@ -28,24 +28,31 @@ def logit(x):
     return np.log(x/(1-x))
 
 
+
+
 def get_thetas(theta):
     gamma = np.exp(theta[0]) #rate at which I recovers
     m = np.exp(theta[1]) #probability of death from cholera
     rho = np.exp(theta[2]) #1/rho is mean duration of short-term immunity
     epsilon = np.exp(theta[3]) # 1/eps is mean duration of immunity
     omega = np.exp(theta[4]) #mean foi
-    c = sigmoid(theta[5])/5 #probability exposure infects
+    c = sigmoid(theta[5] / 5) #probability exposure infects
     beta_trend = theta[6] / 1000 #trend in foi
     sigma = theta[7]**2 / 2 #stdev of foi perturbations
     tau = theta[8]**2 / 5 #stdev of gaussian measurements
-    bs = theta[9:] #seasonality coefficients
+    bs = theta[9:15] #seasonality coefficients
+    omegas = theta[15:]
     k = 3# 1/(np.exp(theta[3])**2) #1/sqrt(k) is coefficient of variation of immune period
     delta = 0.02 #death rate
-    return gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, k, delta
+    return gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas, k, delta
 
-def transform_thetas(gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs):
+def transform_thetas(gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas):
     return np.concatenate([np.array([np.log(gamma), np.log(m), np.log(rho), np.log(epsilon), np.log(omega),
-                    logit(c)*5, beta_trend * 1000, np.sqrt(sigma) * 2, np.sqrt(tau) * 5]), bs])
+                    logit(c)*5, beta_trend * 1000, np.sqrt(sigma*2), np.sqrt(tau*5)]), bs, omegas])
+
+
+
+
 
 
 def rinit(theta, J, covars):
@@ -58,16 +65,38 @@ def rinit(theta, J, covars):
     R2 = pop*R2_0
     R3 = pop*R3_0
     Mn = 0
-    return np.tile(np.array([S,I,Y,Mn,R1,R2,R3]), (J,1))
+    t = 0
+    count = 0
+    return np.tile(np.array([S,I,Y,Mn,R1,R2,R3,t, count]), (J,1))
 
 def rinits(thetas, J, covars):
     return rinit(thetas[0], len(thetas), covars)
 
+def dmeas_helper(y, deaths, v, tol, ltol):
+    return np.logaddexp(
+        jax.scipy.stats.norm.logpdf(y, loc=deaths, scale=v+tol), 
+                     ltol)
+def dmeas_helper_tol(y, deaths, v, tol, ltol):
+    return ltol
+
 def dmeas(y, preds, theta, keys=None):
-    Mn = preds[3]
-    tau = np.exp(theta[8]) #stdev of gaussian measurements
-    return jax.scipy.stats.norm.logpdf(y, loc=Mn, scale=tau*Mn)
-    #return np.nan_to_num(jax.scipy.stats.norm.logpdf(y, loc=Mn, scale=tau*Mn), nan=-1.0e50)
+    deaths = preds[3]; count = preds[-1]; tol = 1.0e-18
+    ltol = np.log(tol)
+    gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas, k, delta = get_thetas(theta)
+    v = tau*deaths
+    return jax.lax.cond(np.logical_or((1-np.isfinite(v)).astype(bool), count>0), #if Y < 0 then count violation
+                         dmeas_helper_tol, 
+                         dmeas_helper,
+                       y, deaths, v, tol, ltol)
+    '''
+    return jax.lax.cond(np.logical_or(np.isfinite(v), count>0), #if Y < 0 then count violation
+                 np.log(tol), 
+                 np.logaddexp(
+                     jax.scipy.stats.norm.logpdf(y, loc=deaths, scale=v+tol), 
+                     np.log(tol)
+                 ))
+    '''
+
 
 dmeasure = jax.vmap(dmeas, (None,0,None))
 dmeasures = jax.vmap(dmeas, (None,0,0))
@@ -103,23 +132,29 @@ def rproc(state, theta, key, covar):
 '''
 
 def rproc(state, theta, key, covar):
-    S, I, Y, deaths, pts = state[0], state[1], state[2], state[3], state[4:]
-    trend, dpopdt, pop, seas = covar[0], covar[1], covar[2], covar[3:]
-    gamma, deltaI, rho, eps, omega, clin, beta_trend, sd_beta, tau, bs, nrstage, delta = get_thetas(theta)
+    S, I, Y, deaths, pts, t, count = state[0], state[1], state[2], state[3], state[4:-2], state[-2], state[-1]
+    t = t.astype(int)
+    trends, dpopdts, pops, seass = covar[:,0], covar[:,1], covar[:,2], covar[:,3:]
+    gamma, deltaI, rho, eps, omega, clin, beta_trend, sd_beta, tau, bs, omegas, nrstage, delta = get_thetas(theta)
     dt = 1/240
     deaths = 0
     nrstage = 3
     clin = 1 # HARDCODED SEIR
     rho = 0 # HARDCODED INAPPARENT INFECTIONS
+    std = onp.sqrt(dt) #onp.sqrt(onp.sqrt(dt))
     
     neps = eps*nrstage
     rdeaths = np.zeros(nrstage)
     passages = np.zeros(nrstage+1)
-        
+    
+
     for i in range(20):
-        subkey, key = jax.random.split(key)
-        dw = jax.random.normal(subkey)*onp.sqrt(dt)
+        trend = trends[t]; dpopdt = dpopdts[t]; pop = pops[t]; seas = seass[t]
         beta = np.exp(beta_trend*trend + np.dot(bs, seas))
+        omega = np.exp(np.dot(omegas, seas))
+        
+        subkey, key = jax.random.split(key)
+        dw = jax.random.normal(subkey)*std #rnorm uses variance sqrt(dt), not stdev
         
         effI = I/pop
         births = dpopdt + delta*pop # births
@@ -142,12 +177,15 @@ def rproc(state, theta, key, covar):
         for j in range(nrstage):
             pts = pts.at[j].add((passages[j] - passages[j+1] - rdeaths[j])*dt)
         deaths += disease*dt # cumulative deaths due to disease
+                        
+        count += np.any(np.hstack([np.array([S, I, Y, deaths]), pts]) < 0)
         
         S = np.clip(S, a_min=0); I = np.clip(I, a_min=0); Y = np.clip(Y, a_min=0)
         pts = np.clip(pts, a_min=0); deaths = np.clip(deaths, a_min=0)
-
         
-    return np.hstack([np.array([S, I, Y, deaths]), pts])
+        t += 1
 
-rprocess = jax.jit(jax.vmap(rproc, (0, None, 0,None)))
+    return np.hstack([np.array([S, I, Y, deaths]), pts, np.array([t]), np.array([count])])
+
+rprocess = jax.jit(jax.vmap(rproc, (0, None, 0, None)))
 rprocesses = jax.jit(jax.vmap(rproc, (0, 0, 0, None)))

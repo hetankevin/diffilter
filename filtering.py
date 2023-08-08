@@ -69,7 +69,7 @@ def pfilter_helper(t, inputs):
         
     # Get prediction particles 
     if covars is not None:
-        particlesP = rprocess(particlesF, theta, keys, covars[t])# if t>0 else particlesF
+        particlesP = rprocess(particlesF, theta, keys, covars)# if t>0 else particlesF
     else:
         particlesP = rprocess(particlesF, theta, keys, None)
 
@@ -120,7 +120,7 @@ def perfilter_helper(t, inputs):
     thetas += sigmas*np.array(onp.random.normal(size=thetas.shape))
     # Get prediction particles 
     if covars is not None:
-        particlesP = rprocesses(particlesF, thetas, keys, covars[t])# if t>0 else particlesF
+        particlesP = rprocesses(particlesF, thetas, keys, covars)# if t>0 else particlesF
     else:
         particlesP = rprocesses(particlesF, thetas, keys)# if t>0 else particlesF
     
@@ -132,8 +132,9 @@ def perfilter_helper(t, inputs):
                                                counts, particlesP, norm_weights, thetas)
     
     # Multiply weights by measurement model result
-    weights += dmeasures(ys[t], particlesP, thetas, keys=keys).squeeze() #shape (Np,)
-    
+    weights += np.nan_to_num(dmeasures(ys[t], particlesP, thetas, keys=keys).squeeze(),
+                            nan=0.0) #shape (Np,)
+                             
     # Obtain normalized weights
     norm_weights, loglik_t = normalize_weights(weights)
     
