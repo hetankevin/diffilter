@@ -23,32 +23,31 @@ tfpk = tfp.math.psd_kernels
 import matplotlib.pyplot as plt
 plt.style.use('matplotlibrc')
 
-
+    
 def resample(norm_weights):
     J = norm_weights.shape[-1]
-    randint = onp.random.randint(0, 10000)
     #counts = jax.random.categorical(key=jax.random.PRNGKey(randint), 
     #                   logits=jax.lax.stop_gradient(norm_weights),
     #                    shape=(J,))
-    unifs = onp.random.uniform()+np.linspace(0,1,J)
-    #unifs = unifs.at[unifs>=1].set(unifs[unifs>=1]-1)
-    unifs = np.where(unifs>=1, x=unifs-1, y=unifs) #when true x, else y
     
+    #unifs = 0.5+np.linspace(0,1,J)
+    #unifs = np.where(unifs>=1, x=unifs-1, y=unifs) #when true x, else y
+    
+    #ARCHIVE
+    #unifs = unifs.at[unifs>=1].set(unifs[unifs>=1]-1)
+    
+    unifs = (onp.random.uniform()+np.arange(J)) / J
+    
+    csum = np.cumsum(np.exp(norm_weights))
     counts = np.repeat(np.arange(J), 
                        np.histogram(unifs, 
-                        bins=np.pad(np.cumsum(np.exp(norm_weights)), pad_width=(1,0)), 
+                        bins=np.pad(csum/csum[-1], pad_width=(1,0)), 
                             density=False)[0].astype(int),
                       total_repeat_length=J)
     
-    if len(counts)<J:
-        counts = np.hstack([counts, np.zeros(J-len(counts))]).astype(int)
+    #if len(counts)<J:
+    #    counts = np.hstack([counts, np.zeros(J-len(counts))]).astype(int)
     return counts
-
-
-
-    #counts = np.cumsum(np.histogram(unifs, 
-    #                bins=np.pad(np.cumsum(np.exp(norm_weights)), pad_width=(1,0)), 
-    #                    density=False)[0].astype(int))
 
 
 def normalize_weights(weights):

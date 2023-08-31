@@ -29,7 +29,7 @@ def logit(x):
 
 
 
-
+'''
 def get_thetas(theta):
     gamma = np.exp(theta[0]) #rate at which I recovers
     m = np.exp(theta[1]) #probability of death from cholera
@@ -49,8 +49,26 @@ def get_thetas(theta):
 def transform_thetas(gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas):
     return np.concatenate([np.array([np.log(gamma), np.log(m), np.log(rho), np.log(epsilon), np.log(omega),
                     logit(c)*5, beta_trend * 1000, np.sqrt(sigma*2), np.sqrt(tau*5)]), bs, omegas])
+'''
+def get_thetas(theta):
+    gamma = np.exp(theta[0]) #rate at which I recovers
+    m = np.exp(theta[1]) #probability of death from cholera
+    rho = np.exp(theta[2]) #1/rho is mean duration of short-term immunity
+    epsilon = np.exp(theta[3]) # 1/eps is mean duration of immunity
+    omega = np.exp(theta[4]) #mean foi
+    c = sigmoid(theta[5] ) #probability exposure infects
+    beta_trend = theta[6] / 100 #trend in foi
+    sigma = np.exp(theta[7]) #stdev of foi perturbations
+    tau = np.exp(theta[8]) #stdev of gaussian measurements
+    bs = theta[9:15] #seasonality coefficients
+    omegas = theta[15:]
+    k = 3# 1/(np.exp(theta[3])**2) #1/sqrt(k) is coefficient of variation of immune period
+    delta = 0.02 #death rate
+    return gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas, k, delta
 
-
+def transform_thetas(gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas):
+    return np.concatenate([np.array([np.log(gamma), np.log(m), np.log(rho), np.log(epsilon), np.log(omega),
+                    logit(c), beta_trend * 100, np.log(sigma), np.log(tau)]), bs, omegas])
 
 
 
@@ -84,10 +102,13 @@ def dmeas(y, preds, theta, keys=None):
     ltol = np.log(tol)
     gamma, m, rho, epsilon, omega, c, beta_trend, sigma, tau, bs, omegas, k, delta = get_thetas(theta)
     v = tau*deaths
+    #return jax.scipy.stats.norm.logpdf(y, loc=deaths, scale=v)
     return jax.lax.cond(np.logical_or((1-np.isfinite(v)).astype(bool), count>0), #if Y < 0 then count violation
                          dmeas_helper_tol, 
                          dmeas_helper,
                        y, deaths, v, tol, ltol)
+
+
     '''
     return jax.lax.cond(np.logical_or(np.isfinite(v), count>0), #if Y < 0 then count violation
                  np.log(tol), 
@@ -187,5 +208,5 @@ def rproc(state, theta, key, covar):
 
     return np.hstack([np.array([S, I, Y, deaths]), pts, np.array([t]), np.array([count])])
 
-rprocess = jax.jit(jax.vmap(rproc, (0, None, 0, None)))
-rprocesses = jax.jit(jax.vmap(rproc, (0, 0, 0, None)))
+rprocess = jax.vmap(rproc, (0, None, 0, None))
+rprocesses = jax.vmap(rproc, (0, 0, 0, None))
