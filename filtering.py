@@ -176,7 +176,7 @@ def perfilter_helper(t, inputs):
     
     oddr = np.exp(np.max(norm_weights))/np.exp(np.min(norm_weights))
     # Systematic resampling
-    counts, particlesF, weights, thetas = jax.lax.cond(oddr > thresh, 
+    counts, particlesF, norm_weights, thetas = jax.lax.cond(oddr > thresh, 
                                                resampler_thetas, 
                                                no_resampler_thetas, 
                                                counts, particlesP, norm_weights, thetas)
