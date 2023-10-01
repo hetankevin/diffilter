@@ -1,0 +1,113 @@
+\documentclass[12p]{article}
+\usepackage{fullpage}
+
+%% for algorithm pseudocode
+\usepackage{enumerate,alltt,xstring}
+\usepackage[ruled,noline,linesnumbered]{algorithm2e}
+\SetKwFor{For}{for}{do}{end}
+\SetKwFor{While}{while}{do}{end}
+\SetKwInput{KwIn}{input}
+\SetKwInput{KwOut}{output}
+\SetKwInput{KwCplx}{complexity}
+\SetKwInput{KwIndices}{note}
+\SetKwBlock{Begin}{procedure}{}
+\DontPrintSemicolon
+\newcommand\argequals{{\,=\,}}
+\newcommand\data[1]{#1^*}
+\newcommand\giventh{{\hspace{0.5mm};\hspace{0.5mm}}}
+\newcommand\seq[2]{{#1}\!:\!{#2}}
+\newcommand\mydot{{\,\cdot\,}}
+\newcommand\given{{\,\vert\,}}
+\newcommand\normal{{\mathrm{Normal}}}
+\newcommand\vmeasure{V}
+\newcommand\emeasure{e}
+
+\newcommand\Time{N}
+\newcommand\ttime{n}
+\newcommand\Np{J}
+\newcommand\np{j}
+\newcommand\altNp{q}
+\newcommand\prob{\mathrm{Prob}}
+
+\begin{document}
+
+%%%%  PFILTER PSEUDOCODE
+\begin{algorithm}[t!]
+  \caption{\textbf{Measurement off policy (MOP) SMC}:
+    \label{alg:mop-smc}
+  }
+  %% \KwIn{
+  %%   Simulator for $f_{X_n|X_{n-1}}(x_n\given x_{n-1}\giventh\theta)$;
+  %%   evaluator for $f_{Y_n|X_n}(y_n\given x_{n}\giventh\theta)$;
+  %%   simulator for $f_{X_0}(x_0\giventh\theta)$;
+  %%   parameter, $\theta$;
+  %%   data, $y^*_{1:N}$;
+  %%   number of particles, $J$.
+  %% }
+  %% \BlankLine
+  Initialize filter particles:
+  simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
+  Initialize filter weights: $w^{F,\theta}_{0,j}= 1/J$ for $j$ in $\seq{1}{J}$
+  \;
+  \For{$n$ in $\seq{1}{N}$}{
+    Simulate for prediction:
+    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:step1}\;
+    Evaluate measurement density:
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    Update weights to compensate for resampling:
+    $\displaystyle w^{P,\theta}_{n,j}= \frac{w^{F,\theta}_{n-1,j} \, g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:weight:update}
+    \;
+    Conditional likelihood under $\phi$: 
+    $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \;
+    Normalize weights:
+    $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \;
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{alg:pfilter:systematic}\;
+    Resample:
+    set ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$ and
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{P,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{alg:pfilter:step2}
+    \;
+  }
+  %% \KwOut{
+  %%   Log likelihood estimate, $\loglikMC(\theta)=\sum_{n=1}^N\loglikMC_{n|1:n-1}$;
+  %%   filter sample, $X^F_{n,1:J}$, for $n$ in $\seq{1}{N}$.
+  %% }
+  %% \KwCplx{$\bigO{J}$}
+\end{algorithm}
+
+\begin{itemize}
+\item MOP-SMC requires that the algorithm is first run at $\phi$, for which it is a vanilla particle filter.  $g^{\phi}_{n,j}$ and $\tilde g^{\phi}_{n,j}$ are computed at this first pass. Then it is run at $\theta$, with the seed kept fixed.
+
+\item Here, the resampling rule for particle $j$ depends on $j$ (and therefore $\phi$ and $X^{P,\phi}_{n,j}$) but not on $\theta$ or  $X^{P,\theta}_{n,j}$. This does not have the standard form for a weighted particle filter, for which we can have general reweighting rules but they are usually a funciton of the location of the particle and the model parameter, $\theta$. That may be why it is harder to see that this is a properly weighted filter. Nevertheless, inspection of the algorithm shows that each particle is properly reweighted to account for its resampling probability, in step~\ref{alg:pfilter:weight:update}, so it should be properly weighted.
+
+\item The final estimate of the likelihood is either
+  \begin{equation}
+    L(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{F,\theta}_{N,j} \right)
+    \prod_{n=1}^N L_n^\phi
+  \end{equation}
+  or
+ \begin{equation}
+   L^\prime(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{P,\theta}_{N,j} \, g^{\theta}_{N,j}\right)
+   \prod_{n=1}^{N-1} L_n^\phi
+  \end{equation}
+ with $L^\prime(\theta)$ presumably having slightly lower variance.
+
+\item Weighted samples representing the filter distribution,
+  $f_{X_n|Y_{1:n}}(x_n \given y^*_{1:n} \giventh \theta)$
+  are either
+  $\big\{\big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big),  j\ \mathrm{in}\ \seq{1}{J}\big\}$
+  or
+  $\big\{\big(X^{P,\theta}_{n,j}, g^\theta_{n,j} \, w^{P,\theta}_{n,j}\big),  j\ \mathrm{in}\ \seq{1}{J}\big\}$,
+  meaning that an expectation over $f_{X_n|Y_{1:n}}(x_n \given y^*_{1:n} \giventh \theta)$ is consistently estimated by a corresponding weighted average of the filter or prediction particles.
+
+  \item As long as \texttt{rprocess} is a continuously differentiable function of $\theta$ for fixed seed, and \texttt{dmeasure} is a continuously differentiable function of $\theta$, and $g^{\phi}_{n,j}\neq 0$, we see that MOP is a continuously differentiable function of $\theta$ for fixed seed. Since it also provided an unbiased estimate of the likelihood, this justifies exchanging the order of differentiation and integration to ensure that its derivative is an unbiased estimate of the deriative of the likelihood.
+
+  \item Taking the derivative with respect to $\theta$ at $\theta=\phi$, step~\ref{alg:pfilter:weight:update} looks very much like the stop gradient approach.
+
+  \end{itemize}
+
+\end{document}
+
