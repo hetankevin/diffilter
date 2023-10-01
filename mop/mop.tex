@@ -47,14 +47,14 @@
   %% \BlankLine
   Initialize filter particles:
   simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
-  Initialize filter weights: $w^{F,\theta}_{0,j}= 1/J$ for $j$ in $\seq{1}{J}$
+  Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
   \;
   \For{$n$ in $\seq{1}{N}$}{
     Simulate for prediction:
     ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:step1}\;
     Evaluate measurement density:
     $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
-    Update weights to compensate for resampling:
+    Update relative weights to compensate for resampling:
     $\displaystyle w^{P,\theta}_{n,j}= \frac{w^{F,\theta}_{n-1,j} \, g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:weight:update}
     \;
     Conditional likelihood under $\phi$: 
