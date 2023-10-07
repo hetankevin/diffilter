@@ -84,7 +84,7 @@
 \item Here, the resampling rule for particle $j$ depends on $j$ (and therefore $\phi$ and $X^{P,\phi}_{n,j}$) but not on $\theta$ or  $X^{P,\theta}_{n,j}$. This does not have the standard form for a weighted particle filter, for which we can have general reweighting rules but they are usually a funciton of the location of the particle and the model parameter, $\theta$. That may be why it is harder to see that this is a properly weighted filter. Nevertheless, inspection of the algorithm shows that each particle is properly reweighted to account for its resampling probability, in step~\ref{alg:pfilter:weight:update}, so it should be properly weighted.
 
 \item The final estimate of the likelihood is either
-  \begin{equation}
+  \begin{equation} \label{mop:lik1}
     L(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{F,\theta}_{N,j} \right)
     \prod_{n=1}^N L_n^\phi
   \end{equation}
@@ -108,6 +108,66 @@
   \item Taking the derivative with respect to $\theta$ at $\theta=\phi$, step~\ref{alg:pfilter:weight:update} looks very much like the stop gradient approach.
 
   \end{itemize}
+
+Here's an outline of an argument explaining why MOP is properly weighted.
+
+\noindent {\bf Lemma 1}. {\it
+Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ is properly weighted for $f_X$, meaning that, if $X\sim f_X$,
+\[
+E[h(X)] \approx \sum_{j=1}^J \frac{w_j}{\sum_{k=1}^J u_k} h(X_j),
+\]
+for some appropriate formalization of $\approx$. Now, let $\{(Y_j,v_j),j=1,\dots,J\}$ be a sample drawn from $\{(X_j,u_j)\}$ where $(X_j,u_j)$ is represented, on average, $\pi_j J$ times. This could amount to binomial resampling having $J$ draws each with probability $p_j$, or systematic resampling. Suppose
+\[
+(Y_j,v_j) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
+\]
+where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ is als properly weighted for $f_X$.
+}
+
+Notably, Lemma~1 permits $\pi_{1:J}$ to depend on $\{(X_j,u_j)\}$ as long as the resampling is carried out independently of $\{(X_j,u_j)\}$ conditional on $\pi_{1:J}$.
+
+\noindent {\bf Lemma 2}. {\it
+  Suppose that $Z_j \sim f_{Z|X}(\cdot | X_j)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, $\{(Z_j,u_j)\}$ is properly weighted for $f_Z$.
+}
+
+\noindent {\bf Lemma 3}. {\it
+Suppose that $(X^\prime_j,u^\prime_j) = \big(X_j,u_j\, f_{Z|X}(z^*|X_j)\big)$. Then, $\{(X^\prime_j,u^\prime_j)\}$ is properly weighted for $f_{X|Z}(\cdot | z^*)$.
+}
+
+Recursively applying Lemmas~1, 2 and~3, we obtain that 
+%to step~\ref{alg:pfilter:step1}, Lemma~2 step~ {alg:pfilter:weight:update} and Lemma~3 to step~\ref{alg:pfilter:step2} we obtain that
+the MOP filter is properly weighted.
+Specifically, suppose inductively that $\big\{\big(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
+Then, Lemma~2 tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big)\big\}$ is properly weighted for $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+Lemma~3 tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} \big)\big\}$ is therefore properly weighted for  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+Lemma~1 guarantees that the resampling rule, given by 
+\[
+\big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \big(X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,j} g^\theta_{n,j}\big/ g^\phi_{n,j}\big),
+\]
+with resampling weights proportional to $g^\phi_{n,j}$, is therefore also properly weighted for $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+
+This has addressed filtering, but not quite yet the likelihood evaluation.
+
+A properly weighted conditional likelihood estimate from MOP (give the argument above) is
+\[
+f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta) \approx \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
+\]
+We write the numerator as
+\[
+L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
+\]
+Using Lemma~1, we see this is properly estimated by
+\[
+L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j}.
+\]
+This corresponds to
+\[
+L^\theta = \prod_{n=1}^N L^\phi_n \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}.
+\]
+Since $w^{F,\theta}_{n,j}=w^{P,\theta}_{n+1,j}$, this is a telescoping product. The remaining terms are
+$\sum_{j=1}^J w^{P,\theta}_{0,j} = 1$ on the denominator and $\sum_{j=1}^J w^{F,\theta}_{N,j}$ on the numerator.
+This derives the MOP estimate in (\ref{mop:lik1}).
+
+
 
 \end{document}
 
