@@ -26,7 +26,7 @@
 \leadauthor{Tan}
 
 % Please add a significance statement to explain the relevance of your work
-\significancestatement{Many scientific models involve highly nonlinear stochastic dynamical systems, sometimes with noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method dramatically outperforms previous approaches on a challenging problem in epidemiology.}
+\significancestatement{Many scientific models involve highly nonlinear stochastic dynamical systems which can be observed only via noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method dramatically outperforms previous approaches on a challenging problem in epidemiology.}
 
 % Please include corresponding author, author contribution and author declaration information
 \authorcontributions{Please provide details of author contributions here.}
@@ -38,6 +38,12 @@
 \keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
 
 \begin{abstract}
+  Automatic differentiation has driven recent advances in machine learing, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods.
+  This progress has required simultaneous advances in algorithms, software and hardware.  
+  Partially observed nonlinear stochastic dynamic systems have proved resistant to these techniques; despite various attempts, widely applicable methods have not yet emerged.
+  We present a new approach which is applicable to a general class of models, possesses a theoretical foundation, and is demonstrated to beat current state-of-the-art methods on a challenging scientific benchmark problem.
+  Our algorithm is compatible with parallel computation on a graphical processing unit, and enjoys the plug-and-play property that its software implementation requires only a simulator for the scientific dynamic model as input (in addition to data, and a measurement model).
+   
 \end{abstract}
 
 \dates{This manuscript was compiled on \today}
