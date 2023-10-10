@@ -1,5 +1,6 @@
 \documentclass[12p]{article}
 \usepackage{fullpage}
+\parskip 2mm
 
 %% for algorithm pseudocode
 \usepackage{enumerate,alltt,xstring}
@@ -31,69 +32,78 @@
 
 \begin{document}
 
-%%%%  PFILTER PSEUDOCODE
-\begin{algorithm}[t!]
+\title{Automatic differentiation via off-policy particle filters}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+Kevin has checked numerically that the measurement off policy (MOP) particle filter has a fixed-seed derivative matching Scibior \& Wood (SW). 
+Here, we present the MOP algorithm in order to check that it is properly weighted.
+The argument for this remains somewhat heuristic, reasoning about properly weighted samples in a similar way to Jun Liu's 2001 book.
+We also introduce a MOP-$\alpha$ algorithm whose fixed-seed derivative interpolates between the basic ignore-resampling-in-derivative (IRID) PF ($\alpha=0$) and 
+MOP ($\alpha=1$).
+\end{abstract}
+
+\section{The Measurement off policy (MOP) particle filter}
+
+%%%%  MOP PFILTER PSEUDOCODE
+%\begin{algorithm}[t!]
+\begin{algorithm}
   \caption{\textbf{Measurement off policy (MOP) SMC}:
     \label{alg:mop-smc}
   }
-  %% \KwIn{
-  %%   Simulator for $f_{X_n|X_{n-1}}(x_n\given x_{n-1}\giventh\theta)$;
-  %%   evaluator for $f_{Y_n|X_n}(y_n\given x_{n}\giventh\theta)$;
-  %%   simulator for $f_{X_0}(x_0\giventh\theta)$;
-  %%   parameter, $\theta$;
-  %%   data, $y^*_{1:N}$;
-  %%   number of particles, $J$.
-  %% }
-  %% \BlankLine
   Initialize filter particles:
   simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
   Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
   \;
   \For{$n$ in $\seq{1}{N}$}{
     Simulate for prediction:
-    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:step1}\;
+    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop:step1}
+    \;
+    Prediction weights: $w_{n,j}^{P,\theta} = w_{n-1,j}^{F,\theta}$ for $j\ \mathrm{in}\ \seq{1}{J}$ 
+    \;
     Evaluate measurement density:
     $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
-    Update relative weights to compensate for resampling:
-    $\displaystyle w^{P,\theta}_{n,j}= \frac{w^{F,\theta}_{n-1,j} \, g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{alg:pfilter:weight:update}
+    Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
     \;
     Conditional likelihood under $\phi$: 
     $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \nllabel{mop:Lphi}
     \;
     Normalize weights:
     $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
     for $j\ \mathrm{in}\ \seq{1}{J}$
     \;
-    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{alg:pfilter:systematic}\;
-    Resample:
-    set ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$ and
-    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{P,\theta}$
-    for $j$ in $\seq{1}{J}$ \nllabel{alg:pfilter:step2}
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{mop:systematic}\;
+    Resample particles: ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$
+    \;
+    Filter weights corrected for resampling:
+    $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop:weight:update}
+    \;
+    Resample filter weights:
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{mop:step2}
+    \;
+    After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
     \;
   }
-  %% \KwOut{
-  %%   Log likelihood estimate, $\loglikMC(\theta)=\sum_{n=1}^N\loglikMC_{n|1:n-1}$;
-  %%   filter sample, $X^F_{n,1:J}$, for $n$ in $\seq{1}{N}$.
-  %% }
-  %% \KwCplx{$\bigO{J}$}
 \end{algorithm}
 
 \begin{itemize}
 \item MOP-SMC requires that the algorithm is first run at $\phi$, for which it is a vanilla particle filter.  $g^{\phi}_{n,j}$ and $\tilde g^{\phi}_{n,j}$ are computed at this first pass. Then it is run at $\theta$, with the seed kept fixed.
 
-\item Here, the resampling rule for particle $j$ depends on $j$ (and therefore $\phi$ and $X^{P,\phi}_{n,j}$) but not on $\theta$ or  $X^{P,\theta}_{n,j}$. This does not have the standard form for a weighted particle filter, for which we can have general reweighting rules but they are usually a funciton of the location of the particle and the model parameter, $\theta$. That may be why it is harder to see that this is a properly weighted filter. Nevertheless, inspection of the algorithm shows that each particle is properly reweighted to account for its resampling probability, in step~\ref{alg:pfilter:weight:update}, so it should be properly weighted.
+\item Here, the resampling rule for particle $j$ depends on $j$ (and therefore $\phi$ and $X^{P,\phi}_{n,j}$) but not on $\theta$ or  $X^{P,\theta}_{n,j}$. This does not have the standard form for a weighted particle filter, for which we can have general reweighting rules but they are usually a funciton of the location of the particle and the model parameter, $\theta$. That may be why it is harder to see that this is a properly weighted filter. Nevertheless, inspection of the algorithm shows that each particle is properly reweighted to account for its resampling probability, in step~\ref{mop:weight:update}, so it should be properly weighted.
 
-\item The final estimate of the likelihood is either
-  \begin{equation} \label{mop:lik1}
-    L(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{F,\theta}_{N,j} \right)
+\item The final estimate of the likelihood is either based on the after-resampling conditional likelihood estimate
+  \begin{equation} \label{mop:likA}
+    L^A(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{F,\theta}_{N,j} \right)
     \prod_{n=1}^N L_n^\phi
   \end{equation}
-  or
- \begin{equation}
-   L^\prime(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{P,\theta}_{N,j} \, g^{\theta}_{N,j}\right)
-   \prod_{n=1}^{N-1} L_n^\phi
+  or the before-resampling estimate,
+ \begin{equation}\label{mop:likB}
+   L^B(\theta) = \prod_{n=1}^N \frac{\sum_{j=1}^J w^{P,\theta}_{N,j} \, g^{\theta}_{N,j}}{\sum_{j=1}^J w^{P,\theta}_{N,j}}.
   \end{equation}
- with $L^\prime(\theta)$ presumably having slightly lower variance.
+ with $L^B(\theta)$ presumably having slightly lower variance.
 
 \item Weighted samples representing the filter distribution,
   $f_{X_n|Y_{1:n}}(x_n \given y^*_{1:n} \giventh \theta)$
@@ -105,7 +115,7 @@
 
   \item As long as \texttt{rprocess} is a continuously differentiable function of $\theta$ for fixed seed, and \texttt{dmeasure} is a continuously differentiable function of $\theta$, and $g^{\phi}_{n,j}\neq 0$, we see that MOP is a continuously differentiable function of $\theta$ for fixed seed. Since it also provided an unbiased estimate of the likelihood, this justifies exchanging the order of differentiation and integration to ensure that its derivative is an unbiased estimate of the deriative of the likelihood.
 
-  \item Taking the derivative with respect to $\theta$ at $\theta=\phi$, step~\ref{alg:pfilter:weight:update} looks very much like the stop gradient approach.
+  \item Taking the derivative with respect to $\theta$ at $\theta=\phi$, step~\ref{mop:weight:update} looks very much like the stop gradient approach.
 
   \end{itemize}
 
@@ -120,7 +130,7 @@ for some appropriate formalization of $\approx$. Now, let $\{(Y_j,v_j),j=1,\dots
 \[
 (Y_j,v_j) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
 \]
-where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ is als properly weighted for $f_X$.
+where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ is properly weighted for $f_X$.
 }
 
 Notably, Lemma~1 permits $\pi_{1:J}$ to depend on $\{(X_j,u_j)\}$ as long as the resampling is carried out independently of $\{(X_j,u_j)\}$ conditional on $\pi_{1:J}$.
@@ -134,7 +144,7 @@ Suppose that $(X^\prime_j,u^\prime_j) = \big(X_j,u_j\, f_{Z|X}(z^*|X_j)\big)$. T
 }
 
 Recursively applying Lemmas~1, 2 and~3, we obtain that 
-%to step~\ref{alg:pfilter:step1}, Lemma~2 step~ {alg:pfilter:weight:update} and Lemma~3 to step~\ref{alg:pfilter:step2} we obtain that
+%to step~\ref{mop:step1}, Lemma~2 step~ {mop:weight:update} and Lemma~3 to step~\ref{mop:step2} we obtain that
 the MOP filter is properly weighted.
 Specifically, suppose inductively that $\big\{\big(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
 Then, Lemma~2 tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big)\big\}$ is properly weighted for $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
@@ -145,29 +155,114 @@ Lemma~1 guarantees that the resampling rule, given by
 \]
 with resampling weights proportional to $g^\phi_{n,j}$, is therefore also properly weighted for $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
 
-This has addressed filtering, but not quite yet the likelihood evaluation.
+This has addressed filtering, but not quite yet the likelihood evaluation. For this we use the following lemma.
 
-A properly weighted conditional likelihood estimate from MOP (give the argument above) is
-\[
-f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta) \approx \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
-\]
-We write the numerator as
+\noindent {\bf Lemma 4}. {\it
+  $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is properly estimated by either the before-resampling estimate,
+\begin{equation}\label{L1}
+L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
+\end{equation}
+or by the after-resampling estimate,
+\begin{equation}\label{L2}
+L_n^{A,\theta} = L^\phi_n \frac{\sum_{j=1}^Jw^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
+\end{equation}
+where $L^\phi_n$ comes from step~\ref{mop:Lphi}.
+}
+
+Here, (\ref{L1}) is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ is properly weighted for $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+To see  (\ref{L2}),
+we write the numerator of (\ref{L1}) as
 \[
 L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
 \]
 Using Lemma~1, we see this is properly estimated by
 \[
-L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j}.
+L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j},
 \]
-This corresponds to
+from which we obtain (\ref{L2}).
+
+Using Lemma~4, we obtain a likelihood estimate,
 \[
-L^\theta = \prod_{n=1}^N L^\phi_n \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}.
+L^{A,\theta} = \prod_{n=1}^N \left( L^\phi_n \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}\right).
 \]
 Since $w^{F,\theta}_{n,j}=w^{P,\theta}_{n+1,j}$, this is a telescoping product. The remaining terms are
 $\sum_{j=1}^J w^{P,\theta}_{0,j} = J$ on the denominator and $\sum_{j=1}^J w^{F,\theta}_{N,j}$ on the numerator.
-This derives the MOP estimate in (\ref{mop:lik1}).
+This derives the MOP estimate in (\ref{mop:likA}).
 
+$L^{B,\theta}$ should generally be preferred, since there is no reason to include the extra variability from resampling when calculating the conditional log likelihood, but it lacks the nice telescoping product.
 
+\section{MOP-$\alpha$}
+
+%%%%  MOP(alpha) PFILTER PSEUDOCODE
+\begin{algorithm}[t!]
+  \caption{\textbf{Measurement off policy (MOP-$\alpha$) SMC}:
+    \label{alg:mop-alpha}
+  }
+  Initialize filter particles:
+  simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
+  Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
+  \;
+  \For{$n$ in $\seq{1}{N}$}{
+    Simulate for prediction:
+    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop-alpha:step1}
+    \;
+    Prediction weights with discounting: $w_{n,j}^{P,\theta} = \big(w_{n-1,j}^{F,\theta}\big)^\alpha$ for $j\ \mathrm{in}\ \seq{1}{J}$
+    \nllabel{mop-alpha:discount}
+    \;
+    Evaluate measurement density:
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+    Conditional likelihood under $\phi$: 
+    $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \nllabel{mop-alpha:Lphi}
+    \;
+    Normalize weights:
+    $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \;
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{mop-alpha:systematic}\;
+    Resample particles: ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$
+    \;
+    Filter weights corrected for resampling:
+    $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop-alpha:weight:update}
+    \;
+    Resample filter weights:
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{mop-alpha:step2}
+    \;
+    After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+  }
+\end{algorithm}
+
+\begin{itemize}
+\item MOP has been rewritten from an earlier draft so that now the only difference between MOP and MOP-$\alpha$ is the discounting exponent $\alpha$ in step~\ref{mop-alpha:discount}.
+\item When $\alpha=1$ we recover MOP.
+\item When $\alpha=0$, $w^{P,\theta}_{n,j}=1$ and so $L^{B,\theta}_n$ corresponds to an equally weighted conditional likelihood, as in a regular particle filter, but with resampling carried out according to $\phi$ not $\theta$.
+  When calculating a derivative with respect to $\theta$ at $\theta=\phi$, this corresponds to ignoring differentiation through the resampling, i.e., the fixed-seed derivative of the PF algorithm.
+  To see this, we notice that the fixed seed derivative which ``ignores'' resampling is not really ignoring it; in an infinitesimal neighborhood of $\phi$, the resampling is constant and so the derivative is zero.
+  The problem is not that the fixed-seed derivative is missing something, just that we cannot correctly move the derivative through an expectation for a discontinuous function.
+\item When $\alpha < 1$, the product
+\[
+  L^{A,\alpha}(\theta)=\prod_{n=1}^N L^{A,\theta,\alpha}_n
+\]
+no longer has a telescoping cancellation. 
+\end{itemize}
+
+\section{Unresolved questions}
+
+\begin{itemize}
+\item $L^{A,\theta}_n$ and $L^{B,\theta}_n$ are asymptotically equivalent as $J$ increases, but are not identical.
+  However, both are identical for a particle filter (i.e., MOP when $\theta=\phi$).
+  Presumably, this could allow their fixed-seeed derivatives to be the same at $\theta=\phi$, though it is not obvious if this is true.
+  In that case, we would have an alternative explanation of the telescoping identity of Scibior \& Wood.
+ 
+\item It seems possible to carry out an extra numerical pass where one recalculates $L^A(\theta)$ taking advantage of the cancellation, which could make the derivative faster and/or more memory efficient, depending on what is the bottleneck. This may not be an immediate priority.
+
+  \item The cancellation difference between  $L^{A,\theta}_n$ and $L^{B,\theta}_n$ is moot for $\alpha<1$, so there's not much reason not to use $L^{B,\theta}_n$.
+ 
+\end{itemize}
 
 \end{document}
 
