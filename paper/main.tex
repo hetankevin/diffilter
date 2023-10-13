@@ -32,12 +32,13 @@
 \authorcontributions{Please provide details of author contributions here.}
 \authordeclaration{Please declare any competing interests here.}
 %\equalauthors{\textsuperscript{1}A.O.(Author One) contributed equally to this work with A.T. (Author Two) (remove if not applicable).}
-\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: ionides@umich.edu}
+\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: kevtan@umich.edu}
 
 % At least three keywords are required at submission. Please provide three to five keywords, separated by the pipe symbol.
 \keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
 
 \begin{abstract}
+Many scientific models involve highly nonlinear stochastic dynamical systems, sometimes with noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method dramatically outperforms previous approaches on a challenging problem in epidemiology.
 \end{abstract}
 
 \dates{This manuscript was compiled on \today}
