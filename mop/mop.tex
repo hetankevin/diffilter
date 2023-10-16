@@ -15,7 +15,7 @@
 \DontPrintSemicolon
 \newcommand\argequals{{\,=\,}}
 \newcommand\data[1]{#1^*}
-\newcommand\giventh{{\hspace{0.5mm};\hspace{0.5mm}}}
+\newcommand\giventh{{\hspace{0.5mm};\hspaxce{0.5mm}}}
 \newcommand\seq[2]{{#1}\!:\!{#2}}
 \newcommand\mydot{{\,\cdot\,}}
 \newcommand\given{{\,\vert\,}}
@@ -38,7 +38,7 @@
 \maketitle
 
 \begin{abstract}
-Kevin has checked numerically that the measurement off policy (MOP) particle filter has a fixed-seed derivative matching Scibior \& Wood (SW). 
+Kevin has checked theoretically that the measurement off policy (MOP) particle filter has a fixed-seed derivative matching Scibior \& Wood (SW). 
 Here, we present the MOP algorithm in order to check that it is properly weighted.
 The argument for this remains somewhat heuristic, reasoning about properly weighted samples in a similar way to Jun Liu's 2001 book.
 We also introduce a MOP-$\alpha$ algorithm whose fixed-seed derivative interpolates between the basic ignore-resampling-in-derivative (IRID) PF ($\alpha=0$) and 
@@ -46,6 +46,16 @@ MOP ($\alpha=1$).
 \end{abstract}
 
 \section{The Measurement off policy (MOP) particle filter}
+
+DOP has the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). 
+
+POP has the process system evolve according to $\theta$, and the resampling evolve according to $\phi$. In essence, we offload the derivative with respect to the process model to the reparametrization trick. 
+
+Bias in dropping the resampling gradient increases as process mixes slower. ADPF has a long memory, and the variance in the weights add up, and there is significant instability. However, by the time the system mixes, ancestral trajectories don't matter as much, so we shouldn't bother with estimating gradients that rely on more than one timestep of the conditional log-likelihood. 
+
+Scientifically, this is great that no matter what you do with the gradient it works out well. 
+
+Implement MOP-$\alpha$ after the paper is mostly written. 
 
 %%%%  MOP PFILTER PSEUDOCODE
 %\begin{algorithm}[t!]
@@ -239,11 +249,12 @@ $L^{B,\theta}$ should generally be preferred, since there is no reason to includ
 
 \begin{itemize}
 \item MOP has been rewritten from an earlier draft so that now the only difference between MOP and MOP-$\alpha$ is the discounting exponent $\alpha$ in step~\ref{mop-alpha:discount}.
-\item When $\alpha=1$ we recover MOP.
+\item When $\alpha=1$ we recover MOP. In particular, $L^{A,\theta}_n$ when $\theta=\phi$ and $\theta=1$ recovers Scibior and Wood. 
 \item When $\alpha=0$, $w^{P,\theta}_{n,j}=1$ and so $L^{B,\theta}_n$ corresponds to an equally weighted conditional likelihood, as in a regular particle filter, but with resampling carried out according to $\phi$ not $\theta$.
-  When calculating a derivative with respect to $\theta$ at $\theta=\phi$, this corresponds to ignoring differentiation through the resampling, i.e., the fixed-seed derivative of the PF algorithm.
+  When calculating a derivative of $L_n^{B, \theta}$ when $\alpha=0$ with respect to $\theta$ at $\theta=\phi$, this corresponds to ignoring differentiation through the resampling, i.e., the fixed-seed derivative of the PF algorithm.
   To see this, we notice that the fixed seed derivative which ``ignores'' resampling is not really ignoring it; in an infinitesimal neighborhood of $\phi$, the resampling is constant and so the derivative is zero.
   The problem is not that the fixed-seed derivative is missing something, just that we cannot correctly move the derivative through an expectation for a discontinuous function.
+\item Of course, the difference between the before-resampling and after-resampling likelihoods is immaterial. If the functions match, then the gradients match. 
 \item When $\alpha < 1$, the product
 \[
   L^{A,\alpha}(\theta)=\prod_{n=1}^N L^{A,\theta,\alpha}_n
