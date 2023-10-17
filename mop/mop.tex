@@ -124,9 +124,9 @@ Here's an outline of an argument explaining why MOP is properly weighted.
 \noindent {\bf Lemma 1}. {\it
 Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ is properly weighted for $f_X$, meaning that, if $X\sim f_X$,
 \[
-E[h(X)] \approx \sum_{j=1}^J \frac{w_j}{\sum_{k=1}^J u_k} h(X_j),
+E[h(X)] \approx \sum_{j=1}^J \frac{u_j}{\sum_{k=1}^J u_k} h(X_j),
 \]
-for some appropriate formalization of $\approx$. Now, let $\{(Y_j,v_j),j=1,\dots,J\}$ be a sample drawn from $\{(X_j,u_j)\}$ where $(X_j,u_j)$ is represented, on average, $\pi_j J$ times. This could amount to binomial resampling having $J$ draws each with probability $p_j$, or systematic resampling. Suppose
+for some appropriate formalization of $\approx$. Now, let $\{(Y_j,v_j),j=1,\dots,J\}$ be a sample drawn from $\{(X_j,u_j)\}$ where $(X_j,u_j)$ is represented, on average, $\pi_j J$ times. This could amount to binomial resampling having $J$ draws each with probability $\pi_j$, or systematic resampling. Suppose
 \[
 (Y_j,v_j) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
 \]
