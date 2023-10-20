@@ -33,6 +33,11 @@ MONITORS = 1
 
 
 @partial(jit, static_argnums=2)
+def jgrad_pf(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.grad(pfilter_pf)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+
+
+@partial(jit, static_argnums=2)
 def jgrad(theta_ests, ys, J, covars, thresh, key=None):
     return jax.grad(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
@@ -107,6 +112,49 @@ def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20
             direction = -hess @ grad #hess here is inverse hessian
         else:
             direction = -grad
+            
+        Acopies.append(theta_ests)
+        logliks.append(loglik)
+        grads.append(grad)
+        hesses.append(hess)
+
+        if scale:
+            direction = direction/np.linalg.norm(direction)
+            
+        eta = line_search(partial(pfilter, ys=ys, J=J, covars=covars, thresh=thresh, key=key), 
+                          loglik, theta_ests, grad, direction, k=i+1, eta=beta, c=c, tau=max_ls_itn) if ls else eta
+        et = eta if len(eta) == 0 else eta[i]
+
+        if i%1==0 and verbose:
+            print(theta_ests, et, logliks[i])
+
+        theta_ests += et*direction
+        
+    logliks.append(np.mean(np.array([pfilter(theta_ests, ys, J, covars=covars, thresh=thresh) for i in range(MONITORS)])))
+    Acopies.append(theta_ests)
+    
+    return np.array(logliks), np.array(Acopies)
+
+#rerun with diff trajs each time
+def train_pf(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20, beta=0.9, eta=0.0025, c=0.1, max_ls_itn=10, thresh=100, verbose=False, scale=False, ls=False): 
+    Acopies = []
+    grads = []
+    hesses = []
+    logliks = []
+    hess = np.eye(theta_ests.shape[-1])
+    
+    
+    for i in tqdm(range(itns)):
+        
+        key = jax.random.PRNGKey(onp.random.choice(int(1e18)))
+        if MONITORS == 1:
+            loglik, grad = jvg(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+            loglik *= len(ys)
+        else:
+            grad = jgrad_pf(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+            loglik = np.mean(np.array([pfilter(theta_ests, ys, J, covars=covars, thresh=thresh, key=key) for i in range(MONITORS)]))
+        
+        direction = -grad
             
         Acopies.append(theta_ests)
         logliks.append(loglik)
