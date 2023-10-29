@@ -286,7 +286,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     \label{alg:mop-alpha}
   }
   Initialize filter particles:
-  simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
+  simulate ${X}_{0,j}^{F,\phi}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\phi}\right)$ for $j$ in $\seq{1}{J}$\;
   Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
   \;
   \For{$n$ in $\seq{1}{N}$}{
@@ -294,15 +294,15 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     \nllabel{dop-alpha:discount}
     \;
     Simulate for prediction:
-    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\phi}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{dop-alpha:step1}
+    ${X}_{n,j}^{P,\phi}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\phi}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{dop-alpha:step1}
     \;
     Adjust weights: $\displaystyle w_{n,j}^{P,\theta} = w_{n,j}^{P,\theta} \times
-    \frac{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\theta}|{X}_{n-1,j}^{F};{\theta}\big)}{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\theta}|{X}_{n-1,j}^{F};{\phi}\big)}$
+    \frac{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\phi}|{X}_{n-1,j}^{F};{\theta}\big)}{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\phi}|{X}_{n-1,j}^{F};{\phi}\big)}$
     for $j\ \mathrm{in}\ \seq{1}{J}$
     \nllabel{dop-alpha:dproc}
     \;
     Evaluate measurement density:
-    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\phi}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
     Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
     \;
     Conditional likelihood under $\phi$: 
@@ -314,7 +314,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     for $j\ \mathrm{in}\ \seq{1}{J}$
     \;
     Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{dop-alpha:systematic}\;
-    Resample particles: ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$
+    Resample particles: ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$
     \;
     Filter weights corrected for resampling:
     $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{dop-alpha:weight:update}
@@ -331,7 +331,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
 \begin{itemize}
 \item In order to match the direct derivative for a discrete \code{rprocess} with $\alpha=0$, we would carry out the discounting in step~\ref{dop-alpha:discount} after the weight adjustment in step~\ref{dop-alpha:dproc}.
   However, if we want to make $\alpha=0$ correspond to a reasonable estimate with no weight memory (i.e., strong mixing) then we should construct the algorithms as stated.
-\item ${X}_{n,j}^{P,\theta}$ in fact depends on $\phi$ not $\theta$ in this algorithm. Rename?
+\item ${X}_{n,j}^{P,\theta}$ in fact depends on $\phi$ not $\theta$ in this algorithm. Renamed accordingly.
 \end{itemize}
 
 \end{document}
