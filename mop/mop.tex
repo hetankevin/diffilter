@@ -267,7 +267,7 @@ no longer has a telescoping cancellation.
 \begin{itemize}
 \item $L^{A,\theta}_n$ and $L^{B,\theta}_n$ are asymptotically equivalent as $J$ increases, but are not identical.
   However, both are identical for a particle filter (i.e., MOP when $\theta=\phi$).
-  Presumably, this could allow their fixed-seeed derivatives to be the same at $\theta=\phi$, though it is not obvious if this is true.
+  Presumably, this could allow their fixed-seed derivatives to be the same at $\theta=\phi$, though it is not obvious if this is true.
   In that case, we would have an alternative explanation of the telescoping identity of Scibior \& Wood.
  
 \item It seems possible to carry out an extra numerical pass where one recalculates $L^A(\theta)$ taking advantage of the cancellation, which could make the derivative faster and/or more memory efficient, depending on what is the bottleneck. This may not be an immediate priority.

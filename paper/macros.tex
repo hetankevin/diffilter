@@ -5,15 +5,9 @@
 \usepackage{mathtools}
 
 % algorithm
-\usepackage{algorithm}
-\usepackage{algpascal}
-\usepackage{algorithmicx}
-\usepackage{algpseudocode}
+\usepackage{algorithm, algorithmic}
 \usepackage{tabularx}
 %\usepackage[table,xcdraw]{xcolor}
-\algdef{SE}[SUBALG]{Indent}{EndIndent}{}{\algorithmicend\ }%
-\algtext*{Indent}
-\algtext*{EndIndent}
 
 % commands
 % global count (no section number)
@@ -59,6 +53,34 @@
 \newcommand{\captionb}{{\em (b)}}
 \newcommand{\captionc}{{\em (c)}}
 \newcommand{\captiond}{{\em (d)}}
+
+
+\newcommand\seq[2]{{#1}\!:\!{#2}}
+\newcommand\R{\mathbb{R}}
+\newcommand\Var{\mathrm{Var}}
+\newcommand\var{\Var}
+\newcommand\Cov{\mathrm{Cov}}
+\newcommand\cov{\Cov}
+\newcommand\iid{\mathrm{iid}}
+\newcommand\dist{d}
+\newcommand\lik{\mathcal{L}}
+\newcommand\prob{\mathbb{P}}
+\newcommand\E{\mathbb{E}}
+\newcommand\loglik{\ell}
+\newcommand\process{\text{process}}
+\newcommand\dimtheta{\mathrm{dim}_{\Theta}}
+\newcommand\param{\,;}
+\newcommand\given{{\,\vert\,}}
+
+\renewcommand\time{n}
+\newcommand\myvec[1]{\boldsymbol{#1}}
+\newcommand\altTime{\tilde n}
+\newcommand\Time{N}
+\newcommand\Np{J}
+\newcommand\np{j}
+\newcommand\altNp{k}
+\newcommand\altAltNp{\tilde j}
+\newcommand\resampleIndex{r}
 
 % color
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
