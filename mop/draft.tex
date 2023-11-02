@@ -121,8 +121,9 @@ Let $\lik(\theta, \phi, \omega, J)$ denote a Monte-Carlo estimate of the likelih
 \end{equation}
 where we define
 \begin{align}
-    \lik(\theta,\phi,\omega, J) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J &\left(f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) f_{X_n|Y_n}(x_{n,j}^{P, \phi}(\omega) | y_n^*, \phi) \\
+    \lik(\theta,\phi,\omega, J) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J &\left(f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) f_{X_n|Y_n}(x_{n,j}^{P, \phi}(\omega) | y_n^*, \phi) \right.\\
     &\cdot
+    \left.
     \frac{f_{Y_n|X_n}(y^*_n|x_{n,j}^{P,\phi}(\omega),\theta)}{f_{Y_n|X_n}(y^*_n|x_{n,j}^{P,\phi}(\omega),\phi)}
     \cdot \frac{f_{X_n|X_{n-1}}(x_{n,j}^{P,\phi}(\omega)|x_{n-1,j}^{F,\phi}(\omega),\theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P,\phi}(\omega)|x_{n-1,j}^{F,\phi}(\omega),\phi)}\right).
 \end{align}
