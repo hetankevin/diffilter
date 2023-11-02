@@ -5,7 +5,7 @@
 \usepackage{mathtools}
 
 % algorithm
-\usepackage{algorithm, algorithmic}
+%\usepackage{algorithm, algorithmic}
 \usepackage{tabularx}
 %\usepackage[table,xcdraw]{xcolor}
 
@@ -27,21 +27,9 @@
 \newcount\comments  % 0 suppresses notes to selves in text
 \comments=0  % TODO: change to 0 for final version
 \newcommand{\genComment}[2]{\ifnum\comments=1{\textcolor{#1}{\textsf{\footnotesize #2}}}\fi}
-\newcommand{\ambuj}[1]{\genComment{red}{[AT:#1]}}
-\newcommand{\ziping}[1]{\genComment{green}{[ZP:#1]}}
+\newcommand{\ed}[1]{\genComment{red}{[AT:#1]}}
+\newcommand{\giles}[1]{\genComment{green}{[ZP:#1]}}
 \newcommand{\kevin}[1]{\genComment{blue}{[KT:#1]}}
-
-% % No number
-% \newtheorem*{thm*}{Theorem}%[section]
-% \newtheorem*{lem*}{Lemma}
-% \newtheorem*{prop*}{Proposition}
-% \newtheorem*{cor*}{Corollary}
-% \newtheorem*{conj*}{Conjecture}
-% \newtheorem*{aspt*}{Assumption}
-% \newtheorem*{claim*}{Claim}
-% \newtheorem*{rmk*}{Remark}
-% \newtheorem*{commt*}{Comment}
-% \newtheorem*{defn*}{Definition}
 
 % Mark sections of captions for referring to divisions of figures
 \newcommand{\figleft}{{\em (Left)}}

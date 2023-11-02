@@ -1,7 +1,10 @@
 \documentclass[9pt,twocolumn,twoside]{pnas-new}
+%\documentclass[9pt,twocolumn,pnasresearcharticle]{pnas-new}
+%\documentclass[9pt,twocolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 
 \input{macros}
+
 
 \templatetype{pnasresearcharticle} % Choose template
 % {pnasresearcharticle} = Template for a two-column research article
@@ -10,11 +13,11 @@
 
 \begin{document}
 
-
 \title{Inference for Dynamic and Latent Variable Models via Plug-and-Play Automatically Differentiable Particle Filtering}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a]{Kevin Tan}
+\author[a]{Giles Hooker}
 \author[b,1]{Edward L. Ionides}
 %\author[a]{Author Three}
 
@@ -54,7 +57,7 @@
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\firstpage{10}
+\firstpage{7}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
 
 
@@ -63,7 +66,7 @@
 
 This is a problem in some critical applications, such as disease modeling, where the models are complex enough that obtaining the density is intractable. However, the particle filter, a popular method for solving the filtering problem in partially-observed dynamical systems, does not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm in a feature known as the plug-and-play property. 
 
-Still, maximum likelihood parameter estimation can be challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Existing methods like the improved iterated filtering algorithm of Ionides et. al. \cite{Ionides_infpomp} converge quickly to a neighborhood of the MLE, but struggle to optimize the last few units of log-likelihood. 
+Still, maximum likelihood parameter estimation can be challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Existing methods like the improved iterated filtering algorithm of Ionides et. al. \cite{ionides15} converge quickly to a neighborhood of the MLE, but struggle to optimize the last few units of log-likelihood. 
 
 \kevin{TODO: (1) Fix beta smoothness to d(n) at no more than O(n), (2) add story to say that no one spotted that it could have been plug-and-play because of e.g. reasons why they would stumble, (3) }
 
@@ -81,15 +84,15 @@ Unlike IF2, we explicitly characterize our method's rate of convergence
 Algorithmic differentiation potentially facilitates numerical optimization, but currently its use for particle filters is limited. We investigate ways to use algorithmic differentiation of particle filters within the confines of the plug-and-play property, with the goal of enhancing current inference capabilities for general POMP models.
 
 
-\textbf{The issue:} Particle filters provide convenient approaches to evaluating the log-likelihood function for partially observed Markov process (POMP) models. However, using this evaluator to obtain a maximum likelihood parameter estimate can be challenging -- especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Empirically, methods such as the improved iterated filtering algorithm (IF2) from Ionides et. al. \cite{Ionides_infpomp} rapidly converge to a neighborhood of the optimum but struggle at finding the exact optimum due to Monte Carlo variance, even with an annealing random walk standard deviation. 
+\textbf{The issue:} Particle filters provide convenient approaches to evaluating the log-likelihood function for partially observed Markov process (POMP) models. However, using this evaluator to obtain a maximum likelihood parameter estimate can be challenging -- especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Empirically, methods such as the improved iterated filtering algorithm (IF2) from Ionides et. al. \cite{ionides15} rapidly converge to a neighborhood of the optimum but struggle at finding the exact optimum due to Monte Carlo variance, even with an annealing random walk standard deviation. 
 
 A potential solution to this could lie in auto-differentiation (AD). This would allow for the use of first and second-order iterative optimization techniques. However, though AD could potentially facilitate numerical optimization, its use for plug-and-play particle filters has so far been limited. This is potentially because particle filtering methods are inherently non-differentiable due to the resampling step that may take place in between iterations. 
 
 \subsection*{The importance of the plug-and-play property:} Performing inference in highly nonlinear stochastic dynamical systems is a challenging problem. Although many methods for inference assume access to the density of state transitions, this is often not available, especially in critical applications like epidemiology.
 
-Basic particle filtering algorithms do not require evaluation of the transition density of the latent Markov process, in a feature known as the \textbf{plug-and-play property} \cite{Breto_timeseriesmech} since it enables an arbitrary model simulator to be plugged into the algorithm. We investigate ways to use algorithmic differentiation of particle filters within the confines of the plug-and-play property, with the goal of enhancing current inference capabilities for general POMP models.
+Basic particle filtering algorithms do not require evaluation of the transition density of the latent Markov process, in a feature known as the \textbf{plug-and-play property} \cite{breto09} since it enables an arbitrary model simulator to be plugged into the algorithm. We investigate ways to use algorithmic differentiation of particle filters within the confines of the plug-and-play property, with the goal of enhancing current inference capabilities for general POMP models.
 
-\subsection*{Other potential applications:} This has applications beyond the obvious one of learning model parameters via first or second-order optimization routines. For example, it could be a step towards developing very general Hamiltonian Monte Carlo methods for particle MCMC, as Rosato et. al. \cite{rosato22b} do by using previous work such as \cite{scibior2021dpf, doucet2011sf} (and we conjecture that the seed-fixing derivatives of Rosato et. al. are the same as these as an immediate consequence of section \ref{subsec:scibiorrel}) to differentiate the particle filter. 
+\subsection*{Other potential applications:} This has applications beyond the obvious one of learning model parameters via first or second-order optimization routines. For example, it could be a step towards developing very general Hamiltonian Monte Carlo methods for particle MCMC, as Rosato et. al. \cite{rosato22b} do by using previous work such as \cite{scibior21, poyiadjis11} (and we conjecture that the seed-fixing derivatives of Rosato et. al. are the same as these as an immediate consequence of section \ref{subsec:scibiorrel}) to differentiate the particle filter. 
 
 \section*{Guide to using this template on Overleaf}
 
@@ -115,7 +118,7 @@ A standard 6-page article is approximately 4,000 words, 50 references, and 4 med
 
 \subsection*{References}
 
-References should be cited in numerical order as they appear in text; this will be done automatically via bibtex, e.g. \cite{belkin2002using} and \cite{berard1994embedding,coifman2005geometric,phdthesis,masterthesis}. All references cited in the main text should be included in the main manuscript file.
+References should be cited in numerical order as they appear in text; this will be done automatically via bibtex,
 
 \subsection*{Data Archival}
 
@@ -219,10 +222,11 @@ Example text for subsection.
 \showacknow{} % Display the acknowledgments section
 
 
-\bibsplit[2]
+%\bibsplit[2]
 %Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
 
+%\bibliographystyle{pnas-new}
 % Bibliography
-\bibliography{pnas-sample}
+\bibliography{bib-ifad}
 
 \end{document}
