@@ -2,7 +2,7 @@
 SHELL:= /bin/bash
 
 # BEGIN: FINE TUNE
-FILES:= main
+FILES:= ms
 DUST_EXT:= {aux,bbl,blg,dvi,log,nav,out,Rout,snm,synctex.gz,toc,vrb}
 # to keep .tex & .log files from 'knitr::knit()', uncomment next line
 #.PRECIOUS: %.tex
