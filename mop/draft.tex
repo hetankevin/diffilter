@@ -67,9 +67,10 @@ We show these off-policy particle filters are properly weighted, recover desirab
 
 In practice, we propose a hybrid algorithm that we call \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts gradient ascent (or a similar iterative first or second-order gradient method) with a coarse solution obtained from a few rounds of iterated filtering. While this requires a differentiable simulator compatible with the reparametrization trick (as previous literature such as \citet{corenflos2021ot} also require), future work will deal with workarounds inspired by our framework that use likelihood ratios of transition densities in place of this. Promising numerical results indicate that IFAD beats IF2 (and by the transitive property, IF1, the Liu-West filter, and particle MCMC) on a challenging scientific benchmark problem.
 
-While the Monte-Carlo Adjusted Profile (MCAP) from \citet{Ionides_mcap} provides a profile likelihood confidence interval that takes into account both Monte Carlo profile error and statistical uncertainty in the likelihood, it is computationally inefficient. \kevin{TODO} We provide a method for incorporating the MCAP methodology in our IFAD algorithm that provides a more computationally efficient profile likelihood confidence interval. 
+While the Monte-Carlo Adjusted Profile (MCAP) from \citet{Ionides_mcap} provides a profile likelihood confidence interval that takes into account both Monte Carlo profile error and statistical uncertainty in the likelihood, it is computationally inefficient. \kevin{TODO} We provide a method for incorporating the MCAP methodology (with the poor man's likelihood profile) in our IFAD algorithm that provides a more computationally efficient profile likelihood confidence interval. 
+\kevin{Quantile regression for estimating the max/the envelope of the likelihood evaluations from AD, then fit MCAP/MQLE/MSLE?}
 
-Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king2016pomp, king2017pompmanual}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{jax} Python package from \citet{jax2018github}. 
+Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king2016pomp, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{jax} Python package from \citet{jax2018github}. 
 
 
 
@@ -89,7 +90,7 @@ The above are all defined on a single probability space $(\Omega, \Sigma, \prob)
 
 \section{A Smooth Extension of the Particle Filter}
 
-\textbf{Intuition:} Our theoretical framework for automatic differentiation for the particle filter hinges on the following observation. Instead of seeking to differentiate $\ell(\theta)$ directly, we instead focus on differentiating through a suitable fixed-seed reweighting of a bootstrap filter. The intuition is as follows. Consider a particle filter likelihood estimate where the system (i.e. \textbf{both the process and measurement models}) evolves under a parameter $\phi \in \Theta$ and the seed, or sample space element, is fixed at $\omega \in \Omega.$ Conditional on $\omega$ and $\phi,$ one can reweight the likelihood estimate to instead evaluate the likelihood at another (sufficiently nearby) $\theta \in \Theta.$ 
+\textbf{Intuition:} Our theoretical framework for automatic differentiation for the particle filter hinges on the following observation. Instead of seeking to differentiate $\ell(\theta)$ directly, we instead focus on differentiating through a suitable fixed-seed reweighting of a bootstrap filter. The intuition is as follows. Consider a particle filter likelihood estimate where the system (i.e. \textbf{both the state transitions and resampling}) evolves under a parameter $\phi \in \Theta$ and the seed, or sample space element, is fixed at $\omega \in \Omega.$ Conditional on $\omega$ and $\phi,$ one can reweight the likelihood estimate to instead evaluate the likelihood at another (sufficiently nearby) $\theta \in \Theta.$ 
 
 Differentiating this reweighted likelihood estimate with respect to $\theta$ then amounts to differentiating through the reweighting scheme, which is differentiable if the densities used for the reweighting are differentiable. We call this simulation-and-reweighting scheme an \textbf{off-policy} likelihood estimate, as it is similar in spirit to the off-policy methods found in the reinforcement learning literature.
 
@@ -155,19 +156,41 @@ Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\
     for every $\phi \in \mathcal{M}, \theta$ in smooth neighborhood $\mathcal{N}(\phi)$, and almost every $\omega \in \Omega$.
 \end{aspt}
 
-We claim that this yields a properly weighted particle filter that recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi.$ \kevin{INSERT RESULTS HERE}
+We claim that this yields a properly weighted particle filter that recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi.$ 
+
 
 \begin{prop}[Correctness of DOP-$\alpha$ (Algorithm \ref{alg:dop})]
-    When $\theta$ is evaluated at $\phi$, 
+    \label{prop:dop-correctness}
+    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood. 
+    
+    In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter, and its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
+
+    and when $\alpha=0$ 
+    
+    
 \end{prop}
 
-\subsection{Measurement Off-Policy}
+\subsubsection{Practical Considerations}
+
+It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, the naively 
+\subsection{Measurement Off-Policy Particle Filters}
 
 However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
 
+There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but the resampling according to $\phi,$ 
+
+We therefore make the following assumption in this section only:
+\begin{aspt}[Differentiable Simulator]
+    $\text{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
+\end{aspt}
 
 
 
+
+\section{Numerical Experiments}
+
+\citet{liu2023bridging} have established that the straight-through estimator can be thought of as a first-order approximation of the gradient.
+\kevin{Benchmark DOP vs straight-through estimator/reinmax in MOP}
 
 \bibliography{paper/ref}
 \bibliographystyle{apalike}
