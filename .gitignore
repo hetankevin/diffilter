@@ -2,8 +2,12 @@
 __pycache__/
 *.py[cod]
 *$py.class
-*~
 *.aux
+
+# emacs backup files
+\#*
+*~
+.#*
 
 # C extensions
 *.so
