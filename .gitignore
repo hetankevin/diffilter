@@ -12,6 +12,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Latex stuff
+*.log
+*.aux
+*.bbl
+*.blg
+
 # Distribution / packaging
 .Python
 build/
