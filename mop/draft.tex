@@ -130,8 +130,6 @@ where we define
 \end{align}
 \end{defn}
 
-
-
 We want $\phi\in\Theta$ to be a point in parameter space around which $\lik(\theta,\phi,\omega, J)$ is differentiable with respect to $\theta$ and does not have excessive Monte~Carlo variance. This leads us to our first assumption.
 
 \begin{aspt}[Smooth Neighborhood]
@@ -157,28 +155,63 @@ Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\
     for every $\phi \in \mathcal{M}, \theta$ in smooth neighborhood $\mathcal{N}(\phi)$, and almost every $\omega \in \Omega$.
 \end{aspt}
 
-We claim that this yields a properly weighted particle filter that recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi.$ 
+\subsubsection{Doubly Off-Policy Particle Filter}
 
+Having the system evolve according to $\phi$ but evaluating the likelihood at $\theta$ requires us to reweight the conditional likelihood at each timestep by likelihood ratios corresponding to the process and measurement models. This corresponds to making two corrections in the particle weights at each timestep, by multiplying by 
+\begin{equation}
+    s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}, \qquad r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)},
+\end{equation}
+as we illustrate in Appendix \ref{app:dop}. We use the notation $x_{n,j}^{P, \phi}$ to emphasize that the particles evolve according to $\phi$. 
+
+We claim that this yields a properly weighted particle filter that recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi,$ which is is Algorithm \ref{alg:dop} when $\alpha=1$. The proof can be found in Appendix A. 
+
+\subsubsection{Discounting Weights}
+
+
+Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. This is because we introduce a discounting parameter $\alpha$ that affects the weights DOP, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$, and the filter remains correctly weighted. The value of $\alpha$ simply informs a bias-variance tradeoff, as we elaborate below. 
+
+When $\alpha=1,$ the likelihood estimate becomes
+\begin{equation}
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\phi}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
+\end{equation}
+as we have a telescoping product.
+
+When $\alpha=0,$ the likelihood estimate becomes
+\begin{equation}
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j},
+\end{equation}
+and though the telescoping product disappears, this reduces to a series of one-step corrections that leave the filter still properly weighted.
+
+\kevin{Is DOP properly weighted when alpha is not 1 and theta is not phi?}
+
+\paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of the entire trajectory, or 
+
+\subsubsection{Correctness of DOP-$\alpha$}
 
 \begin{prop}[Correctness of DOP-$\alpha$ (Algorithm \ref{alg:dop})]
     \label{prop:dop-correctness}
-    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood. 
+    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood, for all $\alpha$. 
     
-    In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter, and its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
+    In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
+    \begin{equation}
+        \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),
+    \end{equation}
 
-    and when $\alpha=0$ 
-    
-    
+    and when $\alpha=0,$ is is the same as differentiating through the fixed-seed likelihood estimate yielded by a vanilla particle filter.
 \end{prop}
+
+The proof for the above follows from Appendix A, as well as the technical lemmas for properly weighted particle filters. 
+
 
 \subsubsection{Practical Considerations}
 
-It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, the naively 
+It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
+
 \subsection{Measurement Off-Policy Particle Filters}
 
-However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
+DOP has the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
 
-There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but the resampling according to $\phi,$ 
+There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but have the resampling according to $\phi,$ we can offload the derivative with respect to the process model to the reparametrization trick. 
 
 We therefore make the following assumption in this section only:
 \begin{aspt}[Differentiable Simulator]
@@ -186,12 +219,22 @@ We therefore make the following assumption in this section only:
 \end{aspt}
 
 
+\kevin{Develop theory for mixing-time swapping? Detect when IF2 reaches a neighborhood of the MLE, by detecting whether it has reached a local sort of stationary distribution when the perturbations are lower bounded, e.g. the autocorrelation between the mean vectors to estimate the mixing time or Gelman-Rubin. In practice, just swap when IF2 converges according to the diagnostics. Theory doesn't care, you just need to in a basin of attraction that is strongly convex.}
+
+
+
 
 
 \section{Numerical Experiments}
 
+\kevin{IFAD vs IF2, AD vs IF2, IFAD0 vs IFAD1, AD0 vs AD1 in Dacca, local and global plots, convergence line plot of IFAD vs IF2, Dacca data plots, toy model from IF2 paper, AD0 vs AD1 gradient histograms, MSE of AD0 and AD1 gradient estimates as J increases on analytically tractable toy model from IF2 paper or OU2 in pomp}
+
+\kevin{Main plots are the local and global 2-way comparison plots of IFAD1 vs IF2, AD1 vs IF2. Visualize the Q-Q plots in the appendix, and use alternate representations as boxplots (or histograms) with dashed line for the maximum in the main paper.}
+
 \citet{liu2023bridging} have established that the straight-through estimator can be thought of as a first-order approximation of the gradient.
 \kevin{Benchmark DOP vs straight-through estimator/reinmax in MOP}
+
+
 
 \bibliography{bib-ifad,bib-ref}
 \bibliographystyle{apalike}
@@ -201,6 +244,7 @@ We therefore make the following assumption in this section only:
 \setcounter{figure}{0}
 
 \section{Doubly Off-Policy Particle Filters}
+\label{app:dop}
 
 
 Evaluating the off-policy likelihood is possible with a weighted particle filter by using resampling weight $p(y^*_n|x_n;\phi)$ and making two corrections in the particle weight, through multiplying $w_{t,j}$ by the two likelihood ratios below,

@@ -51,6 +51,7 @@ DOP has the entire system evolve according to $\phi$, and we differentiate throu
 
 POP has the process system evolve according to $\theta$, and the resampling evolve according to $\phi$. In essence, we offload the derivative with respect to the process model to the reparametrization trick. 
 
+\kevin{w.r.t. alpha=0:}
 Bias in dropping the resampling gradient increases as process mixes slower. ADPF has a long memory, and the variance in the weights add up, and there is significant instability. However, by the time the system mixes, ancestral trajectories don't matter as much, so we shouldn't bother with estimating gradients that rely on more than one timestep of the conditional log-likelihood. 
 
 Scientifically, this is great that no matter what you do with the gradient it works out well. 
