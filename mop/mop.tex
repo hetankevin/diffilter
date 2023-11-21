@@ -133,6 +133,19 @@ Implement MOP-$\alpha$ after the paper is mostly written.
 
 Here's an outline of an argument explaining why MOP is properly weighted.
 
+
+\noindent {\bf Definition 1, Liu}. {\it A random variable $X$ drawn from a distribution $g$ is said to be properly weighted by a weighting function $w(X)$ with respect to the distribution $\pi$ if for any integrable function $h$,
+$$
+E_g\{h(X) w(X)\}=E_\pi\{h(X)\}
+$$
+
+A set of random draws and weights $\left(x^{(j)}, w^{(j)}\right), j=1,2, \ldots$, is said properly weighted with respect to $\pi$ if
+$$
+\lim _{m \rightarrow \infty} \frac{\sum_{j=1}^m h\left(x^{(j)}\right) w^{(j)}}{\sum_{j=1}^m w^{(j)}}=E_\pi(h(X))
+$$
+for any integrable function $h$. In a practical sense we can think of $\pi$ as being approximated by the discrete distribution supported on the $x^{(j)}$ with probabilities proportional to the weights $w^{(j)}$.
+}
+
 \noindent {\bf Lemma 1}. {\it
 Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ is properly weighted for $f_X$, meaning that, if $X\sim f_X$,
 \[
@@ -186,8 +199,9 @@ To see  (\ref{L2}),
 we write the numerator of (\ref{L1}) as
 \[
 L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
+= L^\phi_n \sum_{j=1}^J w_{n,j}^{FC,\theta} \frac{g^\phi_{n,j}}{L_n^\phi}
 \]
-Using Lemma~1, we see this is properly estimated by
+Using Lemma~1, we resample according to probabilities $\frac{g^\phi_{n,j}}{L_n^\phi}$ to see this is properly estimated by
 \[
 L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j},
 \]

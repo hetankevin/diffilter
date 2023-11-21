@@ -168,15 +168,24 @@ We claim that this yields a properly weighted particle filter that recovers the 
 \subsubsection{Discounting Weights}
 
 
-Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. This is because we introduce a discounting parameter $\alpha$ that affects the weights DOP, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$, and the filter remains correctly weighted. The value of $\alpha$ simply informs a bias-variance tradeoff, as we elaborate below. 
+Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. This is because we introduce a discounting parameter $\alpha$ that affects the weights DOP, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. The value of $\alpha$ simply informs a bias-variance tradeoff, as we elaborate below. 
 
-When $\alpha=1,$ the likelihood estimate becomes
+
+\paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$), or considering only the single-step transition dynamics (when $\alpha=0$). This can be thought of as an \textbf{exponentially-weighted moving average}, where $\alpha$ controls the amount of discounting. We elaborate on two special cases below.
+
+\kevin{This isn't a smoother, because we'd need future information.}
+
+\paragraph{When $\alpha=1,$} the likelihood estimate becomes
 \begin{equation}
     \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\phi}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
 \end{equation}
-as we have a telescoping product.
+as we have a telescoping product. Its derivative is then
+\begin{equation}
+    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta},
+\end{equation}
+the average gradient of each surviving particle's cumulative importance weights. 
 
-When $\alpha=0,$ the likelihood estimate becomes
+\paragraph{When $\alpha=0,$} the likelihood estimate becomes
 \begin{equation}
     \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j},
 \end{equation}
@@ -184,13 +193,12 @@ and though the telescoping product disappears, this reduces to a series of one-s
 
 \kevin{Is DOP properly weighted when alpha is not 1 and theta is not phi?}
 
-\paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of the entire trajectory, or 
 
 \subsubsection{Correctness of DOP-$\alpha$}
 
 \begin{prop}[Correctness of DOP-$\alpha$ (Algorithm \ref{alg:dop})]
     \label{prop:dop-correctness}
-    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood, for all $\alpha$. 
+    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood, when either $\alpha=1$ or $\theta=\phi$. 
     
     In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
     \begin{equation}
@@ -243,6 +251,135 @@ We therefore make the following assumption in this section only:
 \renewcommand{\thefigure}{A\arabic{figure}}
 \setcounter{figure}{0}
 
+\section{Properly Weighted Particle Filters}
+
+
+\begin{defn}[Targeting, \cite{liu1998smc}]
+    A random variable $X$ drawn from a distribution $g$ is properly weighted by a weighting function $w(X)$ with respect to the distribution $\pi$ if for any integrable function $h$,
+    $$
+    E_g\{h(X) w(X)\}=E_\pi\{h(X)\}
+    $$
+    
+    A set of particles $(X_j, w_j), j=1,2, \ldots$, targets $\pi$ if
+    $$
+    \frac{\sum_{j=1}^J h(X_j) w_j}{\sum_{j=1}^J w_j} \stackrel{a.s.}{\to} E_\pi(h(X))
+    $$
+    for any integrable function $h$ as $J \to \infty$, in the sense of \cite{chopin2004clt}. 
+\end{defn}
+
+It is known that the bootstrap and appropriately weighted particle filters target the posterior $f_{X_{1:N}|Y_{1:N}}$ in this sense, as long as they adhere to the procedure in \cite{chopin2004clt}. We now present three helper lemmas. The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
+
+
+\begin{lem}[Change of Particle Measure]
+    \label{lem:change-measure-proper-weights}
+    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j,v_j),j=1,\dots,J\}$ be a sample drawn from $\{(X_j,u_j)\}$ where $(X_j,u_j)$ is represented, on average, $\pi_j J$ times. This could amount to multinomial resampling with probability $\pi_j$, or systematic resampling. Write
+    \[
+    (Y_j,v_j) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
+    \]
+    where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ targets $f_X$.
+\end{lem}
+
+\begin{proof}
+    Let $h$ be an integrable function. 
+    \begin{align*}
+        \E\left[\sum_{j=1}^J h(Y_j) v_j\right] 
+        &= \sum_{j=1}^J \E\left[h(X_{a(j)}) \frac{u_{a(j)}}{\pi_{a(j)}}\right] \\
+        &= \sum_{j=1}^J \E\left[h(X_{j}) u_{j}\right],
+    \end{align*}
+    and similarly for the denominator. Now, the numerator and denominator of the reweighted quantity have the same expectation as the numerator and denominator of the original quantity, so they must converge to $ E_\pi(h(X))$ almost surely as well. 
+\end{proof}
+
+
+\textbf{Remark:} Note that Lemma \ref{lem:change-measure-proper-weights} permits $\pi_{1:J}$ to depend on $\{(X_j,u_j)\}$ as long as the resampling is carried out independently of $\{(X_j,u_j)\}$, conditional on $\pi_{1:J}$.
+
+\begin{lem}[Particle Marginals]
+    \label{lem:marginal-proper-weights}
+    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Also suppose that $Z_j \sim f_{Z|X}(\cdot | X_j)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, $\{(Z_j,u_j)\}$ targets $f_Z$.
+\end{lem}
+\begin{proof}
+    Let $h$ be an integrable function. 
+
+    \begin{align*}
+        \E\left[J^{-1}\sum_{j=1}^J h(Z_j) u_j\right] &= \E\left[\E\left[J^{-1}\sum_{j=1}^J h(x_j) u_j f(Z_j|x_j)\Bigg| X_j=x_j\right]\right] \\
+        &= \E\left[J^{-1}\sum_{j=1}^J h(X_j) u_j f(Z_j|X_j)\right] \\
+        &\stackrel{a.s.}{\to} C_Z \E_{f_X}[h(X) f_{Z|X}(Z|X)] \\
+        &= C_Z \E_{f_Z}[h(Z)],
+    \end{align*}
+
+    where $C_Z$ is the normalizing factor, and similarly the denominator converges to $C_Z$. The result then follows from Slutsky's theorem. 
+    
+\end{proof}
+
+\begin{lem}[Particle Posteriors]
+    \label{lem:posterior-proper-weights}
+    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^\prime_j,u^\prime_j) = \big(X_j,u_j\, f_{Z|X}(z^*|X_j)\big)$. Then, $\{(X^\prime_j,u^\prime_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
+\end{lem}
+
+\begin{proof}
+    The proof is similar to that of Lemma \ref{lem:marginal-proper-weights}, except with Bayes' theorem. 
+\end{proof}
+
+
+\begin{prop}[MOP-1 Targets the Posterior]
+    When $\alpha=1$ or $\phi=\theta$, MOP-$\alpha$ targets the posterior. 
+\end{prop}
+\begin{proof}
+    When $\theta=\phi$, the ratio $\frac{g_{n,j}^\theta}{g_{n,j}^\phi}=1,$ and this reduces to the standard case.
+
+    When $\alpha=1$, and $\theta\neq\phi,$ the proof is as follows. Recursively applying Lemmas \ref{lem:change-measure-proper-weights} \ref{lem:marginal-proper-weights}, and \ref{lem:posterior-proper-weights}, we obtain that 
+    %to step~\ref{mop:step1}, Lemma~2 step~ {mop:weight:update} and Lemma~3 to step~\ref{mop:step2} we obtain that
+    the MOP-1 filter targets the posterior.
+    Specifically, suppose inductively that $\big\{\big(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
+    Then, Lemma \ref{lem:marginal-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big)\big\}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+    Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} \big)\big\}$ therefore targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+    Lemma \ref{lem:change-measure-proper-weights} guarantees that the resampling rule, given by 
+    \[
+    \big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \big(X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}\big/ g^\phi_{n,a(j)}\big),
+    \]
+    with resampling weights proportional to $g^\phi_{n,j}$, therefore also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+\end{proof}
+
+
+This has addressed filtering, but not quite yet the likelihood evaluation. For this we use the following lemma.
+
+\begin{lem}[Likelihood Proper Weighting]
+    \label{lem:lik-proper-weight}
+  $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is properly estimated by either the before-resampling estimate,
+\begin{equation}\label{L1}
+L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
+\end{equation}
+or by the after-resampling estimate,
+\begin{equation}\label{L2}
+L_n^{A,\theta} = L^\phi_n \frac{\sum_{j=1}^Jw^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
+\end{equation}
+where $L^\phi_n$ is as defined in the various algorithms.
+\end{lem}
+
+Here, (\ref{L1}) is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ is properly weighted for $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+To see  (\ref{L2}),
+we write the numerator of (\ref{lem:change-measure-proper-weights}) as
+\[
+L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
+= L^\phi_n \sum_{j=1}^J w_{n,j}^{FC,\theta} \frac{g^\phi_{n,j}}{L_n^\phi}
+\]
+Using Lemma \ref{lem:change-measure-proper-weights}, we resample according to probabilities $\frac{g^\phi_{n,j}}{L_n^\phi}$ to see this is properly estimated by
+\[
+L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j},
+\]
+from which we obtain (\ref{L2}).
+
+Using Lemma \ref{lem:lik-proper-weight}, we obtain a likelihood estimate,
+\[
+L^{A,\theta} = \prod_{n=1}^N \left( L^\phi_n \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}\right).
+\]
+Since $w^{F,\theta}_{n,j}=w^{P,\theta}_{n+1,j}$, this is a telescoping product. The remaining terms are
+$\sum_{j=1}^J w^{P,\theta}_{0,j} = J$ on the denominator and $\sum_{j=1}^J w^{F,\theta}_{N,j}$ on the numerator.
+This derives the MOP/DOP estimate.
+
+$L^{B,\theta}$ should generally be preferred, since there is no reason to include the extra variability from resampling when calculating the conditional log likelihood, but it lacks the nice telescoping product.
+
+
+
 \section{Doubly Off-Policy Particle Filters}
 \label{app:dop}
 
@@ -267,7 +404,7 @@ The following result showcases the correctness of corrections \ref{eq:dmeas-rati
     \begin{equation}
         w_{t,j} := \tilde{w}_{t,j} \cdot p(y^*|x_{t,j}^P,\phi)\cdot r \cdot s
     \end{equation}
-    successfully recovers $\lik(\theta)$.
+    successfully recovers $\lik(\theta)$. Therefore, DOP-$\alpha$ targets the posterior and the likelihood when $\alpha=1$ or $\theta=\phi$. 
 \end{prop}
 
 \begin{proof}
@@ -371,7 +508,57 @@ We are finally ready to introduce the off-policy weighted differentiable particl
 
 Here, we consider a doubly off policy particle filter, meaning that both \code{rprocess} and \code{rmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
 
+\section{Gradients}
 
+\begin{prop}
+    Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The gradient estimate is then
 
+    \begin{equation}
+        \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
+    \end{equation}
+
+    yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
+\end{prop}
+
+\begin{proof}
+    
+Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The likelihood estimate becomes
+\begin{equation*}
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\phi}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
+\end{equation*}
+as we have a telescoping product. Then, as
+
+$$\nabla_\theta \hat\ell(\theta) = \frac{\nabla_\theta \hat\lik(\theta)}{\hat\lik(\theta)} = \frac{\nabla_\theta\left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi}{\prod_{n=1}^N L_n^\phi} =  \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta},$$
+
+The derivative of the log-likelihood estimate is then
+\begin{equation*}
+    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta},
+\end{equation*}
+which we decompose as follows.
+
+Observe that as $\alpha=1$,
+
+$$w_{n,j}^{P,\theta} = w_{n-1,\theta}^{F,\theta}\frac{g_{n,j}^\theta}{g_{n,j}^\phi} = \prod_{i=1}^n \frac{g_{i,k_j}^\theta}{g_{i,k_j}^\phi}.$$
+
+Using the log-derivative identity again,
+$$\frac{\nabla_\theta w_{n,j}^{P,\theta}}{w_{n,j}^{P,\theta}} = \nabla_\theta \log w_{n,j}^{P,\theta} = \nabla_\theta \log \left(\prod_{i=1}^n \frac{g_{i,k_j}^\theta}{g_{i,k_j}^\phi}\right) = \nabla_\theta \sum_{i=1}^n \left(\log g_{i,k_j}^\theta - \log g_{i,k_j}^\phi\right) = \sum_{i=1}^n \nabla_\theta \log g_{i,k_j}^\theta.$$
+
+So 
+$$  \nabla_\theta \sum_{n=1}^N \log g_{n,k_j}^\theta = \nabla_\theta \log\left(\prod_{n=1}^N g_{n,k_j}^\theta\right) =  \nabla_\theta \log\left(\prod_{n=1}^N f_{Y_n|X_n}\left(y_n^* | x_{n,k_j}^{P,\theta}\right)\right) = \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right),$$
+
+and 
+$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{i=1}^N \nabla_\theta \log g_{n,k_j}^\theta = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
+
+Substituting, we have that
+\begin{equation*}
+    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta} =\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,k_j}^{P,\theta} = \frac{1}{J}\sum_{j=1}^J w_{N,k_j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,k_j}^{A, P,\theta}\right),
+\end{equation*}
+and finally, observing that when $\theta=\phi$ we have that $w_{N,j}^{F,\theta}=1$, that 
+\begin{equation*}
+    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
+\end{equation*}
+
+yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
+\end{proof}
 
 \end{document}
