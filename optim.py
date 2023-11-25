@@ -32,24 +32,24 @@ MONITORS = 1
 
 
 
-@partial(jit, static_argnums=2)
+#@partial(jit, static_argnums=2)
 def jgrad_pf(theta_ests, ys, J, covars, thresh, key=None):
     return jax.grad(pfilter_pf)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
 
-@partial(jit, static_argnums=2)
+#@partial(jit, static_argnums=2)
 def jgrad(theta_ests, ys, J, covars, thresh, key=None):
     return jax.grad(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
-@partial(jit, static_argnums=2)
+#@partial(jit, static_argnums=2)
 def jvg(theta_ests, ys, J, covars, thresh, key=None):
     return jax.value_and_grad(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
-@partial(jit, static_argnums=2)
+#@partial(jit, static_argnums=2)
 def jhess(theta_ests, ys, J, covars, thresh, key=None):
     return jax.hessian(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
-@partial(jit, static_argnums=2)
+#@partial(jit, static_argnums=2)
 def jpgrad(thetas, ys, J, sigmas, covars, a, thresh, key=None):
     return jax.grad(perfilter_mean, has_aux=True)(
         thetas, ys, J, sigmas, covars=covars, a=a,thresh=thresh, key=key)
