@@ -163,12 +163,43 @@ Having the system evolve according to $\phi$ but evaluating the likelihood at $\
 \end{equation}
 as we illustrate in Appendix \ref{app:dop}. We use the notation $x_{n,j}^{P, \phi}$ to emphasize that the particles evolve according to $\phi$. 
 
-We claim that this yields a properly weighted particle filter that recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi,$ which is is Algorithm \ref{alg:dop} when $\alpha=1$. The proof can be found in Appendix A. 
+We claim that this yields a particle filter that targets the posterior and recovers the derivative estimate of \citet{doucet2011sf, scibior2021dpf} when $\theta$ is evaluated at $\phi$. The proof can be found in Appendix \ref{app:dop}. 
+
+
+\begin{prop}[Correctness of Doubly Off-Policy Particle Filter Corrections]
+    \label{prop:dop-correctness}
+
+    Let the system evolve according to $\phi \in \Theta,$ that is, with the process model $\process(\cdot | \phi)$ and resampling with probabilities proportional to $f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi})$. Also let $\theta \in \gN(\phi)$. Then, the following corrections in the particle weights,
+    \begin{equation}
+    s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}, \qquad r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)},
+    \end{equation}
+    yield a particle filter that is unbiased for the likelihood, even when $\theta \neq \phi$. 
+    
+    In particular, when $\theta$ is evaluated at $\phi$, its gradient is the same as the estimator of \citet{doucet2011sf},
+    \begin{equation}
+        \nabla_\theta \hat\ell(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*).
+    \end{equation}
+\end{prop}
+
+
+\subsection{Measurement Off-Policy Particle Filters}
+
+With the above, we have the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
+
+There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but have the resampling according to $\phi,$ we can offload the derivative with respect to the process model to the reparametrization trick. 
+
+We therefore make the following assumption in this section only:
+\begin{aspt}[Differentiable Simulator]
+    $\text{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
+\end{aspt}
+
+
+\kevin{Develop theory for mixing-time swapping? Detect when IF2 reaches a neighborhood of the MLE, by detecting whether it has reached a local sort of stationary distribution when the perturbations are lower bounded, e.g. the autocorrelation between the mean vectors to estimate the mixing time or Gelman-Rubin. In practice, just swap when IF2 converges according to the diagnostics. Theory doesn't care, you just need to in a basin of attraction that is strongly convex.}
 
 \subsubsection{Discounting Weights}
 
 
-Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. This is because we introduce a discounting parameter $\alpha$ that affects the weights DOP, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. The value of $\alpha$ simply informs a bias-variance tradeoff, as we elaborate below. 
+Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. We introduce a discounting parameter $\alpha$ that affects the weights, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. The value of $\alpha$ therefore informs a bias-variance tradeoff, as we elaborate below. 
 
 
 \paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$), or considering only the single-step transition dynamics (when $\alpha=0$). This can be thought of as an \textbf{exponentially-weighted moving average}, where $\alpha$ controls the amount of discounting. We elaborate on two special cases below.
@@ -177,28 +208,33 @@ Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filterin
 
 \paragraph{When $\alpha=1,$} the likelihood estimate becomes
 \begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\phi}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\theta}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
 \end{equation}
-as we have a telescoping product. Its derivative is then
+as we have a telescoping product. Its derivative when $\theta=\phi$ is then
 \begin{equation}
     \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta},
 \end{equation}
-the average gradient of each surviving particle's cumulative importance weights. 
+the average gradient of each surviving particle's cumulative importance weights. The filter targets the posterior when $\alpha=1$ even when $\theta \neq \phi,$ and therefore suffers from no asymptotic bias. 
 
 \paragraph{When $\alpha=0,$} the likelihood estimate becomes
 \begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j},
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J r_{n,k_j}s_{n,k_j}}{\sum_{j=1}^J r_{n,j}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j},
 \end{equation}
-and though the telescoping product disappears, this reduces to a series of one-step corrections that leave the filter still properly weighted.
+and though the telescoping product disappears, this reduces to a series of one-step corrections. However, these corrections are insufficient when $\theta \neq \phi,$ and the filter suffers from asymptotic bias unless $\theta=\phi.$ Its gradient when $\theta=\phi$ is therefore 
+\begin{align}
+    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J  \nabla_\theta r_{n,j}s_{n,j}\right) \\
+    &= \frac{1}{J} \sum_{j=1}^J   \frac{\nabla_\theta f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{Y_n, X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)}
+\end{align}
+the gradient of the one-step corrections at each timestep. 
 
 \kevin{Is DOP properly weighted when alpha is not 1 and theta is not phi?}
 
 
-\subsubsection{Correctness of DOP-$\alpha$}
+\subsubsection{Correctness of MOP-$\alpha$}
 
-\begin{prop}[Correctness of DOP-$\alpha$ (Algorithm \ref{alg:dop})]
-    \label{prop:dop-correctness}
-    Algorithm \ref{alg:dop} is a properly weighted particle filter that is unbiased for the likelihood, when either $\alpha=1$ or $\theta=\phi$. 
+\begin{prop}[Correctness of MOP-$\alpha$ (Algorithm \ref{alg:mop})]
+    \label{prop:mop-correctness}
+    Algorithm \ref{alg:mop} is a properly weighted particle filter that is unbiased for the likelihood, when either $\alpha=1$ or $\theta=\phi$. 
     
     In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
     \begin{equation}
@@ -215,19 +251,7 @@ The proof for the above follows from Appendix A, as well as the technical lemmas
 
 It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
 
-\subsection{Measurement Off-Policy Particle Filters}
 
-DOP has the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
-
-There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but have the resampling according to $\phi,$ we can offload the derivative with respect to the process model to the reparametrization trick. 
-
-We therefore make the following assumption in this section only:
-\begin{aspt}[Differentiable Simulator]
-    $\text{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
-\end{aspt}
-
-
-\kevin{Develop theory for mixing-time swapping? Detect when IF2 reaches a neighborhood of the MLE, by detecting whether it has reached a local sort of stationary distribution when the perturbations are lower bounded, e.g. the autocorrelation between the mean vectors to estimate the mixing time or Gelman-Rubin. In practice, just swap when IF2 converges according to the diagnostics. Theory doesn't care, you just need to in a basin of attraction that is strongly convex.}
 
 
 
@@ -384,7 +408,7 @@ $L^{B,\theta}$ should generally be preferred, since there is no reason to includ
 \label{app:dop}
 
 
-Evaluating the off-policy likelihood is possible with a weighted particle filter by using resampling weight $p(y^*_n|x_n;\phi)$ and making two corrections in the particle weight, through multiplying $w_{t,j}$ by the two likelihood ratios below,
+The proof for Proposition \ref{prop:dop-correctness} follows from the below two lemmas. Evaluating the off-policy likelihood is possible with a weighted particle filter by using resampling weight $p(y^*_n|x_n;\phi)$ and making two corrections in the particle weight, through multiplying $w_{t,j}$ by the two likelihood ratios below,
 
 \begin{equation}
     \label{eq:dmeas-ratio}
@@ -399,13 +423,13 @@ and
 
 The following result showcases the correctness of corrections \ref{eq:dmeas-ratio} and \ref{eq:rproc-ratio}.
 
-\begin{prop}
+\begin{lem}
     For $\theta$, $\phi$ that satisfy Assumption \ref{assump:smooth-nbhd}, the following correction in the particle filter weights,
     \begin{equation}
         w_{t,j} := \tilde{w}_{t,j} \cdot p(y^*|x_{t,j}^P,\phi)\cdot r \cdot s
     \end{equation}
-    successfully recovers $\lik(\theta)$. Therefore, DOP-$\alpha$ targets the posterior and the likelihood when $\alpha=1$ or $\theta=\phi$. 
-\end{prop}
+    successfully recovers $\lik(\theta)$. Therefore, DOP targets the posterior and the likelihood.
+\end{lem}
 
 \begin{proof}
     Recall $\lik(\theta) = \E[\lik(\theta,\phi,\Omega, J)]=\int_\Omega \lik(\theta,\phi,\omega, J)\, d\mu(\omega)$ and $\lik(\theta) = \int_\Omega \lik(\theta, \omega, J) d\mu(\omega)$. We want to evaluate
@@ -461,6 +485,67 @@ The following result showcases the correctness of corrections \ref{eq:dmeas-rati
          \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) \cdot r \cdot s \right)  p(x_{1:N} | y_{1:N}^*, \phi) \,  d\mu(\omega) \\
          &=: \int_\Omega \lik(\theta,\phi,\omega, J)\, d\mu(\omega).
      \end{align}
+
+     The proof for an arbitrary functional under the particle measure follows analogously.
+\end{proof}
+
+\begin{lem}[Gradient of Doubly Off-Policy Particle Filter]
+    Let the system evolve according to $\phi \in \Theta,$ that is, with the process model $\process(\cdot | \phi)$ and resampling with probabilities proportional to $f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi})$. Also let $\theta \in \gN(\phi)$. When $\theta$ is evaluated at $\phi$, its gradient is the same as the estimator of \citet{doucet2011sf},
+    \begin{equation}
+        \nabla_\theta \hat\ell(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*).
+    \end{equation}
+\end{lem}
+
+\begin{proof}
+    It is known, from \cite{doucet2009tutorial}, that 
+    $$p_\theta(x_{1:N}|y_{1:N}) = \prod_{n=1}^N \frac{p(x_n|x_{n-1})p(y_n|x_n)}{p(y_n|y_{1:n-1})} = \prod_{n=1}^N \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{\lik_n(\theta)}.$$
+
+    From the above lemma, and the fact that the particle filter is unbiased for the likelihood, we know that
+    \begin{align*}
+        \lik(\theta)
+        &= \int_{x_{1:N}} \prod_{n=1}^N \frac{1}{J}\sum_{j=1}^J p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \frac{1}{J}\sum_{j=1}^J p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \right) \frac{p_\theta(x_{1:N}|y_{1:N})}{p_\phi(x_{1:N}|y_{1:N})}p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}\\
+        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\theta) \right) \left(\prod_{n=1}^N \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \lik_n(\phi)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) \lik_n(\theta)}\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\ 
+        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\phi) \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) }\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}.
+    \end{align*}
+
+    Therefore, under regularity conditions that permit differentiating under the integral sign, using the log-derivative trick, we have
+    \begin{align*}
+        \nabla_\theta \lik(\theta)
+        &= \int_{x_{1:N}} \nabla_\theta \hat\lik(\theta) \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N}\\
+        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N \lik_n(\phi) \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) }\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N \left(\frac{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n)}{\lik_n(\phi)}\right)^{-1} p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \int_{x_{1:N}} \nabla_\theta \left(\frac{1}{p_\phi(x_{1:N}|y_{1:N}) }\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right) dx_{1:N} \\
+        &= \int_{x_{1:N}} \left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\nabla_\theta \log\left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right) dx_{1:N} \\
+        &= \int_{x_{1:N}} p_\theta(x_{1:N},y_{1:N}) \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) dx_{1:N} \\
+        &= \int_{x_{1:N}} \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) p_\theta(x_{1:N}|y_{1:N}) \cdot \lik(\theta) \; dx_{1:N}. 
+    \end{align*}
+
+    Using the log-derivative trick again,
+    \begin{align*}
+        \nabla_\theta \ell(\theta)
+        &= \frac{\nabla_\theta \lik(\theta)}{\lik(\theta)} \\
+        &= \int_{x_{1:N}} \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \E_{x_{1:N}|y_{1:N}, \theta}\left[\nabla_\theta \left(\sum_{n=1}^N\log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right)\right] \\
+        &= \E_{x_{1:N}|y_{1:N}, \theta}\left[\nabla_\theta\log p_\theta(x_{1:N},y_{1:N})\right] \\
+        &= \lim_{J\to\infty} \E_{x_{1:N}|y_{1:N}, \theta}\left[\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log p_\theta(x_{1:N,j}^{A,F},y_{1:N}^*)\right].
+    \end{align*}
+
+    But it also holds that
+    \begin{align*}
+        \nabla_\theta \ell(\theta)
+        &= \frac{\nabla_\theta \lik(\theta)}{\lik(\theta)} \\
+        &= \int_{x_{1:N}} \frac{\nabla_\theta \hat\lik(\theta)}{\lik(\theta)} \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N} \\
+        &= \int_{x_{1:N}} \nabla_\theta \hat\ell(\theta) \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N}\\
+        &= \lim_{J\to\infty} \E_{x_{1:N}|y_{1:N}, \phi}\left[\nabla_\theta \hat\ell(\theta)\right].
+    \end{align*}
+
+    and we see that $$\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log p_\theta(x_{1:N,j}^{A,F},y_{1:N}^*)$$ and $$\nabla_\theta \hat\ell(\theta)$$ both converge to the same thing in expectation. They are both particle approximations under the posterior where the variance of each is bounded, therefore one can apply the particle CLT from \cite{chopin2004clt} to obtain that they are both consistent estimates of the score.
+
+    In fact, when $\theta=\phi,$ they are the same in distribution. \kevin{claim}
+
+    \kevin{This is a far weaker result than what I really wanted. This just gives consistency. Want equality in distribution.}
 \end{proof}
 
 
@@ -506,9 +591,9 @@ We are finally ready to introduce the off-policy weighted differentiable particl
 \end{algorithm}
 
 
-Here, we consider a doubly off policy particle filter, meaning that both \code{rprocess} and \code{rmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
+Here, we consider a doubly off policy particle filter, meaning that both \code{rprocess} and \code{dmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
 
-\section{Gradients}
+\section{Measurement Off-Policy Particle Filters}
 
 \begin{prop}
     Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The gradient estimate is then
