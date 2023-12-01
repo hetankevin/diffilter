@@ -13,7 +13,7 @@
 \newcommand{\off}{\operatorname{off}}
 \newcommand{\on}{\operatorname{on}}
 
-\title{Automatic Differentiation to Accelerate Inference for Partially Observed Stochastic Processes}
+\title{Accelerated Inference for Partially Observed Stochastic Processes with Automatic Differentiation}
 \author{Kevin Tan, Giles J. Hooker, Edward L. Ionides}
 \date{}
 
@@ -23,7 +23,7 @@
 \maketitle
 \begin{abstract}
     
-Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamic systems have proved resistant to AD techniques due to (1) the requirement for simulation-based inference that does not require access to the system's transition probabilities and (2) the issue that widely used particle filter algorithms yield a likelihood function that is discontinuous as a function of the model parameters. We propose a new representation that embeds existing methods in a theoretical framework that readily permits extension to a new class of algorithms, providing opportunities for optimizing a bias/variance tradeoff. Further, we develop optimization algorithms suited to the Monte Carlo properties of the derivative estimate, including a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from iterated filtering can beat current state-of-the-art methods on a challenging scientific benchmark problem.
+Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques due to (1) the requirement for simulation-based inference that does not require access to the system's transition probabilities and (2) the issue that widely used particle filter algorithms yield a likelihood function that is discontinuous as a function of the model parameters. We propose a new representation that embeds existing methods in a theoretical framework that readily permits extension to a new class of algorithms, providing opportunities for optimizing a bias/variance tradeoff. Further, we develop optimization algorithms suited to the Monte Carlo properties of the derivative estimate, including a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from iterated filtering can beat current state-of-the-art methods on a challenging scientific benchmark problem.
 \end{abstract}
 
 \section{Introduction}
@@ -72,7 +72,7 @@ While the Monte-Carlo Adjusted Profile (MCAP) from \citet{Ionides_mcap} provides
 
 Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king2016pomp, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{jax} Python package from \citet{jax2018github}. 
 
-
+\kevin{Terminology: Plug-and-play (clearly definable, but not well-known, define at start of paper and don't use in title/abstract), likelihood-free maximum likelihood (seemingly an oxymoron, rationale being there is no need to evaluate density, bayesians call likelihood densities, plus we only approximate the likelihood and don't really have it), simulation-based inference (loaded term)}
 
 \subsection{Significance Statement}
 Many scientific models involve highly nonlinear stochastic dynamical systems which can be observed only via noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method outperforms previous approaches on a challenging problem in epidemiology. This is implemented in a precursor to a Python counterpart to the popular \texttt{pomp} package by \citet{king2016pomp, king2017pompmanual} that includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation.
@@ -88,6 +88,11 @@ We call $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ the process mod
 
 The above are all defined on a single probability space $(\Omega, \Sigma, \prob),$ where $\omega \in \Omega$ denotes an element of the sample space that can be thought of as a random seed. For notational simplicity, we omit the dependence of the likelihood and other suitable calculations on $X_0.$
 
+\paragraph{Seed-Fixing, Coupling, and the Method of Common Random Numbers, Coupling:}
+
+In the rest of this paper, we will identify the seed with an element of the sample space. We do so because the seed determines the entire sequence of pseudo-random numbers as generated by a computer, to maintain an algorithmic and practical interpretation of our theory. When two algorithms share the same seed, this corresponds to the method of common random numbers. 
+
+
 \section{A Smooth Extension of the Particle Filter}
 
 \textbf{Intuition:} Our theoretical framework for automatic differentiation for the particle filter hinges on the following observation. Instead of seeking to differentiate $\ell(\theta)$ directly, we instead focus on differentiating through a suitable fixed-seed reweighting of a bootstrap filter. The intuition is as follows. Consider a particle filter likelihood estimate where the system (i.e. \textbf{both the state transitions and resampling}) evolves under a parameter $\phi \in \Theta$ and the seed, or sample space element, is fixed at $\omega \in \Omega.$ Conditional on $\omega$ and $\phi,$ one can reweight the likelihood estimate to instead evaluate the likelihood at another (sufficiently nearby) $\theta \in \Theta.$ 
@@ -95,6 +100,8 @@ The above are all defined on a single probability space $(\Omega, \Sigma, \prob)
 Differentiating this reweighted likelihood estimate with respect to $\theta$ then amounts to differentiating through the reweighting scheme, which is differentiable if the densities used for the reweighting are differentiable. We call this simulation-and-reweighting scheme an \textbf{off-policy} likelihood estimate, as it is similar in spirit to the off-policy methods found in the reinforcement learning literature.
 
 The above intuition is formalized below.
+
+\kevin{Method of Common Random Numbers, Coupling}
 
 \subsection{Doubly Off-Policy Particle Filters}
 
@@ -181,17 +188,27 @@ We claim that this yields a particle filter that targets the posterior and recov
     \end{equation}
 \end{prop}
 
+\kevin{Cut down on DOP discussion in actual manuscript, remove any references to this as an algorithm, just talk about the idea of an off-policy system/particle filter. Bottom paragraph is the punchline.}
+
+\paragraph{Intuition:} Having the system evolve according to $\phi$ but evaluating the likelihood at $\theta$ requires us to reweight the conditional likelihood at each timestep by likelihood ratios corresponding to the process and measurement models. This corresponds to making two corrections in the particle weights at each timestep, one for the process model and one for the measurement model. The measurement correction cannot be avoided, but one can bypass the process correction -- with the reparametrization trick. We can do when we assume the simulator is differentiable with the reparametrization trick, as \cite{corenflos2021ot} also assume. Doing so then yields an algorithm that only requires a simulator, and does not require the process densities. 
+
 
 \subsection{Measurement Off-Policy Particle Filters}
 
-With the above, we have the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). However, the above algorithm requires access to likelihood ratios, and is therefore not compatible with simulation-based inference. 
+With the above procedure, we have the entire system evolve according to $\phi$, and we differentiate through the likelihood ratios, which are smooth conditional on the resampling being the same (which in turn happens when $\theta \approx \phi$). However, doing so requires access to likelihood ratios, and as such Algorithm \ref{alg:dop} is therefore not compatible with simulation-based inference. 
 
-There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but have the resampling according to $\phi,$ we can offload the derivative with respect to the process model to the reparametrization trick. 
+There is a workaround. Consider the case where you have access to a differentiable simulator compatible with the reparametrization trick. If we have the state transitions evolve according to $\theta,$ but have the resampling according to $\phi,$ we can offload the derivative with respect to the process model to the reparametrization trick, as in \cite{corenflos2021ot}. This corresponds to the MOP-$\alpha$ procedure in Algorithm \ref{alg:mop}. 
 
 We therefore make the following assumption in this section only:
 \begin{aspt}[Differentiable Simulator]
     $\text{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
 \end{aspt}
+
+Algorithm \ref{alg:mop} provides a weighted particle filter that targets the posterior under $\theta$, but when differentiated yields either the low-bias but high-variance gradient estimator of \cite{poyiadjis11}, the high-bias but low-variance estimator of \cite{blei2018vsmc}, or an intermediate, interpolating quantity that can optimize a bias-variance tradeoff. This is controlled by a discounting parameter $\alpha$. The intuition behind this procedure is as follows. 
+
+\paragraph{Intuition:} Broadly, if $\theta\neq\phi,$ one can first run a vanilla particle filter to recover values for the particles with the process model under $\phi.$ One can then run an accordingly reweighted particle filter with the process model under $\theta$, but resampling according to the measurement model under $\phi$, with the same indices as the original vanilla particle filter. This requires one to set the same random seed for both particle filters. This then yields a slightly-unconventionally weighted particle filter that targets the posterior, but has some very nice gradient properties; as we outline in the remainder of this section.
+
+\paragraph{Special Case:} When $\theta = \phi$, one can simply set the particles under $\phi$ to be copies of the particles under $\theta$. Gradients with respect to $\theta$ now treat functions of the particles under $\phi$ as constants, corresponding to the stop-gradient trick in \cite{scibior2021dpf}. This therefore provides a theoretical framework for their stop-gradient trick, which we happily use in our numerical experiments for simplicity. 
 
 
 \kevin{Develop theory for mixing-time swapping? Detect when IF2 reaches a neighborhood of the MLE, by detecting whether it has reached a local sort of stationary distribution when the perturbations are lower bounded, e.g. the autocorrelation between the mean vectors to estimate the mixing time or Gelman-Rubin. In practice, just swap when IF2 converges according to the diagnostics. Theory doesn't care, you just need to in a basin of attraction that is strongly convex.}
@@ -199,7 +216,7 @@ We therefore make the following assumption in this section only:
 \subsubsection{Discounting Weights}
 
 
-Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. We introduce a discounting parameter $\alpha$ that affects the weights, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. The value of $\alpha$ therefore informs a bias-variance tradeoff, as we elaborate below. 
+Observe that at Algorithm \ref{alg:mop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. We introduce a discounting parameter $\alpha$ that affects the weights, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. As previously mentioned, the value of $\alpha$ therefore informs a bias-variance tradeoff. We elaborate on this below. 
 
 
 \paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$), or considering only the single-step transition dynamics (when $\alpha=0$). This can be thought of as an \textbf{exponentially-weighted moving average}, where $\alpha$ controls the amount of discounting. We elaborate on two special cases below.
@@ -208,48 +225,63 @@ Observe that at Algorithm \ref{alg:dop}, at each timestep the corrected filterin
 
 \paragraph{When $\alpha=1,$} the likelihood estimate becomes
 \begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\theta}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\theta}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
 \end{equation}
 as we have a telescoping product. Its derivative when $\theta=\phi$ is then
 \begin{equation}
-    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta},
+    \nabla_\theta \hat{\ell}(\theta) := 
+        \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),
 \end{equation}
 the average gradient of each surviving particle's cumulative importance weights. The filter targets the posterior when $\alpha=1$ even when $\theta \neq \phi,$ and therefore suffers from no asymptotic bias. 
 
 \paragraph{When $\alpha=0,$} the likelihood estimate becomes
 \begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J r_{n,k_j}s_{n,k_j}}{\sum_{j=1}^J r_{n,j}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j},
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J w_{n,j}^{F,\theta} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})},
 \end{equation}
-and though the telescoping product disappears, this reduces to a series of one-step corrections. However, these corrections are insufficient when $\theta \neq \phi,$ and the filter suffers from asymptotic bias unless $\theta=\phi.$ Its gradient when $\theta=\phi$ is therefore 
-\begin{align}
-    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J  \nabla_\theta r_{n,j}s_{n,j}\right) \\
-    &= \frac{1}{J} \sum_{j=1}^J   \frac{\nabla_\theta f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{Y_n, X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)}
-\end{align}
-the gradient of the one-step corrections at each timestep. 
+and though the telescoping product disappears, this reduces to a series of one-step corrections. However, these corrections are insufficient when $\theta \neq \phi,$ and the filter suffers from asymptotic bias unless $\theta=\phi.$ Its gradient when $\theta=\phi$ is therefore
 
-\kevin{Is DOP properly weighted when alpha is not 1 and theta is not phi?}
+    \begin{equation}
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+    \end{equation}
+
+the gradient of the vanilla particle filter where the resampling correction is omitted as found in \cite{blei2018vsmc} -- when applied to the bootstrap filter. As \cite{scibior2021dpf} remark, this estimator only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate only considers the surviving particles at time $N$, which is the other extreme where dependencies across time are fully tracked. 
+
 
 
 \subsubsection{Correctness of MOP-$\alpha$}
 
 \begin{prop}[Correctness of MOP-$\alpha$ (Algorithm \ref{alg:mop})]
     \label{prop:mop-correctness}
-    Algorithm \ref{alg:mop} is a properly weighted particle filter that is unbiased for the likelihood, when either $\alpha=1$ or $\theta=\phi$. 
+    When either $\alpha=1$ or $\theta=\phi$, Algorithm \ref{alg:mop} is a particle filter that targets the posterior and is unbiased for the likelihood under $\theta$. 
     
     In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
     \begin{equation}
         \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),
     \end{equation}
 
-    and when $\alpha=0,$ is is the same as differentiating through the fixed-seed likelihood estimate yielded by a vanilla particle filter.
+    and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
+
+    \begin{equation}
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+    \end{equation}
+
+    that as \cite{scibior2021dpf} show corresponds to differentiating through the fixed-seed likelihood estimate yielded by a vanilla particle filter.
 \end{prop}
 
-The proof for the above follows from Appendix A, as well as the technical lemmas for properly weighted particle filters. 
+The proof for the above follows from Appendices A and C, as well as the technical lemmas for properly weighted particle filters. 
 
 
 \subsubsection{Practical Considerations}
 
 It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
+
+
+\section{Practical Maximum-Likelihood Inference}
+
+The DOP-$\alpha$ and MOP-$\alpha$ procedures therefore provide us with a unifying framework for reasoning about smooth extensions of weighted particle filters that target the posterior and provide reasonable gradient estimates when differentiated. This fixed-seed reweighting hopefully alleviates some confusion that can arise from differentiating through a quantity yielded by ostensibly non-differentiable resampling. This is because in the former we differentiate through smooth likelihood ratios, and in the latter we differentiate through a differentiable simulator with the reparametrization trick and through smooth likelihood ratios in order to adjust for the resampling. 
+
+This still leaves us with the question of designing a reasonably effective procedure for likelihood maximization with these new tools. 
+
 
 
 
@@ -549,6 +581,36 @@ The following result showcases the correctness of corrections \ref{eq:dmeas-rati
 \end{proof}
 
 
+\begin{lem}
+
+Consider the case of DOP-$\alpha$ when $\alpha=0$ and $\theta=\phi$. The gradient estimate is then
+
+    \begin{equation}
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta\right),
+    \end{equation}
+
+    yielding the gradient estimator of \cite{blei2018vsmc} that \cite{scibior2021dpf} show is the gradient of a vanilla particle filter when the resampling terms are dropped.
+
+\end{lem}
+
+\begin{proof}
+    When $\alpha=0,$ the likelihood estimate becomes
+\begin{equation}
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J r_{n,j}s_{n,j}}{\sum_{j=1}^J r_{n,j}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j}.
+\end{equation}
+
+Its gradient when $\theta=\phi$ is therefore 
+\begin{align*}
+    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right) \\
+    &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right)} \\
+    &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta r_{n,j}s_{n,j}}{\sum_{j=1}^J r_{n,j}s_{n,j}} \\
+    &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{Y_n, X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)} \\
+    &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta\right),
+\end{align*}
+where we use the log-derivative trick, observe that $\sum_{j=1}^J r_{n,j}s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. 
+\end{proof}
+
+
 \subsection{Off-Policy Weighted Differentiable Particle Filter}
 
 We are finally ready to introduce the off-policy weighted differentiable particle filter. In the event where a seed is fixed, all expressions in Algorithm \ref{alg:dop} can be considered to be conditional on $\omega \in \Omega$.  
@@ -586,7 +648,7 @@ We are finally ready to introduce the off-policy weighted differentiable particl
             for $j$ in $\seq{1}{J}$ \label{dop-alpha:step2}
             \STATE After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
             \ENDFOR
-		\RETURN likelihood estimate $\hat{\lik}(\theta) = \lik(\theta, \phi, \omega, J) := \prod_{n=1}^N L_n^{A,\theta,\alpha}$, filtering distribution $\{(x_{N,j}^P, w^{F,\theta}_{N,j})\}.$
+		\RETURN likelihood estimate $\hat{\lik}(\theta) = \lik(\theta, \phi, \omega, J) := \prod_{n=1}^N L_n^{A,\theta,\alpha}$, filtering distribution $\{(X_{N,j}^{F, \theta}, w^{F,\theta}_{N,j})\}.$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -595,7 +657,46 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
 
 \section{Measurement Off-Policy Particle Filters}
 
-\begin{prop}
+\begin{algorithm}[H]
+\centering
+	\caption{Measurement Off-Policy-$\alpha$}
+    \label{alg:mop}
+	\begin{algorithmic}[1]
+	     \STATE \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process(x_{n+1}|x_n, \theta)$, evaluation parameter $\theta$, behavior parameter $\phi$, seed $\omega$.
+        \IF{$\theta \neq \phi$}
+            \STATE Run a particle filter once with parameters $\phi$ to obtain $X_{n,j}^{P,\phi}, X_{n,j}^{F,\phi}$, with seed $\omega$.
+        \ELSE
+        \STATE Set $X_{n,j}^{P,\phi}, X_{n,j}^{F,\phi}$ to be copies of $X_{n,j}^{P,\theta}, X_{n,j}^{P,\theta}$ in the rest of the algorithm.
+        \ENDIF
+		\STATE Initialize filter particles ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\cdot\giventh{\theta}\right)$, relative weights $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$. Fix $\omega.$
+		\FOR{$n=1,...,N$}
+            \STATE Prediction weights with discounting: $w_{n,j}^{P,\theta} = \big(w_{n-1,j}^{F,\theta}\big)^\alpha$ for $j\ \mathrm{in}\ \seq{1}{J}$
+            \label{mop-alpha:discount}
+            \STATE Simulate for prediction:
+            ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\cdot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \label{mop-alpha:step1}
+            \STATE Evaluate measurement density:
+            $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$
+            \STATE Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+            \STATE Conditional likelihood under $\phi$: 
+            $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+            \label{dop-alpha:Lphi}
+            \STATE Normalize weights:
+            $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+            for $j\ \mathrm{in}\ \seq{1}{J}$
+            \STATE Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \label{dop-alpha:systematic}
+            \STATE Resample particles: ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$
+            \STATE Filter weights corrected for resampling:
+            $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \label{dop-alpha:weight:update}
+            \STATE Resample filter weights:
+            $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+            for $j$ in $\seq{1}{J}$ \label{dop-alpha:step2}
+            \STATE After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+            \ENDFOR
+		\RETURN likelihood estimate $\hat{\lik}(\theta) = \lik(\theta, \phi, \omega, J) := \prod_{n=1}^N L_n^{A,\theta,\alpha}$, filtering distribution $\{(X_{N,j}^{F, \theta}, w^{F,\theta}_{N,j})\}.$
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{lem}
     Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The gradient estimate is then
 
     \begin{equation}
@@ -603,7 +704,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     \end{equation}
 
     yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
-\end{prop}
+\end{lem}
 
 \begin{proof}
     
@@ -645,5 +746,35 @@ and finally, observing that when $\theta=\phi$ we have that $w_{N,j}^{F,\theta}=
 
 yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
 \end{proof}
+
+\begin{lem}
+
+Consider the case of MOP-$\alpha$ when $\alpha=0$ and $\theta=\phi$. The gradient estimate is then
+
+    \begin{equation}
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+    \end{equation}
+
+    yielding the gradient estimator of \cite{blei2018vsmc} that \cite{scibior2021dpf} show is the gradient of a vanilla particle filter when the resampling terms are dropped -- when applied to the bootstrap filter.
+
+\end{lem}
+
+\begin{proof}
+    When $\alpha=0,$ the likelihood estimate becomes
+\begin{equation}
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J s_{n,j} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}.
+\end{equation}
+
+Its gradient when $\theta=\phi$ is therefore 
+\begin{align*}
+    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right) \\
+    &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)} \\
+    &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta s_{n,j}}{\sum_{j=1}^J s_{n,j}} \\
+    &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)}{f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \phi}; \phi)} \\
+    &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+\end{align*}
+where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. 
+\end{proof}
+
 
 \end{document}
