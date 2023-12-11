@@ -291,12 +291,20 @@ This still leaves us with the question of designing a reasonably effective proce
 
 \section{Numerical Experiments}
 
+\kevin{Do groups of ten and take the best one from each group. Omit old IF2 from figure in the paper, provide complete figure with old IF2 in the appendix, saying that we modified the settings because of more modern practice. }
+
+\kevin{IFAD beats IF2 x percent of the time on 100 paired runs, but the bigger thing is that it gets close to the MLE without much effort. Previously, we'd have to do many searches, plus refinement (which is necessary, as we can see from the IF2 boxplot, it is easy to fool yourself into thinking that because you see the plateau that is the MLE). This includes likelihood profiling diagnostics, which are very computationally intensive. Now we can just take the best of ten searches -- IFAD does the refinement.}
+
 \kevin{IFAD vs IF2, AD vs IF2, IFAD0 vs IFAD1, AD0 vs AD1 in Dacca, local and global plots, convergence line plot of IFAD vs IF2, Dacca data plots, toy model from IF2 paper, AD0 vs AD1 gradient histograms, MSE of AD0 and AD1 gradient estimates as J increases on analytically tractable toy model from IF2 paper or OU2 in pomp}
+
 
 \kevin{Main plots are the local and global 2-way comparison plots of IFAD1 vs IF2, AD1 vs IF2. Visualize the Q-Q plots in the appendix, and use alternate representations as boxplots (or histograms) with dashed line for the maximum in the main paper.}
 
 \citet{liu2023bridging} have established that the straight-through estimator can be thought of as a first-order approximation of the gradient.
 \kevin{Benchmark DOP vs straight-through estimator/reinmax in MOP}
+
+
+\kevin{Have an outsider read the manuscript afterwards.}
 
 
 
