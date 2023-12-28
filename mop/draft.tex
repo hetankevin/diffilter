@@ -429,13 +429,37 @@ Figure \ref{fig:sir} depicts the above compartmental model that we use to benchm
 
 To prevent exploding gradients given the high variance in the MOP-1 estimator, we scale the gradient to have norm 1 before performing vanilla gradient descent, and use a linear cooling schedule of $0.2$ to $ 0.0001$. We chose to use vanilla gradient descent for simplicity, and to demonstrate that minimal tuning was required to have IFAD perform well. 
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[scale=0.53]{imgs/095/pairs.png}
     \includegraphics[scale=0.53]{imgs/095/qq.png}
-    \caption{Caption}
+    \caption{Scatterplots depicting the performance of IFAD against that of IF2. Left: Paired searches from the same starting point. Right: Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 5 log-likelihood units of it. }
     \label{fig:scatter}
 \end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{imgs/095/boxplot.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{imgs/095/optim.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+\begin{figure}[u]
+    \centering
+    \includegraphics{imgs/095/hist.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
 
 
 % The 60 more iterations of IF2 yielded largely not a huge improvement over the initial coarse solution of 40 iterations. This demonstrates what we have mentioned earlier: that although IF2 manages to quickly find a decent coarse solution, it struggles to squeeze out those last few units of log-likelihood improvement. The 60 more iterations of gradient descent, however, successfully refines this solution, getting much closer to the MLE on average. 
