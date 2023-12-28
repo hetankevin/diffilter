@@ -3,6 +3,7 @@
 \usepackage{natbib}
 
 \usepackage{enumitem}
+\usepackage{tikz}
 \setlist{nosep} % to reduce space in lists
 
 \setlength{\parskip}{0.5em}
@@ -31,15 +32,15 @@ Automatic differentiation (AD) has driven recent advances in machine learning, i
 Maximum-likelihood estimation for inference in partially observed stochastic processes, also known as, continuous-state continuous-time hidden Markov models (HMMs), partially-observed Markov processes (POMPs), or partially-observed stochastic nonlinear dynamical systems, is a challenging problem that faces several challenges: 
 \begin{enumerate}
     \item Intractable likelihood functions, bypassed with the approaches of simulated likelihood and likelihood-free inference. 
-    \item The desire for simulation-based inference without access to the transition density of the latent Markov process, with various methods created by \cite{welch2009abc, wood2010sl, doucet2010pmcmc, Ionides_infdynsys, Ionides_infpomp}. 
+    \item The desire for simulation-based inference without access to the transition density of the latent Markov process, with various methods created by \cite{welch2009abc, wood2010sl, doucet2010pmcmc, ionides08, ionides15}. 
     \item Accurate parameter estimation in the presence of significant Monte-Carlo noise in the likelihood estimate.
 \end{enumerate}
 
 Many approaches to inference in these scenarios (such as the EM algorithm, the various Kalman filter variants, and MCMC) either struggle with intractable likelihood functions when the models are complex, or assume access to the probability density of next states given the current state. This is a problem in some critical applications, such as disease modeling, where the models are complex enough such that even obtaining the transition density is an intractable problem. However, the particle filter with the bootstrap proposal, a popular method for solving the filtering problem in partially-observed dynamical systems, provides an unbiased estimate of the likelihood (\cite{delmoral2004feynman}) without requiring evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
 
-This is the backbone behind the only simulation-based full-information maximum likelihood method available in the literature thus far, the improved iterated filtering algorithm of \citet{Ionides_infpomp}. \citet{Ionides_infpomp} utilize the bootstrap filter for perform maximum likelihood estimation with an iterated perturbed Bayes map, successfully tackling challenging problems in epidemiology that available Bayesian methodology fails to solve. 
+This is the backbone behind the only simulation-based full-information maximum likelihood method available in the literature thus far, the improved iterated filtering algorithm of \citet{ionides15}. \citet{ionides15} utilize the bootstrap filter for perform maximum likelihood estimation with an iterated perturbed Bayes map, successfully tackling challenging problems in epidemiology that available Bayesian methodology fails to solve. 
 
-Still, maximum likelihood parameter estimation can be challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. For example, though in practice the algorithm of \citet{Ionides_infpomp} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood. \citet{Ionides_mcap} attempt to address the third problem, albeit with a computationally-expensive approach. 
+Still, maximum likelihood parameter estimation can be challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. For example, though in practice the algorithm of \citet{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood. \citet{Ionides_mcap} attempt to address the third problem, albeit with a computationally-expensive approach. 
 
 \subsection{Automatic Differentiation for Particle Filters}
 
@@ -155,6 +156,7 @@ Lastly, we require the following regularity conditions.
 \end{aspt}
 
 \begin{aspt}[Locally Bounded Derivative]
+\label{assump:local-bounded-derivative}
 Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and a constant $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$ such that
     $$
     \|\nabla \ell(\theta, \phi, \omega, J)\|_2<G(\theta) \leq G<\infty
@@ -275,21 +277,168 @@ The proof for the above follows from Appendices A and C, as well as the technica
 
 It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
 
+\paragraph{Bottom Line:} The DOP-$\alpha$ and MOP-$\alpha$ procedures therefore provide us with a unifying framework for reasoning about smooth extensions of weighted particle filters that target the posterior and provide reasonable gradient estimates when differentiated. This fixed-seed reweighting alleviates issues that can arise from differentiating through a quantity yielded by ostensibly non-differentiable resampling. This is done by either (1) differentiating through smooth likelihood ratios, or (2) differentiating through a differentiable simulator with the reparametrization trick (and through smooth likelihood ratios to adjust for the resampling). 
+
 
 \section{Practical Maximum-Likelihood Inference}
 
-The DOP-$\alpha$ and MOP-$\alpha$ procedures therefore provide us with a unifying framework for reasoning about smooth extensions of weighted particle filters that target the posterior and provide reasonable gradient estimates when differentiated. This fixed-seed reweighting hopefully alleviates some confusion that can arise from differentiating through a quantity yielded by ostensibly non-differentiable resampling. This is because in the former we differentiate through smooth likelihood ratios, and in the latter we differentiate through a differentiable simulator with the reparametrization trick and through smooth likelihood ratios in order to adjust for the resampling. 
 
-This still leaves us with the question of designing a reasonably effective procedure for likelihood maximization with these new tools. 
+This still leaves us with the question of designing a reasonably effective procedure for likelihood maximization with these new tools. We propose a simple algorithm we call Iterated Filtering with Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad} that amounts to warm-starting gradient descent or some other reasonable first or second order procedure with the output of an initial search of IF2. 
 
+\paragraph{Summary:} A coarse solution is found by running IF2 with an aggressive random walk standard deviation (learning rate) and a cooling schedule that is \textbf{bounded below}, until the search stalls to an initial "convergence" to what is hopefully a neighborhood of the MLE. We can then use gradient descent, or other first or second order gradient methods, to refine this coarse solution.
 
+The initial "convergence" happens fairly quickly in practice. In the case of the Dacca cholera model of \cite{king08}, when a geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations of IF2. In comparison, often 100 or 200 iterations of IF2 are used for an initial global search. \cite{ionides15}, for example, use 100 iterations with the Dacca cholera model of \cite{king08}, while \cite{wheeler23} use 200 with Model 1 in \cite{Lee_haiticholera}. 
 
+\paragraph{Rationale:}
 
+IF2 converges quickly to a neighborhood of some reasonably good local optimum in practice, but then struggles to squeeze out the last few log-likelihood units. Conversely, gradient descent (and other first or second order gradient methods) can get stuck in saddle points and less desirable local minima when the likelihood is nonconvex. Warm-starting gradient methods with IF2 lets us get close enough to the MLE for gradient methods to shine, as in most cases regularity conditions ensure that the likelihood surface is well-behaved enough in this neighborhood that the aforementioned issues with saddle points and local minima are alleviated. Combining these two methods in this way lets us enjoy the best of both worlds.
+
+\begin{algorithm}[H]
+\centering
+	\caption{Iterated Filtering with Automatic Differentiation}
+    \label{alg:ifad}
+	\begin{algorithmic}[1]
+	     \STATE \textbf{Input:} Number of particles $J$, timesteps $T$, measurement model $p(y_t^*|x_t, \theta)$, simulator $\process(x_{t+1}|x_t, \theta),$ IF2 cooling schedule $\eta_n$, MOP-$\alpha$ discounting parameter $\alpha$.
+		\STATE Initialize $\theta_0$, $n=0.$
+        \STATE Run IF2 until initial "convergence" under cooling schedule $\eta_n$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_n := \frac{1}{J}\sum_{j=1}^J \Theta_j.$
+		\WHILE{Procedure not converged:}
+		\STATE Draw $\omega \in \Omega$
+		\STATE Perform forward pass by running Algorithm \ref{alg:mop} with discounting parameter $alpha$ to obtain $\loglik(\theta_n, \theta_n, \omega, J).$
+		\STATE Obtain $g(\theta_n) = \nabla_{\theta_n} (-\loglik(\theta_n, \theta_n, \omega, J))$ via backpropagation, $H(\theta_n)$ such that $\lambda_{\min}(H) \geq c$.
+		\STATE Obtain $\eta$ with line search or an annealing schedule.
+		\STATE Update $\theta_{n+1} := \theta_n - \eta (H(\theta_n))^{-1} g(\theta_n)$, $n:=n+1.$
+		\ENDWHILE
+		\STATE Return $\hat{\theta} := \theta_n.$
+	\end{algorithmic}
+\end{algorithm}
+
+\subsection{Theoretical Guarantee}
+
+We first analyze the performance of gradient descent, Newton's method, or any iterative method that multiplies the particle estimate of the gradient with the inverse of a matrix with minimum eigenvalue bounded below, in the case where the log-likelihood surface is $\gamma$-strongly convex. In this case, these methods enjoy a linear convergence guarantee:
+
+\begin{thm}[Convergence of Gradient Methods]
+\label{thm:convergence}
+
+Consider a variant of Algorithm \ref{alg:ifad} where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
+
+Choose $J$ according to the maximum of the $J$ prescribed in Lemmas \ref{lemma:grad_bound} and $\ref{lemma:hess_bound}$ with failure probability $\delta/2$ each. Let $H(\theta_n)$ be a matrix possibly dependent on $\theta_n$ with minimum eigenvalue always greater than some $c>0$. Choose the learning rate $\eta$ and error tolerance $\epsilon$ such that, where $\beta$ is the Armijo condition hyperparameter,
+\begin{equation}
+    \eta \leq \frac{c(1-\beta)}{\Gamma}, \;\; \epsilon \leq \frac{c(1-\beta)}{2\Gamma}||g(\theta_n)||.
+\end{equation}
+
+Then the following holds with probability at least $1-\delta$:
+\begin{equation}
+\ell(\theta^*) - \ell(\theta_{n+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_n))
+\end{equation}
+
+and the algorithm eventually terminates after we obtain $||\nabla_\theta \ell(\theta_n)|| \leq (1+\sigma) \epsilon$.
+\end{thm}
+
+The proof of this result uses the concentration inequalities from \cite{delmoral2011ci}, and leans upon the analysis of \cite{mahoney2016subsampled}. We defer the proof to Appendix \ref{app:ifad}
+
+\paragraph{Takeaways for IFAD (Algorithm \ref{alg:ifad}):}
+
+The gradient stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the IF2 stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. This happens fairly often in practice, for example, when sufficient regularity conditions for local asymptotic normality of the MLE hold.
+
+We conjecture that this applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE. IF2 posesses some SGD-like qualities, including what looks like linear convergence to a ball around the MLE with width determined by the random walk standard deviation. We will explore this conjecture in future work.
+
+\subsection{Runtime}
+
+Even with the increased computational cost of automatic differentiation, Algorithm \ref{alg:ifad} is reasonably fast, as by the cheap gradient principle from \cite{kakade2019provably}, a gradient operation takes no more than 6 times the runtime of the particle filter. 
+
+In addition, re-implementation of the particle filter, iterated filtering, and Algorithm \ref{alg:ifad} itself in \texttt{JAX} (\cite{jax2018github}) led to considerable speedups. This can be attributed to both GPU acceleration and the just-in-time (JIT) compilation functionality that \texttt{JAX} provides. When tested on a computer with an Intel i9-13900K processor, 128GB of RAM, and a NVIDIA RTX3090 GPU, each post-compilation particle filtering operation on the Dacca cholera model from \cite{king08} with 10000 particles took roughly 379 milliseconds (with a standard deviation of 279 microseconds over seven runs), a considerable improvement over the existing performance in the widely used \texttt{pomp} package of \cite{king2016pomp}, which took between 6.19 to 6.39 seconds over ten runs on the same machine.
 
 
 
 
 \section{Numerical Experiments}
+
+\subsection{Cholera in Bangladesh}
+
+To compare the performance of IFAD against that of IF2, we fit the very same model first proposed in \cite{king08} that \cite{ionides15} use to demonstrate the capabilities of IF2. This is a stochastic SIR compartmental model with transition and measurement uncertainty, where the population at time $t$, $H(t)$, is divided into the susceptible compartment $S(t)$, infected compartment $I(t)$, and three ($k=3$) recovered compartments $R_1(t), ..., R_k(t)$ denoting varying degrees of cholera immunity. We write $M(t)$ for the cholera deaths in each month. As in \cite{ionides15}:
+
+\begin{itemize}
+    \item The \textbf{transition dynamics} follow this series of stochastic differential equations:
+
+    \begin{align}
+        d S&=\left(k \epsilon R_k+\delta(S-H)-\lambda(t) S\right) d t+d H-(\sigma S I / H) d B, \\ 
+        d I&=\left(\lambda(t) S-(m+\delta+\gamma) I\right) d t+(\sigma S I / P) d B, \\ 
+        d R_1&=\left(\gamma I-(k \epsilon+\delta) R_1\right) d t, \\ 
+        \vdots \\ 
+        d R_k&=\left(k \epsilon R_{k-1}-(k \epsilon+\delta) R_k\right) d t,
+    \end{align}
+    
+    where $B$ represents Brownian motion, $m$ is the rate at which infected individuals succumb to cholera, $\gamma$ is the rate at which infected individuals recover, $1/\epsilon$ is the mean duration of immunity, $\sigma$ represents the standard deviation of perturbations to the force of infection, and $\delta=0.02$ is the death rate. 
+
+    \item The \textbf{force of infection}, $\lambda(t)$, is modeled by
+    \begin{equation}
+        \lambda(t)=\exp \left\{\beta_{\text {trend }}\left(t-t_0\right)+\sum_{j=1}^{6} \beta_j s_j(t)\right\}(I / P) + \exp \left\{\sum_{j=1}^{6} \omega_j s_j(t)\right\},
+    \end{equation}
+    where the $\beta_j$ model seasonality in the force of infection, $\beta_{\text{trend}}$ models the trend in the force of infection, and the $\omega_j$ represent seasonality of a non-human environmental reservoir of disease. 
+    \item The \textbf{measurement model} for observed monthly cholera deaths is given by 
+    \begin{equation}
+        Y_n \sim \gN(M_n, \tau^2M_n^2),
+    \end{equation}
+    where $M_n$ is the true number of cholera deaths in that month.
+\end{itemize}
+
+
+\usetikzlibrary{arrows.meta,positioning}
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=1cm and 1cm, auto,
+>=Latex,every node/.append style={align=center}, 
+int/.style={draw, minimum size=1.6cm}] 
+\node [int] (S) [right=of H] {$S$};
+\node [int] (I) [right=of S] {$I$};
+\node (Mcoord) [right=of I, coordinate] {Mcoord};
+\node [int] (R1) [right=of Mcoord] {$R_1$};
+\node [int] (R2) [right=of R1] {$R_2$};
+\node [int] (R3) [right=of R2] {$R_3$};
+\node [circle, draw] (M) [above=of Mcoord] {$M$};
+\node (deathsS) [above=of S, coordinate] {deathsS};
+\node (deathsI) [above=of I, coordinate] {deathsS};
+\node (deathsR1) [above=of R1, coordinate] {deathsR1};
+\node (deathsR2) [above=of R2, coordinate] {deathsR2};
+\node (deathsR3) [above=of R3, coordinate] {deathsR3};
+\node (belowR3) [below=of R3, coordinate] {belowR3};
+\node (belowS) [below=of S, coordinate] {belowS};
+\path[->]
+    (H) edge node {$dH$} (S)
+    (S) edge node {$\lambda(t)$}  (I)
+    (I) edge node {$\gamma$}  (R1)
+    (R1) edge node {$k\epsilon$}  (R2)
+    (R2) edge node {$k\epsilon$}  (R3)
+    (R3) edge node {} (belowR3) 
+    (belowR3) edge node {$k\epsilon$} (belowS) 
+    (belowS) edge node {} (S)
+    (I) edge node {$m$}  (M)
+    (S) edge node {$\delta$}  (deathsS)
+    (I) edge node {$\delta$}  (deathsI)
+    (R1) edge node {$\delta$}  (deathsR1)
+    (R2) edge node {$\delta$}  (deathsR2)
+    (R3) edge node {$\delta$}  (deathsR3)
+\end{tikzpicture}
+\caption{Illustration of SIR model from \cite{king08}.}
+\label{fig:sir}
+\end{figure}
+
+Figure \ref{fig:sir} depicts the above compartmental model that we use to benchmark the performance of IFAD. We present comparisons of IFAD with $\alpha=0$ (IFAD-0) and $\alpha=1$ (IFAD-1) against both (1) the results from \cite{ionides15}, and (2) our own implementation of IF2 in \texttt{JAX}. 
+
+\paragraph{Hyperparameters:} While performing an initial exploratory analysis, we found that alternative hyperparameters for IF2 (random walk standard deviation of $\sigma=0.02$, geometrically decreasing cooling rate exponent $a=0.95$) performed better than the settings \cite{ionides15} chose, and chose to use these for our implementation to achieve a fairer comparison. Our implementations of IF2 and IFAD used 10000 particles, in line with \cite{ionides15}. 
+
+To prevent exploding gradients given the high variance in the MOP-1 estimator, we scale the gradient to have norm 1 before performing vanilla gradient descent, and use a linear cooling schedule of $0.2$ to $ 0.0001$. We chose to use vanilla gradient descent for simplicity, and to demonstrate that minimal tuning was required to have IFAD perform well. 
+
+\begin{figure}
+    \centering
+    \includegraphics{imgs/095/qq.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
+
+
+% The 60 more iterations of IF2 yielded largely not a huge improvement over the initial coarse solution of 40 iterations. This demonstrates what we have mentioned earlier: that although IF2 manages to quickly find a decent coarse solution, it struggles to squeeze out those last few units of log-likelihood improvement. The 60 more iterations of gradient descent, however, successfully refines this solution, getting much closer to the MLE on average. 
+
 
 \kevin{Do groups of ten and take the best one from each group. Omit old IF2 from figure in the paper, provide complete figure with old IF2 in the appendix, saying that we modified the settings because of more modern practice. }
 
@@ -315,20 +464,20 @@ This still leaves us with the question of designing a reasonably effective proce
 \renewcommand{\thefigure}{A\arabic{figure}}
 \setcounter{figure}{0}
 
-\section{Properly Weighted Particle Filters}
+\section{Weighted Particle Filters that Target the Posterior}
 
 
 \begin{defn}[Targeting, \cite{liu1998smc}]
-    A random variable $X$ drawn from a distribution $g$ is properly weighted by a weighting function $w(X)$ with respect to the distribution $\pi$ if for any integrable function $h$,
+    A random vector $(X, w)$ drawn from a distribution $g$ \textbf{targets} the distribution $\pi$ if for any integrable function $h$,
     $$
-    E_g\{h(X) w(X)\}=E_\pi\{h(X)\}
+    E_g\{h(X) \cdot w\}=E_\pi\{h(X)\}
     $$
     
-    A set of particles $(X_j, w_j), j=1,2, \ldots$, targets $\pi$ if
+    A set of particles $(X_j, w_j), j=1,2, \ldots$, \textbf{targets} $\pi$ if
     $$
     \frac{\sum_{j=1}^J h(X_j) w_j}{\sum_{j=1}^J w_j} \stackrel{a.s.}{\to} E_\pi(h(X))
     $$
-    for any integrable function $h$ as $J \to \infty$, in the sense of \cite{chopin2004clt}. 
+    for any integrable function $h$ as $J \to \infty$, in the sense of the triangular array convergence in \cite{chopin2004clt}. 
 \end{defn}
 
 It is known that the bootstrap and appropriately weighted particle filters target the posterior $f_{X_{1:N}|Y_{1:N}}$ in this sense, as long as they adhere to the procedure in \cite{chopin2004clt}. We now present three helper lemmas. The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
@@ -782,6 +931,263 @@ Its gradient when $\theta=\phi$ is therefore
     &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
 \end{align*}
 where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. 
+\end{proof}
+
+
+\section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}
+\label{app:ifad}
+
+The analysis in this section roughly follows the analysis in Roosta-Khorasani and Mahoney \cite{mahoney2016subsampled}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from Del Moral and Rio \cite{delmoral2011ci} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
+
+
+The convergence analysis in Theorem \ref{thm:convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
+
+\subsection{Bounding the Gradient}
+
+\begin{lem}[Concentration of Measure for Gradient Estimate]
+    \label{lemma:grad_bound}
+    Assume $\text{osc} \left(\frac{\partial}{\partial_\theta}\right) \leq 1$. For $||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
+    \begin{equation}
+        J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right),\;\; \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2, \;\;\frac{G(\theta)^2}{\epsilon^2}p\log\left(\frac{6p}{\delta}\right)\right\}
+    \end{equation}
+    where $G(\theta)$ is defined as in Assumption \ref{assump:local-bounded-derivative}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_t$ and $r_t$ are two additional model-specific parameters that do not depend on $J$. 
+\end{lem}
+
+\begin{proof}
+
+
+We will seek to use the concentration inequality of \cite{delmoral2011ci} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. To use this, we will first need to resample the particles once more to reassign the normalized weights to $1/J$.
+
+Perform another resampling step at time $T$ to obtain indices $k_j \sim \text{Categorical}(\bar{w}_{T,1}, ..., \bar{w}_{T,J})$. Obtain ancestral trajectories of surviving time $T$ filtering particles $x_{k_j, 1:T}^{A}$. Define $g_j(\theta) = \nabla_\theta -\log L_{T, k_j}$, the gradient of the negative logarithm of the accumulated importance weights of particle $k_j$ along its ancestral trajectory.
+
+We can bound
+\begin{align}
+    ||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)|| 
+    \leq 
+    \left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert 
+    + \left\lVert\frac{1}{J}\sum_{j=1}^J g_j(\theta) - (\nabla_\theta -\loglik(\theta))\right\rVert
+\end{align}
+
+We begin by examining the first term. This term bounds the error of the gradient estimate that the differentiable particle filter provides from the gradient estimate after the final resampling step. 
+
+This amounts to solving the following problem. Say you have a weighted mean $\sum w_j x_j$, where $j=1,…,J$. The $x_j$ are fixed numbers bounded by some constant $G$ and the $w_j$ are non-negative and sum to $1$. Resample indices $k_j, j=1,…,J$ according to the multinomial distribution to get $x_{k_j}$ for each $j$, and also $J^{-1} \sum x_{k_j}$. We want to bound $|\sum w_j x_j - J^{-1} \sum x_{k_j}|$.
+
+By a simple application of Hoeffding's inequality and a union bound, we have
+
+\begin{align}
+    \prob\left(\exists \; j \;s.t.\; \left|(\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right| \geq \epsilon \right)
+    &\leq 2p\exp\left(\frac{-2\epsilon^2J}{G(\theta)^2}\right) 
+\end{align}
+
+We require \begin{equation}
+    J > \frac{G(\theta)^2}{2\epsilon^2}\log(2p/\delta)
+\end{equation} particles to bound $\left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert_\infty < \epsilon$ with probability $1-\delta$, where $G(\theta)$ is defined as in Assumption \ref{assump:local-bounded-derivative}.
+
+We can bound the sup norm by $||x||_\infty \leq \sqrt{p}||x||_2$. So to bound $\left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert < \epsilon$ with probability $1-\delta/3$, we scale the previous $\epsilon$ to $\epsilon/\sqrt{p}$ and therefore require
+
+\begin{equation}
+    J > \frac{G(\theta)^2}{2\epsilon^2}p\log\left(\frac{6p}{\delta}\right)
+\end{equation}
+    
+
+We now tackle the second term. Write $g_{ij}$ for the $i$-th component of the gradient of the negative log-likelihood with respect to the $j$-th particle, $(-\bar{w}_{T,\np} \nabla_\theta\log L_{T,j})_i$.
+
+Apply the concentration inequality in \ref{eq:ci} from Del Moral and Rio \cite{delmoral2011ci} and another union bound to find that  
+
+\begin{align}
+    \left\lVert\frac{1}{J}\sum_{j=1}^J g_{ij} - \left(-\frac{\partial}{\partial \theta_i}\ell(\theta)\right)\right\rVert_\infty \leq \frac{r_t}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_t 
+\end{align}
+
+with probability $1-2p\exp(-t)$. We split the remaining $2\delta/3$ failure probability among these two terms, to find $\delta/3=2p\exp(-t) => t=\log(6p/\delta)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+
+The analogous bound for the 2-norm falls out by scaling the right-hand side by $\sqrt{p}$, to require 
+
+\begin{align}
+    \epsilon = \frac{r_t\sqrt{p}}{J}(1+h^{-1}(\log(6p/\delta))) + \sqrt{\frac{2p\log(6p/\delta)}{J}}\beta_t
+\end{align}
+
+and therefore need 
+
+\begin{align}
+    J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right), \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2\right\}
+\end{align}
+
+Overall, we finally require
+
+\begin{equation}
+        J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right),\;\; \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2, \;\;\frac{G(\theta)^2}{\epsilon^2}p\log\left(\frac{6p}{\delta}\right)\right\}
+\end{equation}
+
+\end{proof}
+
+
+\subsection{Bounding Hessian Estimates}
+
+Should one choose to use a second-order method involving a particle Hessian estimate, we provide a guarantee for its positive-definiteness below.
+
+\begin{lem}[Minimum Eigenvalue Bound for Hessian Estimate]
+    \label{lemma:hess_bound}
+    Assume that the Hessian of the negative log-likelihood $H=\sum_{j=1}^J \E H_j$ has a minimum eigenvalue $\gamma > 0$, that $\E \lambda_{\min} (H_j) = \gamma' > 0$, and finally that $\text{osc}(\lambda_{\min}) \leq 1$. 
+    
+    We then require 
+    \begin{equation}
+        J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'
+    \end{equation}
+    
+    for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$ and with probability at least $1-\exp(-t)$.
+\end{lem}
+\begin{proof}
+Write $\hat{H}(\theta) = \hat{H} = \sum_{j=1}^J H_j$ for the estimate of the negative of the Hessian, where $H_j$ is an element of the outer sum over the $J$ particles.
+
+ As the negative log-likelihood is convex, we want to bound the minimum eigenvalue of $\hat{H}(\theta)$ from below with high probability, so that all the eigenvalues of $\hat{H}(\theta)$ are positive with high probability. This ensures that the estimated Hessian is invertible and positive-definite.
+
+From \cite{boyd2004convex}, we know that the minimum eigenvalue of a symmetric matrix is concave. Therefore, it suffices to show that the first inequality in the below expression
+
+\begin{equation}
+    0 < \sum_{j=1}^J \lambda_{\min} (H_j) \leq  \lambda_{\min}\left(\sum_{j=1}^J H_j\right) = \lambda_{\min} (\hat{H})
+\end{equation}
+
+holds with high probability.
+
+Apply the particle Hoeffding concentration inequality from \cite{delmoral2011ci} to find that  
+
+
+\begin{align}
+    \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \E_{\tilde{\pi}_t}\lambda_{\min}(H_j) &= \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \gamma' \geq -\frac{r_t}{J}(1+h^{-1}(t)) - \sqrt{\frac{2t}{J}}\beta_t \\
+    \sum_{j=1}^J \lambda_{\min}(H_j) &\geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma'
+\end{align}
+
+
+with probability at least $1-\exp(-t)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+
+We additionally require, for $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$,
+\begin{align}
+    \sum_{j=1}^J \lambda_{\min}(H_j) \geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma' \geq c \\
+    J\gamma' \geq c + r_t(1+h^{-1}(t)) + \sqrt{2tJ}\beta_t 
+\end{align}
+
+We therefore require $$J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'$$
+
+for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c$ with probability at least $1-\exp(-t)$.
+
+\end{proof}
+
+
+\subsection{Convergence Analysis of Theorem \ref{thm:convergence}}
+
+\begin{proof}
+
+In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney2016subsampled}.
+
+Define $\theta_\eta = \theta_n + \eta p_n$, where $p_n=-(H(\theta_n))^{-1}g(\theta_n)$. As in Roosta-Khorasani and Mahoney \cite{mahoney2016subsampled}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
+\begin{equation}
+    f(\theta_n+\eta p_n) \leq f(\theta_n) + \eta\beta p_n^Tg(\theta_n)
+\end{equation}
+holds for any $0< \eta < \tilde{\eta}$ and some $\beta \in (0,1)$.
+
+By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney2016subsampled}, we have that choosing $J$ such that $||\nabla_\theta\hat{\ell}(\theta_n) - \nabla_\theta \ell(\theta_n)|| \leq \epsilon$ and $\lambda_{\min}(H(\theta_n)) \geq c$ with probability $(1-\delta)^2$ for each $n$ yields
+
+\begin{align}
+    f(\theta_\eta)-f(\theta_n) \leq \eta p_n^Tg(\theta_n) + \epsilon\eta||p_n|| + \eta^2 \Gamma ||p_n||^2 / 2
+\end{align}
+
+Now, for some $c>0$, with probability $1-\delta$
+\begin{equation}
+    p_n^Tg(\theta_n) = -p_n^TH(\theta_n)p_n \geq -c||p_n||^2
+\end{equation}
+and we can obtain a decrease in the objective. 
+
+Substituting this into the previous expression,
+\begin{align}
+    f(\theta_\eta)-f(\theta_n) \leq -\eta p_n^TH(\theta_n)p_n + \epsilon\eta||p_n|| + \eta^2 \Gamma ||p_n||^2 / 2
+\end{align}
+
+and the Armijo condition then becomes
+\begin{align}
+    -\eta p_n^TH(\theta_n)p_n + \epsilon\eta||p_n|| + \eta^2 \Gamma ||p_n||^2 / 2 &\leq \eta \beta p_n^Tg(\theta_n) = - \eta \beta p_n^TH(\theta_n)p_n \\
+    \epsilon||p_n|| + \eta \Gamma ||p_n||^2 / 2 &\leq (1- \beta) p_n^TH(\theta_n)p_n \\
+    \epsilon + \eta \Gamma ||p_n|| / 2 &\leq c(1- \beta) ||p_n||
+\end{align}
+
+which holds and guarantees an iteration-independent lower bound if 
+\begin{equation}
+    \eta \leq \frac{c(1-\beta)}{\Gamma}, \;\; \epsilon \leq \frac{c(1-\beta)}{2\Gamma}||g(\theta_n)|| \leq \frac{c(1-\beta)}{2}||p_n||
+\end{equation}
+
+Now, first note that
+\begin{equation}
+||g(\theta_n)|| - ||\nabla_\theta f(\theta_n)|| \leq ||g(\theta_n) - \nabla_\theta f(\theta_n)|| \leq \epsilon => ||\nabla_\theta f(\theta_n)|| \geq ||g(\theta_n)|| - \epsilon
+\end{equation} and
+\begin{equation}
+||\nabla_\theta f(\theta_n)||-||g(\theta_n)|| \leq ||\nabla_\theta f(\theta_n)-g(\theta_n)|| \leq \epsilon => ||g(\theta_n)|| \geq ||\nabla_\theta f(\theta_n)|| - \epsilon
+\end{equation}
+
+There are now two cases. If the algorithm terminates and $||g(\theta_n)|| \leq \sigma \epsilon$, we can derive 
+
+\begin{equation}
+    ||\nabla_\theta f(\theta_n)|| \leq ||g(\theta_n)|| + \epsilon = \sigma\epsilon+\epsilon = (\sigma+1)\epsilon
+\end{equation}
+
+
+If the algorithm does not terminate, then $||g(\theta_n)|| > \sigma \epsilon$. Notice that 
+
+\begin{align}
+    \epsilon \geq ||g(\theta_n) - \nabla_\theta f(\theta_n)|| &\geq ||g(\theta_n)|| - ||\nabla_\theta f(\theta_n)|| \\
+    ||\nabla_\theta f(\theta_n)|| + \epsilon &\geq ||g(\theta_n)|| \geq \sigma \epsilon \\
+    ||\nabla_\theta f(\theta_n)|| &\geq \sigma \epsilon - \epsilon = (\sigma - 1)\epsilon \\
+    \frac{||\nabla_\theta f(\theta_n)||}{\sigma-1} &\geq \epsilon
+\end{align}
+
+and now 
+\begin{align}
+    ||\nabla_\theta f(\theta_n)|| - \epsilon
+    &\geq  ||\nabla_\theta f(\theta_n)|| - \frac{||\nabla_\theta f(\theta_n)||}{\sigma-1} = \left(1-\frac{1}{\sigma-1}\right)||\nabla_\theta f(\theta_n|| = \frac{\sigma-2}{\sigma-1}||\nabla_\theta f(\theta_n)|| \geq \frac{2}{3}||\nabla_\theta f(\theta_n)||
+\end{align}
+
+From $||A^{-1}|| = 1/\sigma_{\min}(A)$,
+\begin{align}
+    p_n^TH(\theta_n)p_n &= (-(H(\theta_n))^{-1}g(\theta_n))^TH(\theta_n)(-(H(\theta_n))^{-1}g(\theta_n)) \\
+    &= g(\theta_n)^T(H(\theta_n))^{-1}g(\theta_n) \\
+    &\geq \frac{1}{c}||g(\theta_n)||^2 \\
+    &\geq \frac{1}{c}(||\nabla_\theta f(\theta_n)|| - \epsilon)^2 \\
+    &\geq \frac{4}{9c}||\nabla_\theta f(\theta_n)||^2
+\end{align}
+
+From the assumption that $f$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 -\ell \preceq \Gamma I$, by an implication of $\gamma$-strong convexity we have
+\begin{align}
+    f(\theta_n) - f(\theta^*) \leq \frac{1}{2\gamma}||\nabla_\theta f(\theta_n)||^2
+\end{align}
+and we put together:
+\begin{equation}
+    f(\theta_n) - f(\theta^*) \leq \frac{1}{2\gamma}||\nabla_\theta f(\theta_n)||^2 \leq \frac{9c}{4}\frac{1}{2\gamma}p_n^TH(\theta_n)p_n
+\end{equation}
+\begin{equation}
+    \frac{8\gamma}{9c}(f(\theta_n) - f(\theta^*)) \leq \frac{4}{9c}||\nabla_\theta f(\theta_n)||^2 \leq p_n^TH(\theta_n)p_n
+\end{equation}
+\begin{equation}
+    f(\theta_n) - f(\theta^*) \leq \frac{9c}{8\gamma}p_n^TH(\theta_n)p_n
+\end{equation}
+
+
+\begin{equation}
+    -\frac{8\gamma}{9c}(f(\theta_n) - f(\theta^*)) \geq -\frac{4}{9c}||\nabla_\theta f(\theta_n)||^2 \geq -p_n^TH(\theta_n)p_n
+\end{equation}
+
+But from earlier, as the Armijo condition is fulfilled with our choice of $\eta$ and $\epsilon$,
+\begin{align}
+    f(\theta_{n+1})-f(\theta_n) &\leq -\eta p_n^TH(\theta_n)p_n + \epsilon\eta||p_n|| + \eta^2 \Gamma ||p_n||^2 / 2 \\
+    &\leq -\eta\beta p_n^TH(\theta_n)p_n \\
+    &\leq -\eta\beta\frac{8\gamma}{9c}(f(\theta_n) - f(\theta^*)) 
+\end{align}
+
+and therefore
+\begin{align}
+    f(\theta_{n+1}) - f(\theta^*) 
+    &= f(\theta_{n+1})-f(\theta_n)+f(\theta_n)- f(\theta^*) \\
+    &\leq f(\theta_n)- f(\theta^*) -\eta\beta\frac{8\gamma}{9c}(f(\theta_n) - f(\theta^*)) \\
+    &= (1-\eta\beta\frac{8\gamma}{9c})(f(\theta_n) - f(\theta^*)) 
+\end{align}
+
 \end{proof}
 
 
