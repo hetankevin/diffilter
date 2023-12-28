@@ -433,30 +433,26 @@ To prevent exploding gradients given the high variance in the MOP-1 estimator, w
     \centering
     \includegraphics[scale=0.53]{imgs/095/pairs.png}
     \includegraphics[scale=0.53]{imgs/095/qq.png}
-    \caption{Scatterplots depicting the performance of IFAD against that of IF2. Left: Paired searches from the same starting point. Right: Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 5 log-likelihood units of it. }
+    \caption{Scatterplots depicting the performance of IFAD against that of IF2. Left: Paired searches from the same starting point. Right: Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 5 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
     \label{fig:scatter}
 \end{figure}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.7]{imgs/095/boxplot.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \includegraphics[scale=0.52]{imgs/095/boxplot.png}
+    \includegraphics[scale=0.54]{imgs/095/optim.png}
+    \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs. This simulates the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and improves on the warm-start given by running 40 IF2 iterations. Our choice of hyperparameters for our implementation of IF2 outperforms the choices made by \cite{ionides15}, which we depict in the boxplot labeled "IF2 2015".
+    \textbf{Right:} Optimization progress of IFAD and IF2, where the solid lines depict the median negative log-likelihood at each iteration and the shaded area depicts the best search at any iteration and the 80\% percentile. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD -- IFAD has better tail control and successfully reaches the MLE. The initial loss in log-likelihood upon transitioning from IF2 to MOP seems to help with escaping local minima. 
+    In both, as before, we use a dotted red line to display the MLE. }
+    \label{fig:boxplot-search}
 \end{figure}
 
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.7]{imgs/095/optim.png}
-    \caption{Caption}
-    \label{fig:enter-label}
-\end{figure}
 
 \begin{figure}[u]
     \centering
     \includegraphics[scale=0.7]{imgs/095/hist.png}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Histogram comparison of the performance of IFAD, IF2, and MOP alone. As before, we note that IFAD successfully reaches the MLE a nontrivial number of times, while IF2 ultimately fails to do so. Our implementation of IF2 outperforms that of \cite{ionides15}, largely due to improved hyperparameter choices. MOP alone performs poorly, demonstrating the necessity of IF2. }
+    \label{fig:hist-all}
 \end{figure}
 
 
