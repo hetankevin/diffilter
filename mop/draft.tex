@@ -4,6 +4,9 @@
 
 \usepackage{enumitem}
 \usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+
 \setlist{nosep} % to reduce space in lists
 
 \setlength{\parskip}{0.5em}
@@ -394,12 +397,12 @@ To compare the performance of IFAD against that of IF2, we fit the very same mod
 \end{itemize}
 
 
-\usetikzlibrary{arrows.meta,positioning}
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}[node distance=1cm and 1cm, auto,
 >=Latex,every node/.append style={align=center}, 
-int/.style={draw, minimum size=1.6cm}] 
+int/.style={draw, minimum size=1.6cm}]
+  \node [int] (H) at (0,0) {$H$};
 \node [int] (S) [right=of H] {$S$};
 \node [int] (I) [right=of S] {$I$};
 \node (Mcoord) [right=of I, coordinate] {Mcoord};
@@ -428,7 +431,7 @@ int/.style={draw, minimum size=1.6cm}]
     (I) edge node {$\delta$}  (deathsI)
     (R1) edge node {$\delta$}  (deathsR1)
     (R2) edge node {$\delta$}  (deathsR2)
-    (R3) edge node {$\delta$}  (deathsR3)
+    (R3) edge node {$\delta$}  (deathsR3);
 \end{tikzpicture}
 \caption{Illustration of SIR model from \cite{king08}.}
 \label{fig:sir}
@@ -483,6 +486,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
     \includegraphics[scale=0.53]{imgs/095/pairs.png}
     \includegraphics[scale=0.53]{imgs/095/qq.png}
     \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
+
     \label{fig:scatter}
 \end{figure}
 
@@ -493,6 +497,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
     \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs. This simulates the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and improves on the warm-start given by running 40 IF2 iterations. Our choice of hyperparameters for our implementation of IF2 outperforms the choices made by \cite{ionides15}, which we depict in the boxplot labeled "IF2 2015". As before, while IF2 successfully approaches the MLE, it ultimately fails to find it.
     \textbf{Right:} Boxplot depicting the performance of IFAD, IF2, and MOP alone without the warm-start, where we plot all runs. We see that MOP alone drastically underperforms all other methods, failing to get close to the MLE. This shows that the IF2 warm-start may be necessary to achieve good performance in challenging nonconvex and noisy problems like this one.
     \textbf{Takeaway:} In this panel, we see that (1) IF2 fails to find the MLE while the gradient steps perform better at fine-grained refinement, and (2) performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points, ultimately demonstrating the necessity of a hybrid algorithm like IFAD. 
+
     In both, as before, we use a dotted red line to display the MLE. }
     \label{fig:boxplot-search}
 \end{figure}
@@ -504,7 +509,6 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
     As before, we use a dotted red line to display the MLE. }
     \label{fig:optim}
 \end{figure}
-
 
 \begin{figure}[u!]
     \centering
@@ -563,21 +567,21 @@ While we make the first steps towards developing a Python counterpart to the pop
 \section{Weighted Particle Filters that Target the Posterior}
 
 
-\begin{defn}[Targeting, \cite{liu1998smc}]
+\begin{defn}[Targeting]
     A random vector $(X, w)$ drawn from a distribution $g$ \textbf{targets} the distribution $\pi$ if for any integrable function $h$,
-    $$
+\begin{equation}
     E_g\{h(X) \cdot w\}=E_\pi\{h(X)\}
-    $$
-    
-    A set of particles $(X_j, w_j), j=1,2, \ldots$, \textbf{targets} $\pi$ if
-    $$
-    \frac{\sum_{j=1}^J h(X_j) w_j}{\sum_{j=1}^J w_j} \stackrel{a.s.}{\to} E_\pi(h(X))
-    $$
-    for any integrable function $h$ as $J \to \infty$, in the sense of the triangular array convergence in \cite{chopin2004clt}. 
+\end{equation}  
+    A set of particles $(X^J_j, w^J_j), j=1,2, \ldots,J$, \textbf{targets} $\pi$ if
+\begin{equation}
+    \frac{\sum_{j=1}^J h(X^J_j) w^J_j}{\sum_{j=1}^J w^J_j} \stackrel{a.s.}{\to} E_\pi(h(X))
+\end{equation}
+for any integrable function $h$ as $J \to \infty$.
 \end{defn}
-
-It is known that the bootstrap and appropriately weighted particle filters target the posterior $f_{X_{1:N}|Y_{1:N}}$ in this sense, as long as they adhere to the procedure in \cite{chopin2004clt}. We now present three helper lemmas. The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
-
+\citet{chopin2004clt} asserted without proof that common particle filter algorithms target the filtering distribution, $f_{X_{1:N}|Y_{1:N}}$, in this sense.
+\ed{PERHAPS IF WE HAD A CONCRETE PROOF OF THIS, THAT WOULD HELP TO SEE HOW IT EXTENDS TO OUR SUBSEQUENT LEMMAS. ARGUABLY, THAT IS IN FACT WHAT WE ARE DEVELOPING VIA THESE LEMMAS. I WONDER IF SOME OTHER REFERENCE, E.G. DELMORAL'S 2004 BOOK, HAS AN EXPLICIT PROOF OF CONSISTENCY FOR SOME PARTICLE FILTER ALGORITHM.}
+In order to prove the consistency of our variation on the particle filter, we now present three helper lemmas.
+The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
 
 \begin{lem}[Change of Particle Measure]
     \label{lem:change-measure-proper-weights}
@@ -653,7 +657,7 @@ This has addressed filtering, but not quite yet the likelihood evaluation. For t
 
 \begin{lem}[Likelihood Proper Weighting]
     \label{lem:lik-proper-weight}
-  $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is properly estimated by either the before-resampling estimate,
+  $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is consistently estimated by either the before-resampling estimate,
 \begin{equation}\label{L1}
 L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
 \end{equation}
