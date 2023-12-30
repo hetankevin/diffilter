@@ -328,14 +328,14 @@ IF2 converges quickly to a neighborhood of some reasonably good local optimum in
 
 \subsection{Theoretical Guarantee}
 
-We first analyze the performance of gradient descent, Newton's method, or any iterative method that multiplies the particle estimate of the gradient with the inverse of a matrix with minimum eigenvalue bounded below, in the case where the log-likelihood surface is $\gamma$-strongly convex. In this case, these methods enjoy a linear convergence guarantee:
+We first analyze the performance of gradient descent, Newton's method, or any iterative method that multiplies the particle estimate of the gradient with the inverse of a matrix with minimum eigenvalue bounded below, in the case where the log-likelihood surface is $\gamma$-strongly convex, and where the gradient estimate is a particle approximation of the score (for example, IFAD-1 and MOP-1). In this case, these methods enjoy a linear convergence guarantee:
 
 \begin{thm}[Convergence of Gradient Methods]
 \label{thm:convergence}
 
-Consider a variant of Algorithm \ref{alg:ifad} where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
+Consider a variant of IFAD-1 (Algorithm \ref{alg:ifad}) where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
 
-Choose $J$ according to the maximum of the $J$ prescribed in Lemmas \ref{lemma:grad_bound} and $\ref{lemma:hess_bound}$ with failure probability $\delta/2$ each. Let $H(\theta_n)$ be a matrix possibly dependent on $\theta_n$ with minimum eigenvalue always greater than some $c>0$. Choose the learning rate $\eta$ and error tolerance $\epsilon$ such that, where $\beta$ is the Armijo condition hyperparameter,
+Choose $J$ according to the maximum of the $J$ prescribed in Lemmas \ref{lemma:grad_bound} and (if using a Hessian estimate) $\ref{lemma:hess_bound}$ with failure probability $\delta/2$ each. Let $H(\theta_n)$ be a matrix possibly dependent on $\theta_n$ with minimum eigenvalue always greater than some $c>0$. Choose the learning rate $\eta$ and error tolerance $\epsilon$ such that, where $\beta$ is the Armijo condition hyperparameter,
 \begin{equation}
     \eta \leq \frac{c(1-\beta)}{\Gamma}, \;\; \epsilon \leq \frac{c(1-\beta)}{2\Gamma}||g(\theta_n)||.
 \end{equation}
@@ -352,13 +352,15 @@ The proof of this result uses the concentration inequalities from \cite{delmoral
 
 \paragraph{Takeaways for IFAD (Algorithm \ref{alg:ifad}):}
 
-The gradient stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the IF2 stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. This happens fairly often in practice, for example, when sufficient regularity conditions for local asymptotic normality of the MLE hold.
+The gradient stage of IFAD-1 converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the IF2 stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. This happens fairly often in practice, for example, when sufficient regularity conditions for local asymptotic normality of the MLE hold.
 
 We conjecture that this applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE. IF2 posesses some SGD-like qualities, including what looks like linear convergence to a ball around the MLE with width determined by the random walk standard deviation. We will explore this conjecture in future work.
 
+While this theoretical guarantee currently only holds for IFAD-1, as it forms a particle approximation of the score as in \cite{poyiadjis11}, one can also extend this for a similar guarantee if the bias for the gradient estimate given by MOP-$\alpha$ for $\alpha < 1$ is small enough. For general $\alpha$, including MOP-0, the analysis then becomes more complicated, as one needs to handle the case of biased gradient descent. However, if future measurements $y_{n+1:N}^*$ do not provide a large amount of information on the identification of the current state $x_n$ given past and current measurements $y_{0:n}^*$, as mentioned in \cite{corenflos21}, the bias may be small enough for it to not present too much of a problem.
+
 \subsection{Runtime}
 
-Even with the increased computational cost of automatic differentiation, Algorithm \ref{alg:ifad} is reasonably fast, as by the cheap gradient principle from \cite{kakade2019provably}, a gradient operation takes no more than 6 times the runtime of the particle filter. As such, unlike methods like the marginal differentiable particle filter in \cite{scibior2021dpf} or the the optimal transport of resampling approach of \cite{corenflos21}, our algorithm has runtime \textbf{linear, and not quadratic}, in the number of particles (while alleviating the $O(N^2)$ variance concern of \cite{poyiadjis11} and \cite{corenflos2021ot} and asymptotic bias concern of \cite{blei2018vsmc} through optimizing $\alpha$ for a bias-variance tradeoff). 
+Even with the increased computational cost of automatic differentiation, Algorithm \ref{alg:ifad} is reasonably fast, as by the cheap gradient principle from \cite{kakade2019provably}, a gradient operation takes no more than 6 times the runtime of the particle filter (in practice, this means a gradient step takes about 3.75x as much time as an IF2 iteration). As such, unlike methods like the marginal differentiable particle filter in \cite{scibior2021dpf} or the the optimal transport of resampling approach of \cite{corenflos21}, our algorithm has runtime \textbf{linear, and not quadratic}, in the number of particles (while alleviating the $O(N^2)$ variance concern of \cite{poyiadjis11} and \cite{corenflos2021ot} and asymptotic bias concern of \cite{blei2018vsmc} through optimizing $\alpha$ for a bias-variance tradeoff). 
 
 In addition, re-implementation of the particle filter, iterated filtering, and Algorithm \ref{alg:ifad} itself in \texttt{JAX} (\cite{jax2018github}) led to considerable speedups. This can be attributed to both GPU acceleration and the just-in-time (JIT) compilation functionality that \texttt{JAX} provides. When tested on a computer with an Intel i9-13900K processor, 128GB of RAM, and a NVIDIA RTX3090 GPU, each post-compilation particle filtering operation on the Dacca cholera model from \cite{king08} with 10000 particles took roughly 379 milliseconds (with a standard deviation of 279 microseconds over seven runs), a considerable improvement over the existing performance in the widely used \texttt{pomp} package of \cite{king16}, which took between 6.19 to 6.39 seconds over ten runs on the same machine.
 
