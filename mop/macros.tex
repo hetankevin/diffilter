@@ -7,8 +7,8 @@
 % algorithm
 \usepackage{algorithm, algorithmic}
 \usepackage{tabularx}
-\usepackage[table,xcdraw]{xcolor}
-
+%\usepackage[table,xcdraw]{xcolor}
+\usepackage{xcolor}
 % commands
 % global count (no section number)
 \newtheorem{thm}{Theorem}%[section]
@@ -23,12 +23,12 @@
 \newtheorem{defn}{Definition}
 
 % Comments
-\usepackage{xcolor}
+% \usepackage{xcolor} % already loaded
 \newcount\comments  % 0 suppresses notes to selves in text
 \comments=0  % TODO: change to 0 for final version
 \newcommand{\genComment}[2]{\ifnum\comments=1{\textcolor{#1}{\textsf{\footnotesize #2}}}\fi}
-\newcommand{\ed}[1]{\genComment{red}{[AT:#1]}}
-\newcommand{\giles}[1]{\genComment{green}{[ZP:#1]}}
+\newcommand{\ed}[1]{\genComment{red}{[EI:#1]}}
+\newcommand{\giles}[1]{\genComment{green}{[GH:#1]}}
 \newcommand{\kevin}[1]{\genComment{blue}{[KT:#1]}}
 
 % Mark sections of captions for referring to divisions of figures
@@ -563,9 +563,4 @@
 
 \newcommand{\parents}{Pa} % See usage in notation.tex. Chosen to match Daphne's book.
 
-\DeclareMathOperator*{\argmax}{arg\,max}
-\DeclareMathOperator*{\argmin}{arg\,min}
-
-\DeclareMathOperator{\sign}{sign}
-\DeclareMathOperator{\Tr}{Tr}
 \let\ab\allowbreak
