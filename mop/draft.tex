@@ -67,7 +67,7 @@ We develop a new approach to statistical inference via AD for particle filters w
 
 This is done through the construction of a smooth extension to the particle filter, as well as a \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) family of algorithms that (informally) encompasses the special case of AD of a vanilla PF (recovering the gradient estimator of \citet{blei2018vsmc}) when $\alpha=0$, and the DPF algorithm from \citet{scibior2021dpf} (that recovers the gradient estimator from \citet{doucet2011sf}) when $\alpha=1$. When $\alpha \in (0,1)$, this provides opportunities for optimizing a bias/variance tradeoff. 
 
-We show these off-policy particle filters are properly weighted, recover desirable gradient estimates previously encountered in the literature, and possess other desirable theoretical properties. To cap off the theoretical results, we also derive a linear convergence rate for gradient methods on the particle filter in the presence of strong convexity, providing support for numerical optimization with AD for the particle filter.
+We show these off-policy particle filters successfully target the posterior, recover desirable gradient estimates previously encountered in the literature, and possess other desirable theoretical properties. To cap off the theoretical results, we also derive a linear convergence rate for gradient methods on the particle filter in the presence of strong convexity, providing support for numerical optimization with AD for the particle filter. 
 
 In practice, we propose a hybrid algorithm that we call \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts gradient ascent (or a similar iterative first or second-order gradient method) with a coarse solution obtained from a few rounds of iterated filtering. While this requires a differentiable simulator compatible with the reparametrization trick (as previous literature such as \citet{corenflos21} also require), future work will deal with workarounds inspired by our framework that use likelihood ratios of transition densities in place of this. Promising numerical results indicate that IFAD beats IF2 (and by the transitive property, IF1, the Liu-West filter, and particle MCMC) on a challenging scientific benchmark problem.
 
@@ -88,7 +88,7 @@ Many scientific models involve highly nonlinear stochastic dynamical systems whi
 Consider an unobserved Markov process $\{X_t, t \geq t_0\}$, and observations $Y_1,...,Y_N$ at timesteps $t_1,..., t_N$. The process is parameterized by an unknown parameter $\theta \in \Theta$, where $X \in \gX, Y \in \gY,$ and finally $\gX, \gY, \Theta \subseteq \R^n$. By a similar decomposition to that in \citet{doucet2009tutorial}, we find that the joint density of $X_{0:N}, Y_{1:N}$ can be factored as
 $$f_{X_{0: N}, Y_{1: N}}\left(x_{0: N}, y_{1: N} ; \theta\right)=f_{X_0}\left(x_0 ; \theta\right) \prod_{n=1}^N f_{X_n \mid X_{n-1}}\left(x_n \mid x_{n-1} ; \theta\right) f_{Y_n \mid X_n}\left(y_n \mid x_n ; \theta\right).$$
 
-We call $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ the process model, writing $\operatorname{process}\left(x_n, \theta\right)$ for the simulator corresponding to the above process model, $f_{Y_n|X_n}\left(y_n \mid x_n, \theta\right)$ the measurement model, and will write $y_n^*$ for the actual values of the observations that were observed.
+We call $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ the process model, writing $\texttt{process}\left(x_n, \theta\right)$ for the simulator corresponding to the above process model, $f_{Y_n|X_n}\left(y_n \mid x_n, \theta\right)$ the measurement model, and will write $y_n^*$ for the actual values of the observations that were observed.
 
 The above are all defined on a single probability space $(\Omega, \Sigma, \prob),$ where $\omega \in \Omega$ denotes an element of the sample space that can be thought of as a random seed. For notational simplicity, we omit the dependence of the likelihood and other suitable calculations on $X_0.$
 
@@ -127,8 +127,8 @@ Consider a probability space $(\Omega, \Sigma, \mu)$ governing the particles and
 $$
 \begin{aligned}
 \mathcal{L}(\theta) & =\int_{\Omega} \mathcal{L}(\theta, \omega, J) d \mu(\omega) \\
-& =\int_{\Omega}\left(\prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}\left(y_n^* \mid x_{n, j}^P(\omega), \theta\right)\right) f_{X_{0:N}, Y_{1:N}}\left(x_{0: N}^P(\omega) \mid y_{1: N}^*, \theta\right) d \mu(\omega) \\
-& =\int_{\Omega}\left(\prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}\left(y_n^* \mid x_{n, j}^P(\omega), \theta\right) f_{X_{0:N}, Y_{1:N}}\left(x_{n, j}^P(\omega) \mid y_n^*, \theta\right)\right) d \mu(\omega)
+& =\int_{\Omega}\left(\prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}\left(y_n^* \mid x_{n, j}^P(\omega), \theta\right)\right) f_{X_{0:N}, Y_{1:N}}\left(x_{0: N}^P(\omega) , y_{1: N}^*, \theta\right) d \mu(\omega) \\
+& =\int_{\Omega}\left(\prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}\left(y_n^* \mid x_{n, j}^P(\omega), \theta\right) f_{X_n|X_{n-1}}(x_{n,j}^P(\omega)|x_{n-1,j}^F(\omega), \theta)\right) f_{X_{0:N}| Y_{1:N}}\left(x_{n, j}^P(\omega) \mid y_n^*, \theta\right) d \mu(\omega)
 \end{aligned}
 $$
 where $\mathcal{L}(\theta, \omega, J)$ is the Monte-Carlo estimate of the likelihood given the realization of $\mathrm{J}$ particles corresponding to $\omega \in \Omega$. For simplicity, we resample every timestep. We call $\omega$ a seed, and the deterministic quantity $\mathcal{L}(\theta, \omega, J)$ the seed-fixed estimate.
@@ -144,7 +144,8 @@ Let $\lik(\theta, \phi, \omega, J)$ denote a Monte-Carlo estimate of the likelih
 \end{equation}
 where we define
 \begin{align}
-    \lik(\theta,\phi,\omega, J) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J &\left(f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) f_{X_n|Y_n}(x_{n,j}^{P, \phi}(\omega) | y_n^*, \phi) \right.\\
+    \lik(\theta,\phi,\omega, J) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J &\left(f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) \cdot 
+    f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}(\omega) | x_{n-1,j}^{F,\phi}, \phi) \right.\\
     &\cdot
     \left.
     \frac{f_{Y_n|X_n}(y^*_n|x_{n,j}^{P,\phi}(\omega),\theta)}{f_{Y_n|X_n}(y^*_n|x_{n,j}^{P,\phi}(\omega),\phi)}
@@ -217,7 +218,7 @@ There is a workaround. Consider the case where you have access to a differentiab
 
 We therefore make the following assumption in this section only:
 \begin{aspt}[Differentiable Simulator]
-    $\text{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
+    $\texttt{process}(\cdot | X_{t-1}; \theta)$ is differentiable with respect to $\theta,$ and is compatible with the reparametrization trick. 
 \end{aspt}
 
 Algorithm \ref{alg:mop} provides a weighted particle filter that targets the posterior under $\theta$, but when differentiated yields either the low-bias but high-variance gradient estimator of \cite{poyiadjis11}, the high-bias but low-variance estimator of \cite{blei2018vsmc}, or an intermediate, interpolating quantity that can optimize a bias-variance tradeoff. This is controlled by a discounting parameter $\alpha$. The intuition behind this procedure is as follows. 
@@ -257,7 +258,7 @@ the average gradient of each surviving particle's cumulative importance weights.
 and though the telescoping product disappears, this reduces to a series of one-step corrections. However, these corrections are insufficient when $\theta \neq \phi,$ and the filter suffers from asymptotic bias unless $\theta=\phi.$ Its gradient when $\theta=\phi$ is therefore
 
     \begin{equation}
-        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
     \end{equation}
 
 the gradient of the vanilla particle filter where the resampling correction is omitted as found in \cite{blei2018vsmc} -- when applied to the bootstrap filter. As \cite{scibior2021dpf} remark, this estimator only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate only considers the surviving particles at time $N$, which is the other extreme where dependencies across time are fully tracked. 
@@ -278,7 +279,7 @@ the gradient of the vanilla particle filter where the resampling correction is o
     and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
 
     \begin{equation}
-        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
     \end{equation}
 
     that as \cite{scibior2021dpf} show corresponds to differentiating through the fixed-seed likelihood estimate yielded by a vanilla particle filter.
@@ -301,7 +302,7 @@ This still leaves us with the question of designing a reasonably effective proce
 
 \paragraph{Summary:} A coarse solution is found by running IF2 with an aggressive random walk standard deviation (learning rate) and a cooling schedule that is \textbf{bounded below}, until the search stalls to an initial "convergence" to what is hopefully a neighborhood of the MLE. We can then use gradient descent, or other first or second order gradient methods, to refine this coarse solution.
 
-The initial "convergence" happens fairly quickly in practice. In the case of the Dacca cholera model of \cite{king08}, when a geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations of IF2. In comparison, often 100 or 200 iterations of IF2 are used for an initial global search. \cite{ionides15}, for example, use 100 iterations with the Dacca cholera model of \cite{king08}, while \cite{wheeler23} use 200 with Model 1 in \cite{Lee_haiticholera}. 
+The initial "convergence" happens fairly quickly in practice. In the case of the Dhaka cholera model of \cite{king08}, when a geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations of IF2. In comparison, often 100 or 200 iterations of IF2 are used for an initial global search. \cite{ionides15}, for example, use 100 iterations with the Dhaka cholera model of \cite{king08}, while \cite{wheeler23} use 200 with Model 1 in \cite{Lee_haiticholera}. 
 
 \paragraph{Rationale:}
 
@@ -312,17 +313,17 @@ IF2 converges quickly to a neighborhood of some reasonably good local optimum in
 	\caption{Iterated Filtering with Automatic Differentiation}
     \label{alg:ifad}
 	\begin{algorithmic}[1]
-	     \STATE \textbf{Input:} Number of particles $J$, timesteps $T$, measurement model $p(y_t^*|x_t, \theta)$, simulator $\process(x_{t+1}|x_t, \theta),$ IF2 cooling schedule $\eta_n$, MOP-$\alpha$ discounting parameter $\alpha$.
-		\STATE Initialize $\theta_0$, $n=0.$
-        \STATE Run IF2 until initial "convergence" under cooling schedule $\eta_n$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_n := \frac{1}{J}\sum_{j=1}^J \Theta_j.$
+	     \STATE \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $p(y_n^*|x_n, \theta)$, simulator $\process(x_{n+1}|x_n, \theta),$ IF2 cooling schedule $\eta_t$, MOP-$\alpha$ discounting parameter $\alpha$.
+		\STATE Initialize $\theta_0$, $t=0.$
+        \STATE Run IF2 until initial "convergence" under cooling schedule $\eta_t$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_t := \frac{1}{J}\sum_{j=1}^J \Theta_j.$
 		\WHILE{Procedure not converged:}
 		\STATE Draw $\omega \in \Omega$
-		\STATE Perform forward pass by running Algorithm \ref{alg:mop} with discounting parameter $alpha$ to obtain $\loglik(\theta_n, \theta_n, \omega, J).$
-		\STATE Obtain $g(\theta_n) = \nabla_{\theta_n} (-\loglik(\theta_n, \theta_n, \omega, J))$ via backpropagation, $H(\theta_n)$ such that $\lambda_{\min}(H) \geq c$.
+		\STATE Perform forward pass by running Algorithm \ref{alg:mop} with discounting parameter $\alpha$ to obtain $\loglik(\theta_t, \theta_t, \omega, J).$
+		\STATE Obtain $g(\theta_t) = \nabla_{\theta_t} (-\loglik(\theta_t, \theta_t, \omega, J))$ via backpropagation, $H(\theta_t)$ such that $\lambda_{\min}(H) \geq c$.
 		\STATE Obtain $\eta$ with line search or an annealing schedule.
-		\STATE Update $\theta_{n+1} := \theta_n - \eta (H(\theta_n))^{-1} g(\theta_n)$, $n:=n+1.$
+		\STATE Update $\theta_{t+1} := \theta_t - \eta (H(\theta_t))^{-1} g(\theta_t)$, $t:=t+1.$
 		\ENDWHILE
-		\STATE Return $\hat{\theta} := \theta_n.$
+		\STATE Return $\hat{\theta} := \theta_t.$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -362,7 +363,7 @@ While this theoretical guarantee currently only holds for IFAD-1, as it forms a 
 
 Even with the increased computational cost of automatic differentiation, Algorithm \ref{alg:ifad} is reasonably fast, as by the cheap gradient principle from \cite{kakade2019provably}, a gradient operation takes no more than 6 times the runtime of the particle filter (in practice, this means a gradient step takes about 3.75x as much time as an IF2 iteration). As such, unlike methods like the marginal differentiable particle filter in \cite{scibior2021dpf} or the the optimal transport of resampling approach of \cite{corenflos21}, our algorithm has runtime \textbf{linear, and not quadratic}, in the number of particles (while alleviating the $O(N^2)$ variance concern of \cite{poyiadjis11} and \cite{corenflos2021ot} and asymptotic bias concern of \cite{blei2018vsmc} through optimizing $\alpha$ for a bias-variance tradeoff). 
 
-In addition, re-implementation of the particle filter, iterated filtering, and Algorithm \ref{alg:ifad} itself in \texttt{JAX} (\cite{jax2018github}) led to considerable speedups. This can be attributed to both GPU acceleration and the just-in-time (JIT) compilation functionality that \texttt{JAX} provides. When tested on a computer with an Intel i9-13900K processor, 128GB of RAM, and a NVIDIA RTX3090 GPU, each post-compilation particle filtering operation on the Dacca cholera model from \cite{king08} with 10000 particles took roughly 379 milliseconds (with a standard deviation of 279 microseconds over seven runs), a considerable improvement over the existing performance in the widely used \texttt{pomp} package of \cite{king16}, which took between 6.19 to 6.39 seconds over ten runs on the same machine.
+In addition, re-implementation of the particle filter, iterated filtering, and Algorithm \ref{alg:ifad} itself in \texttt{JAX} (\cite{jax2018github}) led to considerable speedups. This can be attributed to both GPU acceleration and the just-in-time (JIT) compilation functionality that \texttt{JAX} provides. When tested on a computer with an Intel i9-13900K processor, 128GB of RAM, and a NVIDIA RTX3090 GPU, each post-compilation particle filtering operation on the Dhaka cholera model from \cite{king08} with 10000 particles took roughly 379 milliseconds (with a standard deviation of 279 microseconds over seven runs), a considerable improvement over the existing performance in the widely used \texttt{pomp} package of \cite{king16}, which took between 6.19 to 6.39 seconds over ten runs on the same machine.
 
 
 
@@ -386,7 +387,7 @@ To compare the performance of IFAD against that of IF2, we fit the very same mod
     
     where $B$ represents Brownian motion, $m$ is the rate at which infected individuals succumb to cholera, $\gamma$ is the rate at which infected individuals recover, $1/\epsilon$ is the mean duration of immunity, $\sigma$ represents the standard deviation of perturbations to the force of infection, and $\delta=0.02$ is the death rate. 
 
-    \item The \textbf{force of infection}, $\lambda(t)$, is modeled by
+    \item The \textbf{force of infection}, $\lambda(t)$, is modeled by splines $s_j$
     \begin{equation}
         \lambda(t)=\exp \left\{\beta_{\text {trend }}\left(t-t_0\right)+\sum_{j=1}^{6} \beta_j s_j(t)\right\}(I / P) + \exp \left\{\sum_{j=1}^{6} \omega_j s_j(t)\right\},
     \end{equation}
@@ -455,15 +456,15 @@ We benchmarked IFAD against IF2 on a challenging global search problem. 100 init
 \centering
 \begin{tabular}{||c c c||} 
  \hline
- Method & Log-Likelihood & Rank \\ [0.5ex] 
+ Method & Best Log-Likelihood & Rank \\ [0.5ex] 
  \hline\hline
- IF2 2015 & -3768.63 & 5\\ 
- IF2 (Ours) & -3755.91 & 3\\
- IF2 (Warm Start) & -3759.60 & 4 \\
- IFAD-1 & -3748.53 & 2\\
- IFAD-0 & -3747.87 & 1\\
- MOP-1 Alone & -3797.38 & 7\\
- MOP-0 Alone & -3795.74 & 6\\
+     IFAD-0 & -3747.87 & 1\\
+     IFAD-1 & -3748.53 & 2\\
+     IF2 (Ours) & -3755.91 & 3\\
+     IF2 (Warm Start) & -3759.60 & 4 \\
+     IF2 2015 & -3768.63 & 5\\ 
+     MOP-0 Alone & -3795.74 & 6\\
+     MOP-1 Alone & -3797.38 & 7\\
  \hline
 \end{tabular}
 \caption{Maximum log-likelihood found by IF2, IFAD, and MOP alone. IFAD performs the best among all methods. Our implementation of IF2 outperforms that of \cite{ionides15}, but still ultimately underperforms IFAD. Both IFAD-0 and IFAD-1 manage to find the MLE, either matching or beating the highest log-likelihood previously found in the \texttt{dacca()} model implemented within the \texttt{pomp} package of \cite{king16}.}
@@ -498,8 +499,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
     \includegraphics[scale=0.53]{imgs/095/boxplotall.png}
     \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs. This simulates the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and improves on the warm-start given by running 40 IF2 iterations. Our choice of hyperparameters for our implementation of IF2 outperforms the choices made by \cite{ionides15}, which we depict in the boxplot labeled "IF2 2015". As before, while IF2 successfully approaches the MLE, it ultimately fails to find it.
     \textbf{Right:} Boxplot depicting the performance of IFAD, IF2, and MOP alone without the warm-start, where we plot all runs. We see that MOP alone drastically underperforms all other methods, failing to get close to the MLE. This shows that the IF2 warm-start may be necessary to achieve good performance in challenging nonconvex and noisy problems like this one.
-    \textbf{Takeaway:} In this panel, we see that (1) IF2 fails to find the MLE while the gradient steps perform better at fine-grained refinement, and (2) performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points, ultimately demonstrating the necessity of a hybrid algorithm like IFAD. 
-
+    \textbf{Takeaway:} In this panel, we see that (1) IF2 fails to find the MLE while the gradient steps perform better at fine-grained refinement, and (2) performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points, ultimately demonstrating the necessity of a hybrid algorithm like IFAD.
     In both, as before, we use a dotted red line to display the MLE. }
     \label{fig:boxplot-search}
 \end{figure}
@@ -512,7 +512,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
     \label{fig:optim}
 \end{figure}
 
-\begin{figure}[u!]
+\begin{figure}[t!]
     \centering
     \includegraphics[scale=0.7]{imgs/095/hist.png}
     \caption{Histogram comparison of the performance of IFAD, IF2, and MOP alone. As before, we note that IFAD successfully reaches the MLE a nontrivial number of times, while IF2 ultimately fails to do so. Our implementation of IF2 outperforms that of \cite{ionides15}, largely due to improved hyperparameter choices. MOP alone performs poorly, demonstrating the necessity of warm-starting the search with IF2. 
@@ -543,7 +543,7 @@ In the presence of strong convexity, first and second-order gradient methods tha
 
 This leads to a practical hybrid algorithm we call IFAD that warm-starts gradient descent, or some other first or second-order method using the gradient estimate given by MOP-$\alpha$, with IF2. When benchmarked on a challenging global search problem with the model of \cite{king08}, IFAD enjoys the best properties of IF2 and MOP-$\alpha$, successfully approaching a neighborhood of the MLE quickly without getting stuck in saddle points and (poor) local minima (like gradient descent alone would), while effectively optimizing the last few units of log-likelihood (which IF2 struggles with). 
 
-Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{jax} Python package from \citet{jax2018github}. 
+Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{JAX} Python package from \citet{jax2018github}. 
 
 
 \subsection{Future Work}
@@ -552,7 +552,7 @@ While MOP-$\alpha$, and IFAD in its current incarnation, remain very general, th
 
 We conjecture that the linear convergence result in Theorem \ref{thm:convergence} applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE. IF2 posesses some SGD-like qualities, including what looks like linear convergence to a ball around the MLE with width determined by the random walk standard deviation. Not much is known about the convergence rate of IF2, and an answer to this would also provide an answer to the convergence rate of IFAD beyond just the convergence rate of the gradient stage. We will explore this conjecture in future work.
 
-In the interest of simplicity, we only explore the performance of gradient descent on the Dacca cholera model of \cite{king08}. Exploring the use of various first and second order methods such as Newton's method, ADAM, L-BFGS, or other popular iterative optimization methods with the gradient estimates that MOP-$\alpha$ provides in the context of the particle filter could very well lead to nontrivial speedups and increased performance. 
+In the interest of simplicity, we only explore the performance of gradient descent on the Dhaka cholera model of \cite{king08}. Exploring the use of various first and second order methods such as Newton's method, ADAM, L-BFGS, or other popular iterative optimization methods with the gradient estimates that MOP-$\alpha$ provides in the context of the particle filter could very well lead to nontrivial speedups and increased performance. 
 
 Extensions of MOP-$\alpha$ and IFAD to panel and spatiotemporal datam, possibly through a block particle filter in the same vein as \cite{ionides22} and \cite{ning23}, would go a long way towards extending the current applicability of these methods to handle a wider variety of interesting and challenging scientific problems. 
 
@@ -587,21 +587,79 @@ The first follows from standard importance sampling arguments, the second from i
 
 \begin{lem}[Change of Particle Measure]
     \label{lem:change-measure-proper-weights}
-    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j,v_j),j=1,\dots,J\}$ be a sample drawn from $\{(X_j,u_j)\}$ where $(X_j,u_j)$ is represented, on average, $\pi_j J$ times. This could amount to multinomial resampling with probability $\pi_j$, or systematic resampling. Write
+    Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,v_j^J),j=1,\dots,J\}$ be a sample drawn from $\{(X_j^J,u_j^J)\}$ where $(X_j^J,u_j^J)$ is represented, on average, $\pi_j J$ times. This could amount to multinomial resampling with probability $\pi_j$, or systematic resampling. Write
     \[
-    (Y_j,v_j) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
+    (Y_j^J,v_j^J) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
     \]
     where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ targets $f_X$.
 \end{lem}
 
 \begin{proof}
-    Let $h$ be an integrable function. 
-    \begin{align*}
-        \E\left[\sum_{j=1}^J h(Y_j) v_j\right] 
-        &= \sum_{j=1}^J \E\left[h(X_{a(j)}) \frac{u_{a(j)}}{\pi_{a(j)}}\right] \\
-        &= \sum_{j=1}^J \E\left[h(X_{j}) u_{j}\right],
-    \end{align*}
-    and similarly for the denominator. Now, the numerator and denominator of the reweighted quantity have the same expectation as the numerator and denominator of the original quantity, so they must converge to $ E_\pi(h(X))$ almost surely as well. 
+
+
+    Note that as the $Y_j^J$ are a subsample from $X_j^J$, $h$ can be a function of $Y$ as well as it is one for $X$. We then expand
+    $$\frac{\sum_j h(Y_j^J) v_j^J}{\sum_j v_j^J} = \frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}}.$$
+
+    We know that by definition,
+    $$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[f(X)].$$
+
+    We want to show
+    $$\frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} 0.$$. 
+
+    %To see this, observe that 
+    %$$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} = \frac{\sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J}{\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J},$$
+
+    %so it remains to show that
+    %$$\frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}} 
+    %- \frac{\sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J}{\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J}
+    %\stackrel{a.s.}{\to} 0.$$. 
+
+    This is equivalent to showing that
+    $$\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
+    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J} \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J 
+    \stackrel{a.s.}{\to} 0.$$. 
+
+    From $|a d- b c| \leq|d||a-c|+|c||b-d|$, we see that it suffices to bound 
+
+    $$ \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J $$
+    and 
+    $$ \sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J
+    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}$$
+    separately. 
+
+    %Write 
+    %$$\widetilde{\pi_{k_j}^J} := \frac{\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}}, \widetilde{u_{j}^J} := \frac{u_j^J}{\sum_j u_j^J}.$$
+
+    Write $g(X_j^J) = h(X_j^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
+    $$\sum_j Z_j^J := \sum_j \left(g(X_{k_j}^J) -  g(X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
+
+    Assume that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where 
+    $$\E\left[\left(\sum_j Z_j^J\right)^4\right] 
+    = J\E[(Z_1^J)^4] + 3J(J-1)\left(\E[(Z_j^J)^2]\right) \leq CJ^2,$$ for some $C>0$. By Markov, 
+    $$\mathbb{P}\left(\left|\frac{1}{J} \sum_{j=1}^J Z_j^J\right|>\epsilon\right) 
+    \leq \frac{1}{\epsilon^4J^4 } 
+    \mathbb{E}\left[\left(\sum_{j=1}^J Z_j^J\right)^4\right] \leq \frac{C}{\epsilon^4J^2},$$
+    and as these terms are summable we can apply Borel-Cantelli to conclude that these deviations happen only finitely often for every $\epsilon>0,$ giving us the almost-sure convergence for
+    
+    $$ \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J \stackrel{a.s.}{\to} 0.$$ 
+
+    Similarly, we also have that
+    $$ \sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J
+    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J} \stackrel{a.s.}{\to} 0,$$
+
+    and the result is proved. 
+
+    
+    
+   % Let $h$ be an integrable function. 
+    %\begin{align*}
+    %    \E\left[\sum_{j=1}^J h(Y_j) v_j\right] 
+    %    &= \sum_{j=1}^J \E\left[h(X_{a(j)}) \frac{u_{a(j)}}{\pi_{a(j)}}\right] \\
+    %    &= \sum_{j=1}^J \E\left[h(X_{j}) u_{j}\right],
+    %\end{align*}
+    %and similarly for the denominator. Now, the numerator and denominator of the reweighted quantity have the same expectation as the numerator and denominator of the original quantity, so they must converge to $ E_\pi(h(X))$ almost surely as well. 
 \end{proof}
 
 

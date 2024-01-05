@@ -6,8 +6,8 @@
 %\usecolortheme{wolverine}
 \title[AD for POMPs]{Automatic Differentiation Accelerates Inference for Partially Observed Stochastic Processes}
 \subtitle{\small{Inference for Partially Observed Structured Dynamic Systems}}
-\author[Kevin Tan]{Kevin Tan \\\vspace{0.5cm} \small{Joint work with Giles Hooker and Edward Ionides}}
-\date[\today]{\today}
+\author[Kevin Tan]{Kevin Tan \\ \small{University of Pennsylvania, Department of Statistics and Data Science} \\\vspace{0.5cm} \small{Joint work with Giles Hooker and Edward Ionides}}
+\date[January 4, 2024]{IMS Asia Pacific Rim Meeting \\ January 4, 2024}
 
 \usepackage{amsmath}
 \usepackage{tabularx}
@@ -33,6 +33,7 @@
 \usepackage{diagbox}
 \usepackage{tikz}
 \usepackage{fancyhdr}
+\usepackage{appendixnumberbeamer}
 
 
 \newcommand{\Prob}{\displaystyle \mathbb {P}}
@@ -88,41 +89,658 @@
 
 
 \begin{frame}{Partially Observed Markov Processes}
+
+    \begin{itemize}
+        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.
+        \item \pause Unknown parameter $\theta \in \Theta$, to be estimated.
+        \item \textbf{Notation:}
+        \begin{itemize}
+            \item $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ is the \textbf{process model}.
+            \item \pause $\texttt{process}\left(x_n, \theta\right)$ is the \textbf{simulator} corresponding to the process model. 
+            \item \pause $f_{Y_n|X_n}\left(y_n \mid x_n, \theta\right)$ is the \textbf{measurement model}.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Particle Filters}
+
+    \begin{figure}
+        \centering
+        \begin{minipage}[c]{0.5\textwidth}
+            \centering
+            \includegraphics[scale=0.15]{imgs/pfilter.png}
+            \end{minipage}
+        \begin{minipage}[c]{0.45\textwidth}
+            \caption{
+            \\
+            -- Dirac measure approximation of the Bayes filter. 
+            \\ 
+            -- Yields a filtering distribution and likelihood estimate.
+            \\ 
+            -- Graphic from \cite{berg2019pfilterimage}.}
+        \end{minipage}
+        \label{fig:pfilter-illustration}
+    \end{figure}
+    
+    \begin{itemize}
+        \item Monte Carlo approximation of the Bayes filter.
+        \begin{itemize}
+            \item \pause Maintain belief on current state $x_n^F$. 
+            \item \pause Simulate forward to get $x_{n+1}^P$, observe observation $y_{n+1}^*$.
+            \item \pause Update $x_{n+1}^F$ accordingly.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Automatic Differentiation}
+
+    \begin{figure}
+        \begin{minipage}[c]{0.7\textwidth}
+            \includegraphics[scale=0.3]{imgs/autograd.png}
+        \end{minipage}
+        \begin{minipage}[l]{0.27\textwidth}
+            \caption{
+            \\$f(x,y) = x^2+xy+2$, $f'(x,y) = (2x+y,x).$
+            -- Figure from \href{https://avinashselvam.medium.com/automatic-differentiation-explained-9f02c74e9a90}{Medium}.}
+        \end{minipage}
+        \label{fig:autograd-illustration}
+    \end{figure}
+    
+    \begin{itemize}
+        \item Evaluates the gradient of a (scalar or vector-valued) computer program w.r.t. its arguments.
+        \item \pause Traverses computational graph (of primitive functions) with chain rule.
+    \end{itemize}
     
 \end{frame}
 
 
-\section{Introduction}
+\section{Motivation}
 
 \begin{frame}{Maximum Likelihood Inference is Hard in POMPs}
     
 \begin{enumerate}
     \item \textbf{Intractable likelihood functions}! Bypassed with e.g. simulated likelihood, likelihood-free inference, particle filters, etc. 
-    \item Want to perform inference without having access to the transition density of the latent Markov process, using only  a \textbf{simulator} (\cite{welch2009abc, wood2010sl, doucet2010pmcmc, ionides08, ionides15}). 
-    \item \textbf{Significant Monte-Carlo noise in the likelihood estimate} makes accurate parameter estimation difficult.
+    \item \pause May not have access to transition densities, only a \textbf{simulator}. 
+    \begin{itemize}
+        \item \pause IF2 (\cite{ionides15}), particle MCMC (\cite{doucet2010pmcmc}), only full-information methods that can deal with this.
+    \end{itemize}
+    \item \pause \textbf{Significant Monte-Carlo noise in likelihood estimate} makes accurate parameter estimation difficult.
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{When Does IF2 Struggle?}
-
-\begin{itemize}
-    \item IF2 is great at approaching the MLE quickly! 
-    \item Performs parameter updates at every timestep, 
-\end{itemize}
-
+\begin{frame}{IF2 Plateaus Quickly But Struggles to Find the MLE}
 \begin{figure}
     \centering
-    \includegraphics[scale=0.5]{imgs/095/optim.png}
-    \label{fig:enter-label}
+    \includegraphics[scale=0.5]{imgs/095/if2fail.png}
+    \caption{Performance of IF2 on \cite{king08} Dhaka cholera model. Shaded area represents 0th to 80th percentile, solid line is median of 100 runs. While IF2 makes quick initial progress, it fails to find the MLE.}
+    \label{fig:if2fail}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Hang on, wait a minute!}
+    \begin{itemize}
+        \item Original iterated filtering algorithm: (noisy) approximation of score (\cite{ionides06-pnas}). 
+        %\item \pause Performed a single "gradient step" at the end of each filtering iteration.
+        \pause
+        \item \textbf{Would performing automatic differentiation (AD) on the likelihood estimate from the particle filter lead to a less noisy score approximation?}
+    \end{itemize}
+    \pause
+    \begin{block}{Problem!}
+        But the particle filter has discrete stochastic resampling! How can we differentiate this?
+    \end{block}
+\end{frame}
+
+\section{Previous Work: AD for Particle Filters}
+
+
+\begin{frame}{Previous Work}
+
+    \begin{table}[h!]
+        \centering
+        \begin{tabular}{||c c||} 
+         \hline
+         Authors & Method \\ [0.5ex] 
+         \hline\hline
+         \cite{poyiadjis11} & Particle approximation of score
+         \\ & $O(N^2)$ variance, unbiased \\
+         \hline
+         \cite{blei2018vsmc} & Backprop through vanilla PF \\ 
+         & Asymptotic bias \\
+         \hline
+         \cite{corenflos21} & Optimal transport resampling \\
+         & Consistent, $O(J^2)$ runtime \\
+         \hline
+         \cite{scibior21} & Stop-gradient trick \\ 
+         & Recovers \cite{poyiadjis11} with AD \\
+         \hline 
+         \cite{singh22} & Fixed-lag smoothing \\ 
+         & Need transition densities \\ 
+         \hline
+        \end{tabular}
+        \label{table:lit-review}
+    \end{table}
+\end{frame}
+
+
+\begin{frame}{Our Contributions}
+    \begin{itemize}
+        \item New theoretical framework/algorithm/gradient estimator we call MOP-$\alpha$.
+        \begin{itemize}
+            \item \pause Gradient estimates of \cite{blei2018vsmc} (MOP-0), \cite{poyiadjis11} and \cite{scibior2021dpf} (MOP-1) are special cases.
+            \item \pause Does not need transition densities, only a differentiable simulator.
+            \item \pause Can optimize a bias-variance tradeoff. 
+        \end{itemize}
+        \item \pause Promising hybrid algorithm, warm-starts gradient descent (using this estimator) with IF2.
+        \item \pause Outperforms IF2 on Cholera model of \cite{king08}.
+    \end{itemize}
+\end{frame}
+
+
+\section{Smooth Extensions to the Particle Filter}
+
+\begin{frame}{Intuition}
+    \begin{block}{Problem}
+        Want to differentiate through the particle filter. But the particle filter has discrete stochastic resampling! 
+    \end{block}
+    \pause 
+    \begin{block}{Idea}
+        Don't differentiate $\hat\ell(\theta)$ directly, differentiate through a (suitably) reweighted bootstrap filter.
+    \end{block}
+    \begin{itemize}
+        \item \pause Particle filter run with state transitions \& resampling under $\phi \in \Theta$. 
+        \item \pause Reweight to evaluate likelihood at nearby $\theta \in \Theta$ (same resampling).
+        \item \pause Fix seed to treat particles, weights under $\phi$ as constants.
+        \item \pause \textbf{Now only need to differentiate through likelihood ratios!}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{What is this reweighting?}
+    Ordinarily, the likelihood estimate for $\phi$ is 
+    $$\hat\lik(\phi) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J \left(\underbrace{f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi)}_{\textcolor{blue}{\text{Measurement Model}}}
+    \cdot 
+    \underbrace{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi)}_{\textcolor{red}{\text{Process model}}}\right).$$
+    \pause
+    So to estimate the likelihood for $\theta$, we can correct 
+    $$
+        \hat\lik(\theta) 
+        = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi) \cdot 
+        f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi) 
+        \cdot \underbrace{s_{n,j} \cdot r_{n,j}}_{\text{Correction Term}},
+    $$
+    \pause
+    where the multiplicative correction terms are
+    $$
+        \underbrace{s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}}_{\textcolor{blue}{\text{Measurement Model Likelihood Ratios}}},\;\; \underbrace{r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)}}_{\textcolor{red}{\text{Process Model Likelihood Ratios}}}.
+    $$
+        
+\end{frame}
+
+\begin{frame}{New Problem}
+    \begin{block}{Problem}
+        Need likelihood ratios w.r.t. process and measurement models!
+    \end{block}
+    \pause 
+    \begin{block}{Solution}
+        Offload process model derivatives to differentiable simulator. 
+    \end{block}
+    \begin{itemize}
+        \item \pause Run particle filter twice under same seed: one with process model at $\phi$, another with process model at $\theta$. Resample according to $\phi$.
+        \item \pause Correct only with resampling likelihood ratios. 
+        \item \pause Introduce additional discounting parameter $\alpha$ for bias-variance tradeoff.
+    \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{Algorithm: Measurement Off-Policy, MOP-$\alpha$}
+    \begin{enumerate}
+        \item \textbf{Run a particle filter once at} $\phi$ to obtain $X_{n,j}^{P,\phi}, X_{n,j}^{F,\phi}$. Fix seed throughout. Set initial weights $w_{0,j}^{F,\theta} = 1/J$.
+        \item \pause \textbf{At each timestep,} propagate weights $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^\alpha$. 
+        \item \pause Simulate process model ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\cdot|{X}_{n-1,j}^{F};{\theta}\big)$, evaluate measurement model $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$, evaluate conditional likelihood under $\phi$, $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$, \textbf{as usual.}
+        \item \pause \textbf{Resample according to $\phi$:} $k_{1:J} \sim \prob\big(k_{j}=m\big) \propto g^{\phi}_{n,m}$.
+        \item \pause \textbf{Correct filtering weights:} $\displaystyle w^{F,\theta}_{n,j}= w^{P,\theta}_{n,k_j} \times  g^{\theta}_{n,k_j}/ g^{\phi}_{n,k_j}$. 
+    \end{enumerate}
+    \pause 
+    \centering{\textbf{Special Case:} If $\theta=\phi$, only need to run one particle filter! Set $X_{n,j}^{P,\theta}, X_{n,j}^{F,\theta}$ to be copies of the $\phi$ counterparts, where gradients don't propagate. Explains the \textbf{stop-gradient} trick of \cite{scibior21}.}
+\end{frame}
+
+
+\begin{frame}{Bias-Variance Tradeoff with $\alpha$}
+\begin{itemize}
+    \item $\alpha$ balances a tradeoff between:
+    \begin{itemize}
+        \item \pause Maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$).
+        \item \pause Considering only the single-step transition dynamics (when $\alpha=0$).
+    \end{itemize}
+    \item \pause\textbf{Exponentially-weighted moving average} where $\alpha$ controls the amount of discounting.
+    \item \pause Bias small if $y_{n+1:N}^*$ not informative for $x_n$ given $y_{0:n}^*$ (\cite{corenflos21}).
+\end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}{Bias-Variance Tradeoff with $\alpha$}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{imgs/mlegrad.png}
+    \caption{Gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate unbiased with high variance. When $\alpha=0$, lower variance but biased.}
+    \label{fig:bias-variance}
 \end{figure}
     
+\end{frame}
+
+\begin{frame}{Guarantee}
+    \begin{prop}[Correctness of MOP-$\alpha$]
+    \label{prop:mop-correctness}
+    When either $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the posterior and is unbiased for the likelihood under $\theta$. 
+    When $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. Its gradient when $\alpha=1$ is the estimate of \citet{poyiadjis11},
+    $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),$$
+    and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
+    $$
+        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
+    $$
+    i.e. differentiating through a vanilla particle filter (\cite{scibior21}).
+\end{prop}
+\end{frame}
+
+
+
+\section{Practical Maximum Likelihood Inference}
+
+\begin{frame}{One possible procedure:}
+    \begin{itemize}
+        \item Warm-start gradient descent, or some other first or second order procedure (using the gradient estimate given by MOP-$\alpha$), with the output of an initial search of IF2. 
+        \item \pause Run IF2, aggressively cooling to a fixed learning rate, till search stalls.
+        \item \pause Refine this coarse solution with gradient descent.
+    \end{itemize}
+    \pause
+    \centering{\textbf{Iterated Filtering with Automatic Differentiation (IFAD)}}
+\end{frame}
+
+
+\begin{frame}{Convergence Analysis}
+    \begin{prop}[Convergence of IFAD-1]
+        \label{thm:convergence}
+        
+        Consider a variant of IFAD-1 where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
+        
+        Let $H(\theta_n)$ be a matrix possibly dependent on $\theta_n$ with minimum eigenvalue always greater than some $c>0$. Choose learning rate $\eta$ and error tolerance $\epsilon$ such that, where $\beta$ is the Armijo condition hyperparameter,
+        \begin{equation*}
+            \eta \leq \frac{c(1-\beta)}{\Gamma}, \;\; \epsilon \leq \frac{c(1-\beta)}{2\Gamma}||g(\theta_n)||.
+        \end{equation*}
+        
+        Then, with $J$ large enough, the following holds with probability at least $1-\delta$:
+        \begin{equation*}
+        \ell(\theta^*) - \ell(\theta_{n+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_n))
+        \end{equation*}
+        
+        and the algorithm terminates when $||\nabla_\theta \ell(\theta_n)|| \leq (1+\sigma) \epsilon$.
+        \end{prop}
+\end{frame}
+
+\begin{frame}{Convergence Analysis}
+    \begin{itemize}
+        \item Similar to \cite{mahoney16}, uses concentration inequalities from \cite{delmoral2011ci}.
+        \item Gradient stage of IFAD-1 converges linearly to the MLE if:
+        \begin{enumerate}
+            \item \pause The log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE.
+            \item \pause The IF2 stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. 
+        \end{enumerate}
+        \item \pause \textbf{Conjecture:} This applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE and behaves a lot like SGD. 
+    \end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}{Runtime}
+
+\begin{itemize}
+    \item Warm-start:
+    \begin{itemize}
+        \item \pause Initial warm-start "convergence" happens fairly quickly in practice. 
+        \begin{itemize}
+            \item \pause Dhaka cholera model of \cite{king08}: 40 iterations, usually 100-200 for global search.
+        \end{itemize}
+    \end{itemize}
+    \item \pause MOP-$\alpha$:
+    \begin{itemize}
+        \item \pause Gradient takes 3.75x time of \texttt{pfilter()}, in line with cheap gradient principle (\cite{kakade2019provably}).
+    \end{itemize}
+    \item \pause Runtime \textbf{linear, and not quadratic}, in number of particles.
+    \item \pause Re-implementation in \texttt{JAX} (\cite{jax2018github}) led to 16x speedup v.s. \texttt{pomp} package of \cite{king08}.
+\end{itemize}
+
+\end{frame}
+
+
+\section{Numerical Experiments}
+
+\begin{frame}{Cholera in Bangladesh}
+
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.5]{imgs/dacca.png}
+        \caption{Illustration of SIR model from \cite{king08}.}
+        \label{fig:sir}
+    \end{figure}
+    
+    \begin{itemize}
+        \item Dhaka model from \cite{king08}, also used in \cite{ionides15} to benchmark IF2.
+        \item \pause Stochastic SIR compartmental model with transition uncertainty driven by Brownian motion.
+        \item \pause Force of infection $\lambda(t)$ modeled with splines for seasonality, etc.
+    \end{itemize}
+    
+        %\item \pause Population $H(t)$ divided into:
+        %\begin{itemize}
+        %    \item \pause Susceptible compartment $S(t)$.
+        %    \item \pause Infected compartment $I(t)$.
+        %    \item \pause Three ($k=3$) recovered compartments $R_1(t), ..., R_k(t)$ denoting varying degrees of cholera immunity.
+        %\end{itemize}
+        %\item \pause $M(t)$ denotes the cholera deaths in each month.
+\end{frame}
+
+\begin{frame}{Results}
+    
+    \begin{table}[h!]
+        \centering
+        \begin{tabular}{||c c c||} 
+         \hline
+         Method & Best Log-Likelihood & Rank \\ [0.5ex] 
+         \hline\hline
+         IFAD-0 & $\textbf{-3747.87}$ & 1\\
+         IFAD-1 & $\textbf{-3748.53}$ & 2\\
+         IF2 (Ours) & -3755.91 & 3\\
+         IF2 (\cite{ionides15}) & -3768.63 & 4\\ 
+         MOP-0 Alone & -3795.74 & 5\\
+         MOP-1 Alone & -3797.38 & 6\\
+         \hline
+        \end{tabular}
+        \caption{\\
+        -- IFAD performs the best among all methods, finding the MLE. \\
+        -- Our implementation of IF2 outperforms that of \cite{ionides15} but underperforms IFAD.}
+        \label{table:mle}
+    \end{table}
+    
+    \begin{itemize}
+        \item Benchmarked IFAD against IF2 on a challenging global search problem. 
+        \item \pause Performed 100 searches each. 
+    \end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Results}
+    
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[scale=0.37]{imgs/095/pairs.png}
+    \includegraphics[scale=0.37]{imgs/095/qq.png}
+    \caption{\\
+    --\textbf{Left:} Paired searches from the same starting point. \\
+    --\textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. \\
+    -- IFAD has the edge and manages to find the MLE.\\
+    -- No IF2 search successfully gets within 7 log-likelihood units of it.}
+    \label{fig:scatter}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Results}
+    
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.28]{imgs/095/boxplot.png}
+    \includegraphics[scale=0.31]{imgs/095/boxplotall.png}
+    \caption{\\
+    -- \textbf{Left:} Results of best run out of every ten runs, simulating procedure of running a few searches and choosing the best one. \\
+    -- \textbf{Right:} MOP alone drastically underperforms all other methods, failing to get close to the MLE. \\
+    -- IF2 warm-start necessary in challenging nonconvex and noisy problems.}
+    \label{fig:boxplot-search}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}{Results}
+\begin{figure}[htbp!]
+    \centering
+    \includegraphics[scale=0.5]{imgs/095/optim.png}
+    \caption{\\
+    -- Solid lines depict the median negative log-likelihood at each iteration.\\
+    -- Shaded area depicts the best search at any iteration and the 80\% percentile.}
+    \label{fig:optim}
+\end{figure}
+%-- While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD -- IFAD has better tail control and successfully reaches the MLE. The initial loss in log-likelihood upon transitioning from IF2 to MOP seems to help with escaping local minima. 
+\end{frame}
+
+\begin{frame}{Results}
+    
+\begin{figure}[u!]
+    \centering
+    \includegraphics[scale=0.35]{imgs/095/hist.png}
+    \caption{Histogram comparison of IFAD, IF2, and MOP alone. Right is better.}
+    \label{fig:hist-all}
+\end{figure}
+\end{frame}
+
+\begin{frame}{Takeaways}
+    \begin{enumerate}
+        \item IF2 converges quickly to a neighborhood of the MLE but fails to find the MLE.
+        \item \pause Gradient steps perform better at fine-grained refinement.
+        \item \pause Performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points.
+        \item \pause IFAD combines the best of IF2 and MOP, approaching the MLE quickly and successfully performing refinement -- even on a very difficult global search problem.
+    \end{enumerate}
+\end{frame}
+
+\section{Conclusions and Future Work}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item New theoretical framework/algorithm/gradient estimator that encompasses a few existing gradient estimates.
+        \item \pause Promising hybrid algorithm that warm-starts gradient descent (using this estimator) with IF2.
+        \item \pause Outperforms IF2 on Dhaka cholera model of \cite{king15}.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Future Work}
+    \begin{itemize}
+        \item MOP-$\alpha$ cannot handle discrete latent states. Maybe likelihood ratios can get around this.
+        \item \pause Convergence rate of IF2 not known, conjecture similar behavior to SGD. 
+        \item \pause Only gradient descent explored, other methods like Newton's method, ADAM, L-BFGS, etc. may perform better.
+        \item \pause Extensions to panel and spatiotemporal data, e.g. with a block particle filter in the lens of \cite{ionides22} and \cite{ning23}.
+        \item \pause Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual}.
+    \end{itemize}
 \end{frame}
 
 
 \bibliographystyle{apalike}
 \bibliography{mop/bib-ifad, mop/bib-ref}
 
+\appendix
+\section{Appendix}
 
+
+\begin{frame}{Previous Work}
+
+    
+    \begin{itemize}
+        \item \cite{poyiadjis11}, particle approximation of the score. \pause \\ \cite{scibior21}: AD + "stop-gradient trick". 
+        \item 
+        \pause \cite{blei2018vsmc}, backpropagate through vanilla particle filter.
+        \item 
+        \pause \cite{corenflos21}, optimal transport resampling.
+        \item 
+        \pause \cite{singh22}, fixed-lag smoothing.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Previous Work: Issues}
+    \begin{itemize}
+        \item Not (yet) compatible with desire for simulation-based inference.
+        \begin{itemize}
+            \item \pause Need modifications to use the bootstrap filter.
+            \item \pause Sometimes special cases needed, e.g. transitions factoring into a policy and deterministic model (\cite{singh22}).
+        \end{itemize}
+        \item \pause Computationally expensive, quadratic in number of particles.
+        \begin{itemize}
+            \item \pause Optimal transport resampling (\cite{corenflos21}), marginal particle filters (\cite{scibior21}).
+        \end{itemize}
+        \item \pause High variance, or asymptotically biased.
+        \begin{itemize}
+            \item \pause Either one drops resampling terms and accepts asymptotic bias (\cite{blei2018vsmc}), or has variance quadratic in horizon (\cite{poyiadjis11}, \cite{scibior21})
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{(Improved) Iterated Filtering (\cite{ionides15})}
+    \begin{itemize}
+        \item Only (practical) full-information, frequentist method of parameter estimation in POMPs that does not need transition densities. 
+        \begin{itemize}
+            \item \pause Each particle has its own set of parameters.
+            \item \pause Particle parameters perturbed at every timestep.
+            \item \pause Parameters resampled with their particles according to likelihood.
+        \end{itemize}
+        \item \pause Treats parameters as augmentations of the state space, evolving according to a random walk.
+        \item \pause \textbf{Consistent estimates} via viewing this as a sequential Bayes map on the parameter distribution.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{When Does IF2 Struggle?}
+
+\begin{itemize}
+    \item \textbf{IF2 is great at approaching the MLE quickly!}
+    \item \pause Performs parameter updates at every timestep, so it does not need to wait to filter through the entire trajectory before each update.
+    \item \pause \textbf{But struggles at squeezing out the last few units of log-likelihood.}
+    \begin{itemize}
+        \item \pause Especially true in highly nonlinear, nonconvex, and noisy settings, e.g. \textbf{disease models}. 
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Assumptions}
+        
+    \begin{aspt}[Smooth Neighborhood]
+    \label{assump:smooth-nbhd}
+    There exists a neighborhood $\mathcal{N}(\phi)$ around any $\phi \in \Theta$ where for all $\theta \in \mathcal{N}(\phi)$ and almost every $\omega \in \Omega$, the Monte Carlo estimate of the likelihood at $\theta \in \mathcal{N}(\phi)$ with the system evolving according to $\phi$ conditional on $\omega$, $\hat\lik(\theta,\phi,\omega, J)$, is twice differentiable in $\theta$. 
+    \end{aspt}
+
+    \begin{itemize}
+        \item \pause \textbf{Justification:} For suitably nearby $\theta$ and $\phi$, the resampling indices for $\hat\lik(\theta,\phi,\omega, J)$ and $\hat\lik(\phi,\phi,\omega, J)$ are the same.
+        \item \pause This eliminates any discontinuities from resampling.
+        \item \pause For small enough $\mathcal{N}(\phi)$, the likelihood ratios are bounded. 
+        \item \pause The likelihood only changes by a factor of the likelihood ratios, which are bounded and smooth in $\theta$ if the densities used in the calculation are. 
+    \end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Assumptions}
+    
+    \begin{aspt}[Continuity of the Likelihood] $\ell(\theta)$ proper is continuous in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$.
+    \end{aspt}
+    \pause 
+    \begin{aspt}[Bounded Measurement Model] There is an $\epsilon>0$ with $\epsilon^{-1}>f_{Y_n \mid X_n}\left(y_n{ }^* \mid x_n; \theta\right)>\epsilon$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
+    \end{aspt}
+    \pause 
+    \begin{aspt}[Locally Bounded Derivative]
+    \label{assump:local-bounded-derivative}
+    Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and a constant $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$ such that
+        $$
+        \|\nabla \ell(\theta, \phi, \omega, J)\|_2<G(\theta) \leq G<\infty
+        $$
+        for every $\phi \in \mathcal{M}, \theta$ in smooth neighborhood $\mathcal{N}(\phi)$, and almost every $\omega \in \Omega$.
+    \end{aspt}
+\end{frame}
+
+
+\begin{frame}{Algorithm: Measurement Off-Policy, MOP-$\alpha$}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.4]{imgs/mop.png}
+        \caption{MOP-$\alpha$ algorithm.}
+        \label{fig:mop}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Why did we bother with this?}
+    \begin{itemize}
+        \item Lets us work with only a differentiable simulator.
+        \item \pause Discounting parameter $\alpha$ helps with a bias-variance tradeoff (explained later). 
+        \item \pause Gradients returned by the likelihood estimate $$\hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$$ have nice properties.
+    \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Iterated Filtering with Automatic Differentiation (IFAD)}
+    \begin{figure}
+        \centering
+        \includegraphics[scale=0.45]{imgs/ifad.png}
+        \caption{Warm-starting first/second order iterative optimization with IF2.}
+        \label{fig:ifad}
+    \end{figure}
+\end{frame}
+
+
+\begin{frame}{Why does this help?}
+    \begin{itemize}
+        \item IF2 converges quickly, but struggles with last few log-likelihood units. 
+        \item \pause Gradient descent gets stuck in saddle points and poor local minima when the likelihood is nonconvex. 
+        \item \pause Warm-starting gradient methods with IF2:
+        \begin{itemize}
+            \item \pause Under regularity conditions, the likelihood is well-behaved near the MLE.
+            \item \pause Issues with saddle points and local minima alleviated. 
+        \end{itemize}
+        \item \pause Combining these two lets us enjoy the best of both worlds.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Convergence Analysis}
+
+    Guarantee currently only holds for IFAD-1, as it forms a particle approximation of the score as in \cite{poyiadjis11}.
+    \begin{itemize}
+        \item \pause Can be extended if the bias for the gradient estimate given by MOP-$\alpha$ for $\alpha < 1$ is small enough.
+        \item \pause e.g. $\alpha$ close to 1, or $y_{n+1:N}^*$ uninformative of current state $x_n$ given past and current measurements $y_{0:n}^*$.
+        \item \pause Otherwise, need to handle biased gradient descent.
+    \end{itemize}
+
+\end{frame}
+
+
+
+
+\begin{frame}{Cholera in Bangladesh}
+    The \textbf{transition dynamics} follow this series of stochastic differential equations driven by Brownian motion:
+    \begin{align*}
+        d S&=\left(k \epsilon R_k+\delta(S-H)-\lambda(t) S\right) d t+d H-(\sigma S I / H) d B, \\ 
+        d I&=\left(\lambda(t) S-(m+\delta+\gamma) I\right) d t+(\sigma S I / P) d B, \\ 
+        d R_1&=\left(\gamma I-(k \epsilon+\delta) R_1\right) d t, \\ 
+        \vdots \\ 
+        d R_k&=\left(k \epsilon R_{k-1}-(k \epsilon+\delta) R_k\right) d t,
+    \end{align*}
+\end{frame}
+
+\begin{frame}{Cholera in Bangladesh}
+The \textbf{force of infection}, $\lambda(t)$, is modeled by splines $s_j$, 
+    \begin{equation*}
+        \lambda(t)=\exp \left\{\beta_{\text {trend }}\left(t-t_0\right)+\sum_{j=1}^{6} \beta_j s_j(t)\right\}(I / P) + \exp \left\{\sum_{j=1}^{6} \omega_j s_j(t)\right\},
+    \end{equation*}
+    where
+    \begin{itemize}
+        \item \pause $\beta_j$ model seasonality in the force of infection.
+        \item \pause $\beta_{\text{trend}}$ models the trend in the force of infection.
+        \item \pause $\omega_j$ represent seasonality of a non-human environmental reservoir of disease.
+    \end{itemize}
+    
+\end{frame}
+
+\begin{frame}{Cholera in Bangladesh}
+    The \textbf{measurement model} for observed monthly cholera deaths is given by 
+    \begin{equation*}
+        Y_n \sim \gN(M_n, \tau^2M_n^2),
+    \end{equation*}
+    where $M_n$ is the true number of cholera deaths in that month.
+\end{frame}
 
 \end{document}
 
