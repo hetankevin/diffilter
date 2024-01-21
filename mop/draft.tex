@@ -181,6 +181,8 @@ Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\
 
 \subsubsection{Doubly Off-Policy Particle Filter}
 
+\kevin{rewrite to de-emphasize dop as in presentation, sell mop as the big theoretical idea that explains AD through PFs and unifies two previous estimators}
+
 Having the system evolve according to $\phi$ but evaluating the likelihood at $\theta$ requires us to reweight the conditional likelihood at each timestep by likelihood ratios corresponding to the process and measurement models. This corresponds to making two corrections in the particle weights at each timestep, by multiplying by 
 \begin{equation}
     s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}, \qquad r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)},
@@ -543,7 +545,7 @@ In the presence of strong convexity, first and second-order gradient methods tha
 
 This leads to a practical hybrid algorithm we call IFAD that warm-starts gradient descent, or some other first or second-order method using the gradient estimate given by MOP-$\alpha$, with IF2. When benchmarked on a challenging global search problem with the model of \cite{king08}, IFAD enjoys the best properties of IF2 and MOP-$\alpha$, successfully approaching a neighborhood of the MLE quickly without getting stuck in saddle points and (poor) local minima (like gradient descent alone would), while effectively optimizing the last few units of log-likelihood (which IF2 struggles with). 
 
-Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{JAX} Python package from \citet{jax2018github}. 
+Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual} that we call \texttt{pomp-py}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{JAX} Python package from \citet{jax2018github}. 
 
 
 \subsection{Future Work}
@@ -570,15 +572,15 @@ While we make the first steps towards developing a Python counterpart to the pop
 
 
 \begin{defn}[Targeting]
-    A random vector $(X, w)$ drawn from a distribution $g$ \textbf{targets} the distribution $\pi$ if for any integrable function $h$,
+    A random vector $(X, w)$ drawn from a distribution $g$ \textbf{targets} the distribution $\pi$ if for any measurable and bounded functional $h$,
 \begin{equation}
     E_g\{h(X) \cdot w\}=E_\pi\{h(X)\}
 \end{equation}  
-    A set of particles $(X^J_j, w^J_j), j=1,2, \ldots,J$, \textbf{targets} $\pi$ if
+    A set of particles $(X^J_j, w^J_j), j=1,2, \ldots,J$, \textbf{targets} $\pi$ if for any measurable and bounded functional $h$,
 \begin{equation}
     \frac{\sum_{j=1}^J h(X^J_j) w^J_j}{\sum_{j=1}^J w^J_j} \stackrel{a.s.}{\to} E_\pi(h(X))
 \end{equation}
-for any integrable function $h$ as $J \to \infty$.
+as $J \to \infty$.
 \end{defn}
 \citet{chopin2004clt} asserted without proof that common particle filter algorithms target the filtering distribution, $f_{X_{1:N}|Y_{1:N}}$, in this sense.
 \ed{PERHAPS IF WE HAD A CONCRETE PROOF OF THIS, THAT WOULD HELP TO SEE HOW IT EXTENDS TO OUR SUBSEQUENT LEMMAS. ARGUABLY, THAT IS IN FACT WHAT WE ARE DEVELOPING VIA THESE LEMMAS. I WONDER IF SOME OTHER REFERENCE, E.G. DELMORAL'S 2004 BOOK, HAS AN EXPLICIT PROOF OF CONSISTENCY FOR SOME PARTICLE FILTER ALGORITHM.}
@@ -591,7 +593,7 @@ The first follows from standard importance sampling arguments, the second from i
     \[
     (Y_j^J,v_j^J) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
     \]
-    where $a$ is called the ancestor function. Then, $\{(Y_j,v_j),j=1,\dots,J\}$ targets $f_X$.
+    where $a$ is called the ancestor function. If the importance sampling weights $u/\pi$ are bounded, then $\{(Y_j,v_j),j=1,\dots,J\}$ targets $f_X$.
 \end{lem}
 
 \begin{proof}
@@ -634,7 +636,7 @@ The first follows from standard importance sampling arguments, the second from i
     Write $g(X_j^J) = h(X_j^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
     $$\sum_j Z_j^J := \sum_j \left(g(X_{k_j}^J) -  g(X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
 
-    Assume that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where 
+    Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where 
     $$\E\left[\left(\sum_j Z_j^J\right)^4\right] 
     = J\E[(Z_1^J)^4] + 3J(J-1)\left(\E[(Z_j^J)^2]\right) \leq CJ^2,$$ for some $C>0$. By Markov, 
     $$\mathbb{P}\left(\left|\frac{1}{J} \sum_{j=1}^J Z_j^J\right|>\epsilon\right) 
@@ -650,6 +652,9 @@ The first follows from standard importance sampling arguments, the second from i
     - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J} \stackrel{a.s.}{\to} 0,$$
 
     and the result is proved. 
+
+
+    \kevin{MAY HAVE TO DEAL WITH CONDITIONING ON THE FILTRATION AT THE LAST TIMESTEP, AND THEN USING THE TOWER PROPERTY. EXPECTATION WILL BE THE SAME REGARDLESS FOR THE FOURTH MOMENT.}
 
     
     
@@ -667,29 +672,55 @@ The first follows from standard importance sampling arguments, the second from i
 
 \begin{lem}[Particle Marginals]
     \label{lem:marginal-proper-weights}
-    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Also suppose that $Z_j \sim f_{Z|X}(\cdot | X_j)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, $\{(Z_j,u_j)\}$ targets $f_Z$.
+    Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $Z_j^J \sim f_{Z|X}(\cdot | X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, if the $u_j^J$ are bounded, $\{(Z_j^J,u_j^J)\}$ targets $f_Z$.
 \end{lem}
 \begin{proof}
-    Let $h$ be an integrable function. 
 
-    \begin{align*}
-        \E\left[J^{-1}\sum_{j=1}^J h(Z_j) u_j\right] &= \E\left[\E\left[J^{-1}\sum_{j=1}^J h(x_j) u_j f(Z_j|x_j)\Bigg| X_j=x_j\right]\right] \\
-        &= \E\left[J^{-1}\sum_{j=1}^J h(X_j) u_j f(Z_j|X_j)\right] \\
-        &\stackrel{a.s.}{\to} C_Z \E_{f_X}[h(X) f_{Z|X}(Z|X)] \\
-        &= C_Z \E_{f_Z}[h(Z)],
-    \end{align*}
+    We want to show that
+     $$\frac{\sum_j h(Z_j^J) u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)] = \E_{f_X}[\E_{f_{Z|X}}[h(Z) | X]].$$
 
-    where $C_Z$ is the normalizing factor, and similarly the denominator converges to $C_Z$. The result then follows from Slutsky's theorem. 
+    We know that by definition, for any measurable and bounded functional $g$ with domain $\gX$,
+    $$\frac{\sum_j g(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].$$
+
+    Let $\bar{u}_j^J = \frac{J u_j^J}{\sum_j u_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(Z_j^J) u_j^J}{J^{-1}\sum_j u_j^J} = \frac{J^{-1}\sum_j h(Z_j^J) \bar{u}_j^J}{J^{-1}\sum_j \bar{u}_j^J}.$$
+
+    The denominator converges to $1$ almost surely. The numerator, on the other hand, is
+    $$\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J,$$
+
+    which by the same fourth moment argument to the above lemma converges almost surely to the limit of its expectation
+    $$\lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J\right] = \lim_{J\to\infty} \E_{X_j^J}\left[\E_{Z_j^J|X_j^J}\left[\frac{1}{J}\sum_j  h(Z_j^J)\bar{u}_j^J\bigg|X_j^J\right]\right].$$
+
+    It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   
+    $$\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)] = \E_{f_X}[\E_{f_{Z|X}}[h(Z) | X]].$$ 
     
 \end{proof}
 
 \begin{lem}[Particle Posteriors]
     \label{lem:posterior-proper-weights}
-    Suppose that $\{(X_j,u_j),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^\prime_j,u^\prime_j) = \big(X_j,u_j\, f_{Z|X}(z^*|X_j)\big)$. Then, $\{(X^\prime_j,u^\prime_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
+    Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^{\prime J}_j,u^{\prime J}_j) = \big(X_j^J,u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$. Then, if $u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$ and $u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big) / f_Z(z^*)$ are bounded, $\{(X^{\prime J}_j,u^{\prime J}_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
 \end{lem}
 
 \begin{proof}
-    The proof is similar to that of Lemma \ref{lem:marginal-proper-weights}, except with Bayes' theorem. 
+    Again, we want to show that
+     $$\frac{\sum_j h(X_j^J) \cdot u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j u_j^J \cdot f_{Z|X}(z^*|X_j^J)} \stackrel{a.s.}{\to} \E_{f_{X|Z}}[h(X)|z^*].$$
+
+    We already have that
+    $$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[h(X)].$$
+
+    %= \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j f_{Z|X}(z^*|X_j^J)f_X(X_j^J)}
+    
+    Write $\bar{u}_j^{J} = \frac{J u_j^J}{\sum_j u_j^J}$. Define the weights $u^{' J}_j := u_j^J \cdot f_{Z|X}(z^*|X_j^J),$ and the corresponding self-normalized weights $\bar{u}_j^{' J} := \frac{J u^{' J}_j}{\sum_j u^{' J}_j}.$ The denominator of the below quantity 
+    $$ \frac{J^{-1} \sum_j h(X_j^J) \bar{u}_j^{' J}}{J^{-1} \sum_j \bar{u}_j^{' J}}$$
+    converges to $1$, while the numerator, by the same fourth moment argument as the first lemma, converges almost surely to the limit of its expectation, which is
+    \begin{align*}
+        \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \bar{u}_j^{' J} \right]
+        &= \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \frac{J u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j u_j^J \cdot f_{Z|X}(z^*|X_j^J)}\right] \\
+        &= \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \frac{J \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}{\sum_j \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}\right]\\
+        &= \lim_{J\to\infty} \E\left[ \sum_j h(X_j^J) \frac{\frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}{\sum_j \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}\right]\\
+        &= \E_{X|Z}[h(X)|z^*],
+    \end{align*}
+
+    where we can swap the limit and expectations with the bounded convergence theorem.
 \end{proof}
 
 
@@ -697,7 +728,7 @@ The first follows from standard importance sampling arguments, the second from i
     When $\alpha=1$ or $\phi=\theta$, MOP-$\alpha$ targets the posterior. 
 \end{prop}
 \begin{proof}
-    When $\theta=\phi$, the ratio $\frac{g_{n,j}^\theta}{g_{n,j}^\phi}=1,$ and this reduces to the standard case.
+    When $\theta=\phi$, regardless of the value of $\alpha$, the ratio $\frac{g_{n,j}^\theta}{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter estimate.
 
     When $\alpha=1$, and $\theta\neq\phi,$ the proof is as follows. Recursively applying Lemmas \ref{lem:change-measure-proper-weights} \ref{lem:marginal-proper-weights}, and \ref{lem:posterior-proper-weights}, we obtain that 
     %to step~\ref{mop:step1}, Lemma~2 step~ {mop:weight:update} and Lemma~3 to step~\ref{mop:step2} we obtain that
@@ -749,7 +780,7 @@ Since $w^{F,\theta}_{n,j}=w^{P,\theta}_{n+1,j}$, this is a telescoping product. 
 $\sum_{j=1}^J w^{P,\theta}_{0,j} = J$ on the denominator and $\sum_{j=1}^J w^{F,\theta}_{N,j}$ on the numerator.
 This derives the MOP/DOP estimate.
 
-$L^{B,\theta}$ should generally be preferred, since there is no reason to include the extra variability from resampling when calculating the conditional log likelihood, but it lacks the nice telescoping product.
+$L^{B,\theta}$ should generally be preferred in practice, since there is no reason to include the extra variability from resampling when calculating the conditional log likelihood, but it lacks the nice telescoping product that lets us derive exact expressions for the gradient later.
 
 
 
@@ -852,8 +883,8 @@ The following result showcases the correctness of corrections \ref{eq:dmeas-rati
     From the above lemma, and the fact that the particle filter is unbiased for the likelihood, we know that
     \begin{align*}
         \lik(\theta)
-        &= \int_{x_{1:N}} \prod_{n=1}^N \frac{1}{J}\sum_{j=1}^J p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \frac{1}{J}\sum_{j=1}^J p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \right) \frac{p_\theta(x_{1:N}|y_{1:N})}{p_\phi(x_{1:N}|y_{1:N})}p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}\\
+        &= \int_{x_{1:N}} \prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
+        &= \int_{x_{1:N}} \left(\prod_{n=1}^N  p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \right) \frac{p_\theta(x_{1:N}|y_{1:N})}{p_\phi(x_{1:N}|y_{1:N})}p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}\\
         &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\theta) \right) \left(\prod_{n=1}^N \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \lik_n(\phi)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) \lik_n(\theta)}\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\ 
         &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\phi) \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) }\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}.
     \end{align*}
@@ -1152,7 +1183,7 @@ We can bound the sup norm by $||x||_\infty \leq \sqrt{p}||x||_2$. So to bound $\
 
 We now tackle the second term. Write $g_{ij}$ for the $i$-th component of the gradient of the negative log-likelihood with respect to the $j$-th particle, $(-\bar{w}_{T,\np} \nabla_\theta\log L_{T,j})_i$.
 
-Apply the concentration inequality in \ref{eq:ci} from Del Moral and Rio \cite{delmoral2011ci} and another union bound to find that  
+Apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delmoral2011ci} and another union bound to find that  
 
 \begin{align}
     \left\lVert\frac{1}{J}\sum_{j=1}^J g_{ij} - \left(-\frac{\partial}{\partial \theta_i}\ell(\theta)\right)\right\rVert_\infty \leq \frac{r_t}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_t 
