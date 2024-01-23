@@ -273,9 +273,9 @@ the gradient of the vanilla particle filter where the resampling correction is o
     \label{prop:mop-correctness}
     When either $\alpha=1$ or $\theta=\phi$, Algorithm \ref{alg:mop} is a particle filter that targets the posterior and is unbiased for the likelihood under $\theta$. 
     
-    In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf},
+    In particular, when $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. In this case, its gradient when $\alpha=1$ is the same as the estimator of \citet{doucet2011sf} when applied to the bootstrap filter,
     \begin{equation}
-        \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),
+        \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{0:N}}(y_{1:N}^* | x_{1:N,j}^{A, F,\theta}),
     \end{equation}
 
     and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
@@ -289,6 +289,16 @@ the gradient of the vanilla particle filter where the resampling correction is o
 
 The proof for the above follows from Appendices A and C, as well as the technical lemmas for properly weighted particle filters. 
 
+\kevin{Take derivative of loglik with regard to alpha?}
+\kevin{Talk about regime change the moment you move away from alpha=1, variance going from N2 to N, and bias going from 0 to something, but try to prove that decrease in variance outweights increase in bias. }
+\kevin{Create tools for choosing alpha via binary search CV from an averaged alpha=1 target}
+\kevin{suppose at each filtering step, look at gradient calculated at alpha=0, dynamically select alpha during filtering. calculate bias and variance online during filtering, and update alpha accordingly. }
+
+
+\kevin{No need to recompute so many particle filters! Just take an array of weight copies, one for each alpha. Gradients for each alpha come free the moment you compute one of them. }
+
+\kevin{Elbow method on variance, since bias is hard to compute? }
+\kevin{Get variance estimate, bias estimate, construct confidence intervals on bias estimate, use that to get unbiased estimate of the MSE. }
 
 \subsubsection{Practical Considerations}
 
@@ -672,26 +682,30 @@ The first follows from standard importance sampling arguments, the second from i
 
 \begin{lem}[Particle Marginals]
     \label{lem:marginal-proper-weights}
-    Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $Z_j^J \sim f_{Z|X}(\cdot | X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, if the $u_j^J$ are bounded, $\{(Z_j^J,u_j^J)\}$ targets $f_Z$.
+    Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $\tilde Z_j^J \sim f_{Z|X}(\cdot | \tilde X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, if the $U_j^J$ are bounded, $\{(\tilde Z_j^J,U_j^J)\}$ targets $f_Z$.
 \end{lem}
 \begin{proof}
-
-    We want to show that
-     $$\frac{\sum_j h(Z_j^J) u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)] = \E_{f_X}[\E_{f_{Z|X}}[h(Z) | X]].$$
-
-    We know that by definition, for any measurable and bounded functional $g$ with domain $\gX$,
-    $$\frac{\sum_j g(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].$$
-
-    Let $\bar{u}_j^J = \frac{J u_j^J}{\sum_j u_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(Z_j^J) u_j^J}{J^{-1}\sum_j u_j^J} = \frac{J^{-1}\sum_j h(Z_j^J) \bar{u}_j^J}{J^{-1}\sum_j \bar{u}_j^J}.$$
-
+    We want to show that, for any measurable bounded $h$, 
+     $$\frac{\sum_j h(\tilde Z_j^J) \, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E[h(Z)] = \E\big[\E[h(Z) | X]\big].$$
+    By hypothesis, for any measurable and bounded functional $g$ with domain $\gX$,
+    \begin{equation}\label{eq:lemma2:g}
+    \frac{\sum_j g(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E[g(X)].
+    \end{equation}
+    Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(\tilde Z_j^J) U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.$$
     The denominator converges to $1$ almost surely. The numerator, on the other hand, is
-    $$\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J,$$
-
-    which by the same fourth moment argument to the above lemma converges almost surely to the limit of its expectation
-    $$\lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J\right] = \lim_{J\to\infty} \E_{X_j^J}\left[\E_{Z_j^J|X_j^J}\left[\frac{1}{J}\sum_j  h(Z_j^J)\bar{u}_j^J\bigg|X_j^J\right]\right].$$
-
+    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\bar{U}_j^J,$$
+    by the same fourth moment argument to the above lemma converges almost surely to the limit of its expectation
+    \begin{eqnarray*}        
+    \lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J\right] 
+    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  
+      \E\left[ h(\tilde Z_j^J)\, \bar{U}_j^J\big|\tilde X_j^J, \bar U_j^J\right]
+    \right]
+    \\
+    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  \E\big[h(Z) \big| X=\tilde X_j^J \big] \, \bar U_j^J\right].
+    \end{eqnarray*}
+    Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand size converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
     It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   
-    $$\frac{1}{J}\sum_j h(Z_j^J)\bar{u}_j^J \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)] = \E_{f_X}[\E_{f_{Z|X}}[h(Z) | X]].$$ 
+    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\,\bar{U}_j^J \stackrel{a.s.}{\to} \E[h(Z)].$$ 
     
 \end{proof}
 
@@ -808,7 +822,7 @@ The following result showcases the correctness of corrections \ref{eq:dmeas-rati
     \begin{equation}
         w_{t,j} := \tilde{w}_{t,j} \cdot p(y^*|x_{t,j}^P,\phi)\cdot r \cdot s
     \end{equation}
-    successfully recovers $\lik(\theta)$. Therefore, DOP targets the posterior and the likelihood.
+    successfully recovers $\lik(\theta)$.
 \end{lem}
 
 \begin{proof}
