@@ -320,7 +320,7 @@ The initial "convergence" happens fairly quickly in practice. In the case of the
 
 IF2 converges quickly to a neighborhood of some reasonably good local optimum in practice, but then struggles to squeeze out the last few log-likelihood units. Conversely, gradient descent (and other first or second order gradient methods) can get stuck in saddle points and less desirable local minima when the likelihood is nonconvex. Warm-starting gradient methods with IF2 lets us get close enough to the MLE for gradient methods to shine, as in most cases regularity conditions ensure that the likelihood surface is well-behaved enough in this neighborhood that the aforementioned issues with saddle points and local minima are alleviated. Combining these two methods in this way lets us enjoy the best of both worlds.
 
-\begin{algorithm}[H]
+\begin{algorithm}[ht]
 \centering
 	\caption{Iterated Filtering with Automatic Differentiation}
     \label{alg:ifad}
@@ -412,7 +412,7 @@ To compare the performance of IFAD against that of IF2, we fit the very same mod
 \end{itemize}
 
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \begin{tikzpicture}[node distance=1cm and 1cm, auto,
 >=Latex,every node/.append style={align=center}, 
@@ -498,17 +498,17 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
 
 \begin{figure}[htbp!]
     \centering
-    \includegraphics[scale=0.53]{imgs/095/pairs.png}
-    \includegraphics[scale=0.53]{imgs/095/qq.png}
+    \includegraphics[scale=0.53]{../imgs/095/pairs.png}
+    \includegraphics[scale=0.53]{../imgs/095/qq.png}
     \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
 
     \label{fig:scatter}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[ht]
     \centering
-    \includegraphics[scale=0.48]{imgs/095/boxplot.png}
-    \includegraphics[scale=0.53]{imgs/095/boxplotall.png}
+    \includegraphics[scale=0.48]{../imgs/095/boxplot.png}
+    \includegraphics[scale=0.53]{../imgs/095/boxplotall.png}
     \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs. This simulates the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and improves on the warm-start given by running 40 IF2 iterations. Our choice of hyperparameters for our implementation of IF2 outperforms the choices made by \cite{ionides15}, which we depict in the boxplot labeled "IF2 2015". As before, while IF2 successfully approaches the MLE, it ultimately fails to find it.
     \textbf{Right:} Boxplot depicting the performance of IFAD, IF2, and MOP alone without the warm-start, where we plot all runs. We see that MOP alone drastically underperforms all other methods, failing to get close to the MLE. This shows that the IF2 warm-start may be necessary to achieve good performance in challenging nonconvex and noisy problems like this one.
     \textbf{Takeaway:} In this panel, we see that (1) IF2 fails to find the MLE while the gradient steps perform better at fine-grained refinement, and (2) performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points, ultimately demonstrating the necessity of a hybrid algorithm like IFAD.
@@ -518,7 +518,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
 
 \begin{figure}[htbp!]
     \centering
-    \includegraphics[scale=0.7]{imgs/095/optim.png}
+    \includegraphics[scale=0.7]{../imgs/095/optim.png}
     \caption{Optimization progress of IFAD and IF2, where the solid lines depict the median negative log-likelihood at each iteration and the shaded area depicts the best search at any iteration and the 80\% percentile. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD -- IFAD has better tail control and successfully reaches the MLE. The initial loss in log-likelihood upon transitioning from IF2 to MOP seems to help with escaping local minima. 
     As before, we use a dotted red line to display the MLE. }
     \label{fig:optim}
@@ -526,7 +526,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[scale=0.7]{imgs/095/hist.png}
+    \includegraphics[scale=0.7]{../imgs/095/hist.png}
     \caption{Histogram comparison of the performance of IFAD, IF2, and MOP alone. As before, we note that IFAD successfully reaches the MLE a nontrivial number of times, while IF2 ultimately fails to do so. Our implementation of IF2 outperforms that of \cite{ionides15}, largely due to improved hyperparameter choices. MOP alone performs poorly, demonstrating the necessity of warm-starting the search with IF2. 
     We once again see that IFAD combines the best of IF2 and MOP, approaching the MLE quickly due to the IF2 warm-start and successfully refining the coarse solution with gradient steps, achieving superior performance. As before, we use a dotted red line to display the MLE. }
     \label{fig:hist-all}
@@ -596,57 +596,38 @@ as $J \to \infty$.
 \ed{PERHAPS IF WE HAD A CONCRETE PROOF OF THIS, THAT WOULD HELP TO SEE HOW IT EXTENDS TO OUR SUBSEQUENT LEMMAS. ARGUABLY, THAT IS IN FACT WHAT WE ARE DEVELOPING VIA THESE LEMMAS. I WONDER IF SOME OTHER REFERENCE, E.G. DELMORAL'S 2004 BOOK, HAS AN EXPLICIT PROOF OF CONSISTENCY FOR SOME PARTICLE FILTER ALGORITHM.}
 In order to prove the consistency of our variation on the particle filter, we now present three helper lemmas.
 The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
+We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resampling, which is convenient for the proof though other resampling strategies may be preferable in practice REFS.
 
 \begin{lem}[Change of Particle Measure]
     \label{lem:change-measure-proper-weights}
-    Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,v_j^J),j=1,\dots,J\}$ be a sample drawn from $\{(X_j^J,u_j^J)\}$ where $(X_j^J,u_j^J)$ is represented, on average, $\pi_j J$ times. This could amount to multinomial resampling with probability $\pi_j$, or systematic resampling. Write
+    Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,V_j^J),j=1,\dots,J\}$ be a multinomial sample drawn from $\{(\tilde X_j^J,U_j^J)\}$ where $(\tilde X_j^J,U_j^J)$ is represented, on average, $\pi^J_j J$ times. Write
     \[
-    (Y_j^J,v_j^J) = \big(X_{a(j)},u_{a(j)}/\pi_{a(j)}\big),
+    (Y_j^J,V_j^J) = \big(\tilde X^J_{a(j)},U^J_{a(j)}/\pi^J_{a(j)}\big),
     \]
-    where $a$ is called the ancestor function. If the importance sampling weights $u/\pi$ are bounded, then $\{(Y_j,v_j),j=1,\dots,J\}$ targets $f_X$.
+    where $a$ is called the ancestor function. If the importance sampling weights $U_j/\pi_j$ are bounded, then $\{(Y^J_j,V^J_j),j=1,\dots,J\}$ targets $f_X$.
 \end{lem}
 
 \begin{proof}
 
 
     Note that as the $Y_j^J$ are a subsample from $X_j^J$, $h$ can be a function of $Y$ as well as it is one for $X$. We then expand
-    $$\frac{\sum_j h(Y_j^J) v_j^J}{\sum_j v_j^J} = \frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}}.$$
-
-    We know that by definition,
-    $$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[f(X)].$$
+    $$\frac{\sum_j h(Y_j^J) V_j^J}{\sum_j V_j^J} = \frac{\sum_j h(\tilde X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}}.$$
+    By hypothesis,
+    $$\frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[f(X)].$$
 
     We want to show
-    $$\frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} 0.$$. 
-
-    %To see this, observe that 
-    %$$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} = \frac{\sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J}{\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J},$$
-
-    %so it remains to show that
-    %$$\frac{\sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}} 
-    %- \frac{\sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J}{\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J}
-    %\stackrel{a.s.}{\to} 0.$$. 
-
-    This is equivalent to showing that
-    $$\sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
-    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J} \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J 
-    \stackrel{a.s.}{\to} 0.$$. 
-
-    From $|a d- b c| \leq|d||a-c|+|c||b-d|$, we see that it suffices to bound 
-
-    $$ \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
-    -  \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J $$
-    and 
-    $$ \sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J
-    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}$$
-    separately. 
-
-    %Write 
-    %$$\widetilde{\pi_{k_j}^J} := \frac{\frac{u_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J}}, \widetilde{u_{j}^J} := \frac{u_j^J}{\sum_j u_j^J}.$$
-
-    Write $g(X_j^J) = h(X_j^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
-    $$\sum_j Z_j^J := \sum_j \left(g(X_{k_j}^J) -  g(X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
+    \begin{equation}\label{eq:lemma1:h}
+    \frac{\sum_j h(X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} 0.
+    \end{equation}
+    For this, it is sufficient to show that
+   $$ \sum_j h(\tilde X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(\tilde X_j^J)\frac{U_j^J}{\pi_j^J}\pi_j^J \stackrel{a.s.}{\to} 0 $$
+    since an application of this result with $h(x)=1$ provides almost sure convergence of the denominator in (\ref{eq:lemma1:h}).
+    Write $g(\tilde X_j^J) = h(\tilde X_j^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
+    $$\sum_j Z_j^J := \sum_j \left(g(\tilde X_{k_j}^J) -  g(\tilde X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
 
     Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where 
+    {THE Zs ARE ONLY CONDITIONALLY INDEPENDENT, SO WE COULD PUT IN THE CONDITIONING EVENT (I.E., THE Xs AND Us) HERE TO BE MORE ACCURATE}
     $$\E\left[\left(\sum_j Z_j^J\right)^4\right] 
     = J\E[(Z_1^J)^4] + 3J(J-1)\left(\E[(Z_j^J)^2]\right) \leq CJ^2,$$ for some $C>0$. By Markov, 
     $$\mathbb{P}\left(\left|\frac{1}{J} \sum_{j=1}^J Z_j^J\right|>\epsilon\right) 
@@ -691,9 +672,9 @@ The first follows from standard importance sampling arguments, the second from i
     \begin{equation}\label{eq:lemma2:g}
     \frac{\sum_j g(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E[g(X)].
     \end{equation}
-    Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(\tilde Z_j^J) U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.$$
+    Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(\tilde Z_j^J) \, U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \, \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.$$
     The denominator converges to $1$ almost surely. The numerator, on the other hand, is
-    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\bar{U}_j^J,$$
+    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J,$$
     by the same fourth moment argument to the above lemma converges almost surely to the limit of its expectation
     \begin{eqnarray*}        
     \lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J\right] 
@@ -715,6 +696,18 @@ The first follows from standard importance sampling arguments, the second from i
 \end{lem}
 
 \begin{proof}
+
+        
+    $$ \frac{J^{-1} \sum_j h(X_j^J) \bar{u}_j^{' J}}{J^{-1} \sum_j \bar{u}_j^{' J}}$$
+    
+    by
+    
+    \begin{equation}
+    \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {u}_j^{J}}{J^{-1} \sum_j {u}_j^{J}}
+    \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {u}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \right)^{-1}
+    \end{equation}
+    
+
     Again, we want to show that
      $$\frac{\sum_j h(X_j^J) \cdot u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j u_j^J \cdot f_{Z|X}(z^*|X_j^J)} \stackrel{a.s.}{\to} \E_{f_{X|Z}}[h(X)|z^*].$$
 
@@ -722,6 +715,14 @@ The first follows from standard importance sampling arguments, the second from i
     $$\frac{\sum_j h(X_j^J)u_j^J}{\sum_j u_j^J} \stackrel{a.s.}{\to} \E_{f_X}[h(X)].$$
 
     %= \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j f_{Z|X}(z^*|X_j^J)f_X(X_j^J)}
+
+    Consider the following:
+    \begin{equation}
+    \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {u}_j^{J}}{J^{-1} \sum_j {u}_j^{J}}
+    \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {u}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \right)^{-1}.
+    \end{equation}
+
+    
     
     Write $\bar{u}_j^{J} = \frac{J u_j^J}{\sum_j u_j^J}$. Define the weights $u^{' J}_j := u_j^J \cdot f_{Z|X}(z^*|X_j^J),$ and the corresponding self-normalized weights $\bar{u}_j^{' J} := \frac{J u^{' J}_j}{\sum_j u^{' J}_j}.$ The denominator of the below quantity 
     $$ \frac{J^{-1} \sum_j h(X_j^J) \bar{u}_j^{' J}}{J^{-1} \sum_j \bar{u}_j^{' J}}$$
@@ -977,7 +978,7 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J r_{n,j}s_{n,j}
 
 We are finally ready to introduce the off-policy weighted differentiable particle filter. In the event where a seed is fixed, all expressions in Algorithm \ref{alg:dop} can be considered to be conditional on $\omega \in \Omega$.  
 
-\begin{algorithm}[H]
+\begin{algorithm}[ht]
 \centering
 	\caption{Doubly Off-Policy-$\alpha$}
     \label{alg:dop}
@@ -1019,7 +1020,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
 
 \section{Measurement Off-Policy Particle Filters}
 
-\begin{algorithm}[H]
+\begin{algorithm}[ht]
 \centering
 	\caption{Measurement Off-Policy-$\alpha$}
     \label{alg:mop}
@@ -1041,17 +1042,17 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
             \STATE Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
             \STATE Conditional likelihood under $\phi$: 
             $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
-            \label{dop-alpha:Lphi}
+            \label{mop-alpha:Lphi}
             \STATE Normalize weights:
             $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
             for $j\ \mathrm{in}\ \seq{1}{J}$
-            \STATE Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \label{dop-alpha:systematic}
+            \STATE Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \label{mop-alpha:systematic}
             \STATE Resample particles: ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$
             \STATE Filter weights corrected for resampling:
-            $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \label{dop-alpha:weight:update}
+            $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \label{mop-alpha:weight:update}
             \STATE Resample filter weights:
             $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
-            for $j$ in $\seq{1}{J}$ \label{dop-alpha:step2}
+            for $j$ in $\seq{1}{J}$ \label{mop-alpha:step2}
             \STATE After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
             \ENDFOR
 		\RETURN likelihood estimate $\hat{\lik}(\theta) = \lik(\theta, \phi, \omega, J) := \prod_{n=1}^N L_n^{A,\theta,\alpha}$, filtering distribution $\{(X_{N,j}^{F, \theta}, w^{F,\theta}_{N,j})\}.$
@@ -1139,6 +1140,11 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 \end{proof}
 
 
+
+
+\kevin{Show bias is order N, variance is order N when alpha below 1. That implies optimal choice of alpha is not 1. }
+
+
 \section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}
 \label{app:ifad}
 
@@ -1148,10 +1154,15 @@ The analysis in this section roughly follows the analysis in Roosta-Khorasani an
 The convergence analysis in Theorem \ref{thm:convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
 
 \subsection{Bounding the Gradient}
+\kevin{Add a few words to explain that the gradient of the log-likelihood w.r.t. parameters is a functional of the particle measure under boundedness assumptions and fixed parameters, appeal to authority and say doucet did it too. }
+
+\kevin{Gradient linear map, bound conditional likelihoods at time n. Alternatively, convert del moral and doucet expectation bound to high-probability bound. https://arxiv.org/pdf/1905.11546.pdf for trick. Alternatively, concatenate previous states. }
+
+\kevin{Show MOP-1 is unbiased. Extend analysis to not-1 case. }
 
 \begin{lem}[Concentration of Measure for Gradient Estimate]
     \label{lemma:grad_bound}
-    Assume $\text{osc} \left(\frac{\partial}{\partial_\theta}\right) \leq 1$. For $||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
+    Assume $\text{osc} \left(\frac{\partial}{\partial_\theta} \hat{\ell}_\theta(x_{n,j}^P) \right) \leq 1$. For $||\nabla_\theta \hat{\loglik}_\theta(x_{n,j}^P) - \nabla_\theta \loglik_\theta(x^P)|| = ||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
     \begin{equation}
         J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right),\;\; \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2, \;\;\frac{G(\theta)^2}{\epsilon^2}p\log\left(\frac{6p}{\delta}\right)\right\}
     \end{equation}
@@ -1175,7 +1186,7 @@ We can bound
 
 We begin by examining the first term. This term bounds the error of the gradient estimate that the differentiable particle filter provides from the gradient estimate after the final resampling step. 
 
-This amounts to solving the following problem. Say you have a weighted mean $\sum w_j x_j$, where $j=1,…,J$. The $x_j$ are fixed numbers bounded by some constant $G$ and the $w_j$ are non-negative and sum to $1$. Resample indices $k_j, j=1,…,J$ according to the multinomial distribution to get $x_{k_j}$ for each $j$, and also $J^{-1} \sum x_{k_j}$. We want to bound $|\sum w_j x_j - J^{-1} \sum x_{k_j}|$.
+This amounts to solving the following problem. Say you have a weighted mean $\sum w_j x_j$, where $j=1,\dots,J$. The $x_j$ are fixed numbers bounded by some constant $G$ and the $w_j$ are non-negative and sum to $1$. Resample indices $k_j, j=1,\dots,J$ according to the multinomial distribution to get $x_{k_j}$ for each $j$, and also $J^{-1} \sum x_{k_j}$. We want to bound $|\sum w_j x_j - J^{-1} \sum x_{k_j}|$.
 
 By a simple application of Hoeffding's inequality and a union bound, we have
 
