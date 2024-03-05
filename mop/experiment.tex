@@ -1,7 +1,7 @@
 \documentclass{article}
 \usepackage[margin=2cm]{geometry}
 \usepackage{natbib}
-\usepackage{hyperref}
+
 \usepackage{enumitem}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta}
@@ -51,7 +51,7 @@ Recent advances in automatic differentiation (AD) for particle filters (\cite{bl
 
 \citet{blei2018vsmc} and \citet{jon2018diffpf} drop high-variance resampling terms from the gradient, leading to bias that does not vanish asymptotically according to \citet{corenflos21}. Though the approach of \citet{corenflos21} is promising, it is computationally expensive. \citet{doucet2022particlebased} provide another promising fixed-lag smoothing-based approach that is similar in spirit to our method (MOP-$\alpha$), but requires either (1) access to the process model transition densities or (2) the special case where the transition density factors into a policy that selects actions (in the reinforcement learning sense) and a deterministic model that maps states and actions to next-timestep states. 
 
-Finally, \citet{scibior2021dpf} demonstrate that the estimators derived in \citet{poyiadjis11} can be attained with AD, albeit with a simple tweak to the particle filter that does not modify its likelihood estimates. Though their method is not fully compatible with simulation-based inference, we show that another simple tweak enables this compatibility and corresponds to a special case of our MOP-$\alpha$ algorithm. 
+Finally, \citet{scibior2021dpf} demonstrate that the estimators derived in \citet{doucet2011sf} can be attained with AD, albeit with a simple tweak to the particle filter that does not modify its likelihood estimates. Though their method is not fully compatible with simulation-based inference, we show that another simple tweak enables this compatibility and corresponds to a special case of our MOP-$\alpha$ algorithm. 
 
 \subsection{Our Contributions}
 
@@ -65,14 +65,13 @@ Previous research on AD for particle filters has struggled with various issues:
 
 We develop a new approach to statistical inference via AD for particle filters which addresses these concerns. We develop a new theoretical framework that encompasses existing methods, and addresses the seemingly incompatible paradox of differentiating through a Monte-Carlo algorithm with discontinuous resampling.
 
-This is done through the construction of a smooth extension to the particle filter, as well as a \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) family of algorithms that (informally) encompasses the special case of AD of a vanilla PF (recovering the gradient estimator of \citet{blei2018vsmc}) when $\alpha=0$, and the DPF algorithm from \citet{scibior2021dpf} (that recovers the gradient estimator from \citet{poyiadjis11}) when $\alpha=1$. When $\alpha \in (0,1)$, this provides opportunities for optimizing a bias/variance tradeoff. 
+This is done through the construction of a smooth extension to the particle filter, as well as a \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) family of algorithms that (informally) encompasses the special case of AD of a vanilla PF (recovering the gradient estimator of \citet{blei2018vsmc}) when $\alpha=0$, and the DPF algorithm from \citet{scibior2021dpf} (that recovers the gradient estimator from \citet{doucet2011sf}) when $\alpha=1$. When $\alpha \in (0,1)$, this provides opportunities for optimizing a bias/variance tradeoff. 
 
 We show these off-policy particle filters successfully target the posterior, recover desirable gradient estimates previously encountered in the literature, and possess other desirable theoretical properties. To cap off the theoretical results, we also derive a linear convergence rate for gradient methods on the particle filter in the presence of strong convexity, providing support for numerical optimization with AD for the particle filter. 
 
 In practice, we propose a hybrid algorithm that we call \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts gradient ascent (or a similar iterative first or second-order gradient method) with a coarse solution obtained from a few rounds of iterated filtering. While this requires a differentiable simulator compatible with the reparametrization trick (as previous literature such as \citet{corenflos21} also require), future work will deal with workarounds inspired by our framework that use likelihood ratios of transition densities in place of this. Promising numerical results indicate that IFAD beats IF2 (and by the transitive property, IF1, the Liu-West filter, and particle MCMC) on a challenging scientific benchmark problem.
 
-While the Monte-Carlo Adjusted Profile (MCAP) from \citet{Ionides_mcap} provides a profile likelihood confidence interval that takes into account both Monte Carlo profile error and statistical uncertainty in the likelihood, it is computationally inefficient. \kevin{TODO} We provide a method for incorporating the MCAP methodology (with the poor man's likelihood profile) in our IFAD algorithm that provides a more computationally efficient profile likelihood confidence interval. 
-\kevin{Quantile regression for estimating the max/the envelope of the likelihood evaluations from AD, then fit MCAP/MQLE/MSLE?}
+While the Monte-Carlo Adjusted Profile (MCAP) from \citet{Ionides_mcap} provides a profile likelihood confidence interval that takes into account both Monte Carlo profile error and statistical uncertainty in the likelihood, it is computationally inefficient. We provide a method for incorporating the MCAP methodology (with the poor man's likelihood profile) in our IFAD algorithm that provides a more computationally efficient profile likelihood confidence interval. 
 
 Finally, we make the first steps towards developing a Python counterpart to the popular \texttt{pomp} R package by \citet{king16, king2017pompmanual} that we call \texttt{pompy}. The software we provide includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation enabled by the \texttt{jax} Python package from \citet{jax2018github}. 
 
@@ -81,7 +80,6 @@ Finally, we make the first steps towards developing a Python counterpart to the 
 \subsection{Significance Statement}
 Many scientific models involve highly nonlinear stochastic dynamical systems which can be observed only via noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method outperforms previous approaches on a challenging problem in epidemiology. This is implemented in a precursor to a Python counterpart to the popular \texttt{pomp} package by \citet{king16, king2017pompmanual} that includes welcome features for scientific computing such as GPU acceleration, parallel computing for single-program-multiple-data programs, just-in-time compilation, and automatic differentiation.
 
-\kevin{TODO: (1) Fix beta smoothness to d(n) at no more than O(n), (2) add story to say that no one spotted that it could have been plug-and-play because of e.g. reasons why they would stumble}
 
 \section{Problem Setup}
 
@@ -115,8 +113,6 @@ Our theoretical framework for automatic differentiation for the particle filter 
 Differentiating this reweighted likelihood estimate with respect to $\theta$ then amounts to differentiating through the reweighting likelihood ratios, which is differentiable if the densities used for the reweighting are differentiable. We call this simulation-and-reweighting scheme an \textbf{off-policy} likelihood estimate, as it is similar in spirit to the off-policy methods found in the reinforcement learning literature.
 
 The above intuition is formalized below.
-
-\kevin{Method of Common Random Numbers, Coupling}
 
 \subsection{Doubly Off-Policy Particle Filters}
 
@@ -153,36 +149,40 @@ where we define
 \end{align}
 \end{defn}
 
+We want $\phi\in\Theta$ to be a point in parameter space around which $\lik(\theta,\phi,\omega, J)$ is differentiable with respect to $\theta$ and does not have excessive Monte~Carlo variance. This leads us to our first assumption.
+
+\begin{aspt}[Smooth Neighborhood]
+\label{assump:smooth-nbhd}
+There exists a neighborhood $\mathcal{N}(\phi)$ around any $\phi \in \Theta$ where for all $\theta \in \mathcal{N}(\phi)$ and almost every $\omega \in \Omega$, the Monte Carlo estimate of the likelihood at $\theta \in \mathcal{N}(\phi)$ with the system evolving according to $\phi$ conditional on $\omega$, $\lik(\theta,\phi,\omega, J)$, is twice differentiable in $\theta$. 
+\end{aspt}
+
+\paragraph{Intuition:} We can justify this assumption as follows. For suitably nearby $\theta$ and $\phi$, the resampling indices for $\lik(\theta,\phi,\omega, J)$ and $\lik(\phi,\phi,\omega, J)$ are the same, eliminating any discontinuities from resampling, and that for small enough $\mathcal{N}(\phi)$ the likelihood ratios are bounded. The likelihood only changes by a factor of the likelihood ratios, which are bounded and smooth in $\theta$ if the densities used in the calculation are. For DOP, you need smooth likelihood ratios for the process model. For MOP, you need $k$ continuous derivatives from the reparametrization trick. 
+
 Lastly, we require the following regularity conditions.
 
 \begin{aspt}[Continuity of the Likelihood] $\ell(\theta)$ proper is continuous in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$.
 \end{aspt}
 
-\begin{aspt}[Bounded Measurement Model]
-\label{assump:bounded-measurement}
-There is an $\epsilon>0$ such that $\epsilon^{-1}>f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)>\epsilon$ and a $G'(\theta)>0$ such that $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty < G'(\theta)$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
+\begin{aspt}[Bounded Measurement Model] There is an $\epsilon>0$ with $\epsilon^{-1}>f_{Y_n \mid X_n}\left(y_n{ }^* \mid x_n; \theta\right)>\epsilon$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
 \end{aspt}
 
-\begin{aspt}[Locally Bounded Derivatives]
+\begin{aspt}[Locally Bounded Derivative]
 \label{assump:local-bounded-derivative}
-Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and constants $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$, $H=\sup _{\theta \in \mathcal{N}} H(\theta)<\infty$ such that
+Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and a constant $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$ such that
     $$
-    \|\nabla_\theta \ell(\theta, \phi, \omega, J)\|_\infty <G(\theta) \leq G<\infty, \;\;
-    \|\nabla^2_\theta \ell(\theta, \phi, \omega, J)\|_\infty <G(\theta) \leq G<\infty
+    \|\nabla \ell(\theta, \phi, \omega, J)\|_2<G(\theta) \leq G<\infty
     $$
-    for every $\phi \in \mathcal{M}, \theta \in \mathcal{N}_J(\phi)$, and almost every $\omega \in \Omega$.
+    for every $\phi \in \mathcal{M}, \theta$ in smooth neighborhood $\mathcal{N}(\phi)$, and almost every $\omega \in \Omega$.
 \end{aspt}
 
 
 We need the following assumption to ensure that the weighted particle filter with off-policy resampling targets the posterior:
 \begin{aspt}[Bounded And Differentiable Measurement Density Ratios]
-    \label{assump:diff-meas}
     For any $\phi \in \Theta$, there exists an open neighborhood $\gN(\phi)$ containing $\phi$ such that the density ratios $\frac{f_{Y_n|X_n}(y_n^*|x, \theta)}{f_{Y_n|X_n}(y_n^*|x, \phi)}$ are bounded and have more than two continuous derivatives for all timesteps $n=1,...,N$, $x \in \gX$ and all $\theta\in\gN(\phi)$. 
 \end{aspt}
 
 In the following assumption, the first condition is sufficient for DOP, and the second for MOP:
 \begin{aspt}[Bounded And Differentiable Process Model]
-    \label{assump:diff-process}
     Either one of the following two conditions hold:
     \begin{enumerate}
         \item For any $\phi \in \Theta$, there exists an open neighborhood $\gN(\phi)$ containing $\phi$ such that the density ratios $\frac{f_{X_n|X_{n-1}}(x'|x, \theta)}{f_{X_n|X_{n-1}}(x'|x, \phi)}$ are bounded and have more than two continuous derivatives for all timesteps $n=1,...,N$, $x, x' \in \gX$ and all $\theta\in\gN(\phi)$, or
@@ -190,49 +190,14 @@ In the following assumption, the first condition is sufficient for DOP, and the 
     \end{enumerate}
 \end{aspt}
 
-We want $\phi\in\Theta$ to be a point in parameter space around which $\lik(\theta,\phi,\omega, J)$ is differentiable with respect to $\theta$ and does not have excessive Monte~Carlo variance.
-
-We require many of these assumptions to establish the following proposition, the proof of which is a straightforward consequence of what we assumed.
-
-\begin{prop}[Smooth Neighborhood]
-\label{prop:smooth-nbhd}
-There exists an open neighborhood $\mathcal{N}(\phi)$ around any $\phi \in \Theta$ where for all $\theta \in \mathcal{N}(\phi)$ and almost every $\omega \in \Omega$, the Monte Carlo estimate of the likelihood at $\theta \in \mathcal{N}(\phi)$ with the system evolving according to $\phi$ conditional on $\omega$, $\lik(\theta,\phi,\omega, J)$, has two continuous derivatives in $\theta$.
-\end{prop}
-
-\begin{proof}
-    For a fixed $\omega$, the resampling indices for $\lik(\theta,\phi,\omega, J)$ and $\lik(\phi,\phi,\omega, J)$ are the same as the resampling indices in both cases correspond to that yielded by $f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}(\omega);\phi)$, eliminating any discontinuities from resampling. 
-    
-    By Assumptions \ref{assump:diff-meas} and \ref{assump:diff-process}, for small enough $\mathcal{N}(\phi)$ the density ratios are bounded. The likelihood only changes by a factor of the density ratios, which are bounded and possess two continuous derivatives in $\theta$ if either the process and measurement densities used in the calculation do, or if the measurement densities do and one has access to a differentiable simulator with two continuous derivatives in $\theta$. This gives us the desired result. 
-
-    As a remark, we note that the neighborhoods the sequence is differentiable in are independent of $J$, as the resampling does not change with $\theta$ -- it is dependent on $\phi$. 
-\end{proof}
-
-
 \subsubsection{Doubly Off-Policy Particle Filter}
+
 
 Having the system evolve according to $\phi$ but evaluating the likelihood at $\theta$ requires us to reweight the conditional likelihood at each timestep by likelihood ratios corresponding to the process and measurement models. This corresponds to making two corrections in the particle weights at each timestep, by multiplying by 
 \begin{equation}
     s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}, \qquad r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)},
 \end{equation}
 as we illustrate in Appendix \ref{app:dop}. We use the notation $x_{n,j}^{P, \phi}$ to emphasize that the particles evolve according to $\phi$. 
-
-We claim that this yields a particle filter that targets the posterior and recovers the derivative estimate of \citet{poyiadjis11, scibior2021dpf} when $\theta$ is evaluated at $\phi$. The proof can be found in Appendix \ref{app:dop}. 
-
-
-\begin{prop}[Correctness of Doubly Off-Policy Particle Filter Corrections]
-    \label{prop:dop-correctness}
-
-    Let the system evolve according to $\phi \in \Theta,$ that is, with the process model $\process(\cdot | \phi)$ and resampling with probabilities proportional to $f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi})$. Also let $\theta \in \gN(\phi)$. Then, the following corrections in the particle weights,
-    \begin{equation}
-    s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}, \qquad r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)},
-    \end{equation}
-    yield a particle filter that is unbiased for the likelihood, even when $\theta \neq \phi$. 
-    
-    In particular, when $\theta$ is evaluated at $\phi$, its gradient is the same as the estimator of \citet{poyiadjis11},
-    \begin{equation}
-        \nabla_\theta \hat\ell(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*).
-    \end{equation}
-\end{prop}
 
 \paragraph{Intuition:} Having the system evolve according to $\phi$ but evaluating the likelihood at $\theta$ requires us to reweight the conditional likelihood at each timestep by likelihood ratios corresponding to the process and measurement models. This corresponds to making two corrections in the particle weights at each timestep, one for the process model and one for the measurement model. The measurement correction cannot be avoided, but one can bypass the process correction -- with the reparametrization trick. We can do when we assume the simulator is differentiable with the reparametrization trick, as \cite{corenflos21} also assume. Doing so then yields an algorithm that only requires a simulator, and does not require the process densities. 
 
@@ -254,18 +219,19 @@ Algorithm \ref{alg:mop} provides a weighted particle filter that targets the pos
 
 \paragraph{Special Case:} When $\theta = \phi$, one can simply set the particles under $\phi$ to be copies of the particles under $\theta$. Gradients with respect to $\theta$ now treat functions of the particles under $\phi$ as constants, corresponding to the stop-gradient trick in \cite{scibior2021dpf}. This therefore provides a theoretical framework for their stop-gradient trick, which we happily use in our numerical experiments for simplicity. 
 
-
-\kevin{Develop theory for mixing-time swapping? Detect when IF2 reaches a neighborhood of the MLE, by detecting whether it has reached a local sort of stationary distribution when the perturbations are lower bounded, e.g. the autocorrelation between the mean vectors to estimate the mixing time or Gelman-Rubin. In practice, just swap when IF2 converges according to the diagnostics. Theory doesn't care, you just need to in a basin of attraction that is strongly convex.}
-
 \subsubsection{Discounting Weights}
 
+\kevin{Turn all theorems and lemmas into remarks, one big section on results we think may be true but leave to future work to prove. }
 
-Observe that at Algorithm \ref{alg:mop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. We introduce a discounting parameter $\alpha$ that affects the weights, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$, as we show in Proposition \ref{prop:dop-correctness}. As previously mentioned, the value of $\alpha$ therefore informs a bias-variance tradeoff. We elaborate on this below. 
+\kevin{Release arxiv version concurrently with an initial release of the package. Target April release, grant results for DMS come back then. }
+
+\kevin{For a software paper, JOSS, signal that the software is careful. JSS is higher impact, but difficult to get a paper in. }
+
+Observe that at Algorithm \ref{alg:mop}, at each timestep the corrected filtering importance weights $w_{n,j}^{F,\theta}$ optionally propagate to the next timestep for us to maintain the correction. We introduce a discounting parameter $\alpha$ that affects the weights, so $w_{n,j}^{P,\theta} := (w_{n-1,j}^{F,\theta})^{\alpha}$. Note that no matter what value $\alpha$ takes on, the system evolves according to $\phi$ when we perform the correction to evaluate the likelihood at $\theta$. The filter fully targets the posterior when $\theta=\phi$, or $\alpha=1$. As previously mentioned, the value of $\alpha$ therefore informs a bias-variance tradeoff. We elaborate on this below. 
 
 
 \paragraph{Bias-Variance Tradeoff} This discounting serves the purpose of balancing a tradeoff between maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$), or considering only the single-step transition dynamics (when $\alpha=0$). This can be thought of as an \textbf{exponentially-weighted moving average}, where $\alpha$ controls the amount of discounting. We elaborate on two special cases below.
 
-\kevin{This isn't a smoother, because we'd need future information.}
 
 \paragraph{When $\alpha=1,$} the likelihood estimate becomes
 \begin{equation}
@@ -316,20 +282,20 @@ the gradient of the vanilla particle filter where the resampling correction is o
 
 The proof for the above follows from Appendices A and C, as well as the technical lemmas for properly weighted particle filters. 
 
-\kevin{Take derivative of loglik with regard to alpha?}
-\kevin{Talk about regime change the moment you move away from alpha=1, variance going from N2 to N, and bias going from 0 to something, but try to prove that decrease in variance outweights increase in bias. }
-\kevin{Create tools for choosing alpha via binary search CV from an averaged alpha=1 target}
-\kevin{suppose at each filtering step, look at gradient calculated at alpha=0, dynamically select alpha during filtering. calculate bias and variance online during filtering, and update alpha accordingly. }
+% \kevin{Take derivative of loglik with regard to alpha?}
+% \kevin{Talk about regime change the moment you move away from alpha=1, variance going from N2 to N, and bias going from 0 to something, but try to prove that decrease in variance outweights increase in bias. }
+% \kevin{Create tools for choosing alpha via binary search CV from an averaged alpha=1 target}
+% \kevin{suppose at each filtering step, look at gradient calculated at alpha=0, dynamically select alpha during filtering. calculate bias and variance online during filtering, and update alpha accordingly. }
 
 
-\kevin{No need to recompute so many particle filters! Just take an array of weight copies, one for each alpha. Gradients for each alpha come free the moment you compute one of them. }
+% \kevin{No need to recompute so many particle filters! Just take an array of weight copies, one for each alpha. Gradients for each alpha come free the moment you compute one of them. }
 
-\kevin{Elbow method on variance, since bias is hard to compute? }
-\kevin{Get variance estimate, bias estimate, construct confidence intervals on bias estimate, use that to get unbiased estimate of the MSE. }
+% \kevin{Elbow method on variance, since bias is hard to compute? }
+% \kevin{Get variance estimate, bias estimate, construct confidence intervals on bias estimate, use that to get unbiased estimate of the MSE. }
 
 \subsubsection{Practical Considerations}
 
-It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{poyiadjis11} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
+It is only ever practical to evaluate $\theta$ at $\phi$. This removes the issue of the likelihood ratios blowing up, and yields an estimate of the likelihood that agrees with the bootstrap filter estimate. Its gradient in this case is either the estimate of \citet{doucet2011sf} when $\alpha=1$, a single-timestep estimator that corresponds to naively taking the derivative of the particle filter when $\alpha=0$ as first proposed in \citet{blei2018vsmc}
 
 \paragraph{Bottom Line:} The DOP-$\alpha$ and MOP-$\alpha$ procedures therefore provide us with a unifying framework for reasoning about smooth extensions of weighted particle filters that target the posterior and provide reasonable gradient estimates when differentiated. This fixed-seed reweighting alleviates issues that can arise from differentiating through a quantity yielded by ostensibly non-differentiable resampling. This is done by either (1) differentiating through smooth likelihood ratios, or (2) differentiating through a differentiable simulator with the reparametrization trick (and through smooth likelihood ratios to adjust for the resampling). In particular, MOP-$\alpha$ does not require access to the transition densities, and like the bootstrap filter, only requires access to a (albeit differentiable) simulator. To our knowledge, this is the first particle filter gradient method in the literature with this capability. 
 
@@ -370,9 +336,7 @@ IF2 converges quickly to a neighborhood of some reasonably good local optimum in
 
 We first analyze the performance of gradient descent, Newton's method, or any iterative method that multiplies the particle estimate of the gradient with the inverse of a matrix with minimum eigenvalue bounded below, in the case where the log-likelihood surface is $\gamma$-strongly convex, and where the gradient estimate is a particle approximation of the score (for example, IFAD-1 and MOP-1). In this case, these methods enjoy a linear convergence guarantee:
 
-\kevin{I think we can establish the linear convergence for the entire procedure in the same sense as \href{this}{https://arxiv.org/pdf/2311.08442.pdf}, in the sense that if IF2 is run for a sufficiently large but fixed number of iterations, once we arrive in a local strongly convex region, we get linear convergence when we swap to MOP. Show by induction that we remain in the strongly convex region (in terms of parameter space and likelihood), eqn 218. }
-
-\begin{thm}[Convergence of Gradient Methods]
+\begin{conj}[Convergence of Gradient Methods]
 \label{thm:convergence}
 
 Consider a variant of IFAD-1 (Algorithm \ref{alg:ifad}) where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
@@ -388,9 +352,9 @@ Then the following holds with probability at least $1-\delta$:
 \end{equation}
 
 and the algorithm eventually terminates after we obtain $||\nabla_\theta \ell(\theta_n)|| \leq (1+\sigma) \epsilon$.
-\end{thm}
+\end{conj}
 
-The proof of this result uses the concentration inequalities from \cite{delmoral2011ci}, and leans upon the analysis of \cite{mahoney16}. We defer the proof to Appendix \ref{app:ifad}
+The proof of this result uses the concentration inequalities from \cite{delmoral2011ci}, and leans upon the analysis of \cite{mahoney2016subsampled}. We defer the proof to Appendix \ref{app:ifad}
 
 \paragraph{Takeaways for IFAD (Algorithm \ref{alg:ifad}):}
 
@@ -562,6 +526,7 @@ IFAD, in comparison, successfully manages to (1) approach the MLE quickly due to
 \end{figure}
 
 
+\kevin{Rewrite this para}
 \paragraph{Differences Between IFAD-0 and IFAD-1:} The differences between IFAD-1 and IFAD-0 (MOP-1 and MOP-0) do not seem very pronounced in this example. This could be due to a number of reasons, such as (1) future case counts $y_{{n+1}:N}^*$ not providing a large amount of information on state identification $x_n$ given current and past measurements $y_{0:n}^*$ as mentioned in \cite{corenflos21}, and (2) the gradient normalization making the trajectories given by MOP-0 and MOP-1 more similar than they would be otherwise. 
 
 
@@ -627,14 +592,14 @@ In order to prove the consistency of our variation on the particle filter, we no
 The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
 We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resampling, which is convenient for the proof though other resampling strategies may be preferable in practice REFS.
 
-\begin{lem}[Change of Particle Measure]
+\begin{conj}[Change of Particle Measure]
     \label{lem:change-measure-proper-weights}
     Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,V_j^J),j=1,\dots,J\}$ be a multinomial sample drawn from $\{(\tilde X_j^J,U_j^J)\}$ where $(\tilde X_j^J,U_j^J)$ is represented, on average, $\pi^J_j J$ times. Write
     \[
     (Y_j^J,V_j^J) = \big(\tilde X^J_{a(j)},U^J_{a(j)}/\pi^J_{a(j)}\big),
     \]
     where $a$ is called the ancestor function. If the importance sampling weights $U_j/\pi_j$ are bounded, then $\{(Y^J_j,V^J_j),j=1,\dots,J\}$ targets $f_X$.
-\end{lem}
+\end{conj}
 
 \begin{proof}
 
@@ -690,10 +655,10 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
 
 \textbf{Remark:} Note that Lemma \ref{lem:change-measure-proper-weights} permits $\pi_{1:J}$ to depend on $\{(X_j,u_j)\}$ as long as the resampling is carried out independently of $\{(X_j,u_j)\}$, conditional on $\pi_{1:J}$.
 
-\begin{lem}[Particle Marginals]
+\begin{conj}[Particle Marginals]
     \label{lem:marginal-proper-weights}
     Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $\tilde Z_j^J \sim f_{Z|X}(\cdot | \tilde X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, if the $U_j^J$ are bounded, $\{(\tilde Z_j^J,U_j^J)\}$ targets $f_Z$.
-\end{lem}
+\end{conj}
 \begin{proof}
     We want to show that, for any measurable bounded $h$, 
      $$\frac{\sum_j h(\tilde Z_j^J) \, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E[h(Z)] = \E\big[\E[h(Z) | X]\big].$$
@@ -719,10 +684,10 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     
 \end{proof}
 
-\begin{lem}[Particle Posteriors]
+\begin{conj}[Particle Posteriors]
     \label{lem:posterior-proper-weights}
     Suppose that $\{(X_j^J,u_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^{\prime J}_j,u^{\prime J}_j) = \big(X_j^J,u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$. Then, if $u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$ and $u_j^J \cdot f_{Z|X}(z^*|X_j^J)\big) / f_Z(z^*)$ are bounded, $\{(X^{\prime J}_j,u^{\prime J}_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
-\end{lem}
+\end{conj}
 
 \begin{proof}
 
@@ -790,7 +755,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
 
 This has addressed filtering, but not quite yet the likelihood evaluation. For this we use the following lemma.
 
-\begin{lem}[Likelihood Proper Weighting]
+\begin{conj}[Likelihood Proper Weighting]
     \label{lem:lik-proper-weight}
   $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is consistently estimated by either the before-resampling estimate,
 \begin{equation}\label{L1}
@@ -801,7 +766,7 @@ or by the after-resampling estimate,
 L_n^{A,\theta} = L^\phi_n \frac{\sum_{j=1}^Jw^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
 \end{equation}
 where $L^\phi_n$ is as defined in the various algorithms.
-\end{lem}
+\end{conj}
 
 Here, (\ref{L1}) is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
 To see  (\ref{L2}),
@@ -833,181 +798,9 @@ $L^{B,\theta}$ should generally be preferred in practice, since there is no reas
 \section{Doubly Off-Policy Particle Filters}
 \label{app:dop}
 
-
-The proof for Proposition \ref{prop:dop-correctness} follows from the below two lemmas. Evaluating the off-policy likelihood is possible with a weighted particle filter by using resampling weight $p(y^*_n|x_n;\phi)$ and making two corrections in the particle weight, through multiplying $w_{t,j}$ by the two likelihood ratios below,
-
-\begin{equation}
-    \label{eq:dmeas-ratio}
-    s=p(y^*_n|x_n;\theta)/p(y^*_n|x_n;\phi)
-\end{equation}
-and
-\begin{equation}
-    \label{eq:rproc-ratio}
-    r=p(x_n|x_{n-1};\theta)/p(x_n|x_{n-1};\phi).
-\end{equation}
-
-
-The following result showcases the correctness of corrections \ref{eq:dmeas-ratio} and \ref{eq:rproc-ratio}.
-
-\begin{lem}
-    For $\theta$, $\phi$ that satisfy Proposition \ref{prop:smooth-nbhd}, the following correction in the particle filter weights,
-    \begin{equation}
-        w_{t,j} := \tilde{w}_{t,j} \cdot p(y^*|x_{t,j}^P,\phi)\cdot r \cdot s
-    \end{equation}
-    successfully recovers $\lik(\theta)$.
-\end{lem}
-
-\begin{proof}
-    Recall $\lik(\theta) = \E[\lik(\theta,\phi,\Omega, J)]=\int_\Omega \lik(\theta,\phi,\omega, J)\, d\mu(\omega)$ and $\lik(\theta) = \int_\Omega \lik(\theta, \omega, J) d\mu(\omega)$. We want to evaluate
-    \begin{align*}
-        \lik(\theta,\omega, J)
-        &= \E\left[ \prod_{t=1}^T \lik_t(\theta) \middle| \omega\right]
-        = \E\left[ \prod_{t=1}^T p(y_t^*|y_{1:t-1}^*,\theta) \middle| \omega\right] \\
-        &= \E\left[ \prod_{t=1}^T \frac{1}{J} \sum_{j=1}^J  p(y_t^*|x_{t,j}^P,\theta) p(x_{t,j}^P|y_{1:t-1}^*,\theta) \middle| \omega\right] \\
-        &= \E\left[ \prod_{t=1}^T\frac{1}{J}  \sum_{j=1}^J  p(y_t^*|x_{t,j}^P,\theta) p(x_{t,j}^P|x_{t-1}^F,\theta) \middle| \omega\right] 
-    \end{align*}
-    where $p(x_t^P|y_{1:t-1}^*,\theta)$ is the prediction distribution of particles, and the filtering distribution of particles is proportional to $p(y_t^*|x_{t,j}^P,\theta)$, the likelihood of particle $j$ at time $t$.
-    
-    Consider first the case with no resampling. Let $\lik^j(\theta)$, $\lik^j(\phi)$ be the likelihood of trajectory $j$ under $\theta$ and $\phi$ respectively. As the prediction and filtering particles are then the same, we use $x_{t,j}$ to refer to both. As such, conditional on $\omega$,
-    \begin{align*}
-        \lik^j(\theta) 
-        &= \prod_{t=1}^T p(y_t^*|x_{t,j}, \theta) p(x_{t,j}|x_{t-1,j}, \theta) \\
-        &= \prod_{t=1}^T p(y_t^*|x_{t,j}, \phi) \frac{p(y_t^*|x_{t,j}, \theta)}{p(y_t^*|x_{t,j}, \phi)} p(x_{t,j}|x_{t-1,j}, \theta) \frac{p(x_{t,j}|x_{t-1,j}, \theta) }{p(x_{t,j}|x_{t-1,j}, \phi) } \\
-        &= \prod_{t=1}^T p(y_t^*|x_{t,j}, \phi) \cdot s \cdot p(x_{t,j}|x_{t-1,j}, \phi)\cdot r
-    \end{align*}
-    
-    and therefore, if trajectories were proposed with equal probability with particles conditional on $\omega$,
-    $$ \lik(\theta, \omega, J) = \frac{1}{J} \sum_{j=1}^J \prod_{t=1}^T p(y_t^*|x_{t,j}, \phi) \cdot s \cdot p(x_{t,j}|x_{t-1,j}, \phi)\cdot r $$
-    The correction is therefore sufficient for recovering $\lik(\theta)$, with trajectories collected with the process model at $\phi$ and measurements evaluated with the measurement model at $\phi$. 
-    
-    Consider now the case with resampling. Without loss of generality we can resample every timestep. Here, $x_{t,j}^F(\phi) \sim p(y^*|x_{t,j}^P, \phi)$ and $x_{t,j}^P(\phi) \sim p(x_t|x_{t-1}^F,\phi)$, and similarly for $\theta$. We use this notation to emphasize that \textbf{both} the measurement model and the previously drawn particles depend on $\phi$ or $\theta$.
-    
-    \begin{align*}
-        \lik_t(\theta) &= \E_{x_{t,j}^P \sim p(x_t|x_{t-1}^F, \theta)} \left[\frac{1}{J}\sum_{j=1}^J p(y_t^*|x_{t,j}^P,\theta) \right] \\
-        &= \E_{x_{t,j}^P \sim p(x_t|x_{t-1}^F, \theta)} \left[\frac{1}{J}\sum_{j=1}^J p(y_t^*|x_{t,j}^P,\phi) \frac{p(y_t^*|x_{t,j}^P,\theta)}{p(y_t^*|x_{t,j}^P,\phi)} \right] \\
-        &= \E_{x_{t,j}^P \sim p(x_t|x_{t-1}^F, \phi)} \left[\frac{1}{J}\sum_{j=1}^J p(y_t^*|x_{t,j}^P,\phi) \frac{p(y_t^*|x_{t,j}^P,\theta)}{p(y_t^*|x_{t,j}^P,\phi)} \frac{p(x_{t,j}|x_{t-1,j}, \theta) }{p(x_{t,j}|x_{t-1,j}, \phi) }\right] \\
-        &= \E_{x_{t,j}^P \sim p(x_t|x_{t-1}^F, \phi)} \left[\frac{1}{J}\sum_{j=1}^J p(y_t^*|x_{t,j}^P,\phi) \cdot s \cdot r \right] \\
-        &= \E_{\omega}\E_{x_{t,j}^P \sim \process(x_{t-1}^F, \omega, \phi)} \left[\frac{1}{J}\sum_{j=1}^J p(y_t^*|x_{t,j}^P,\phi) \cdot s \cdot r \middle| \omega \right]
-    \end{align*}
-    
-    and again the correction is sufficient.
-
-    Therefore,
-
-    
-    \begin{align}
-         \mathcal{L}(\theta) 
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^P(\omega), \theta) p(x_{n,j}^P(\omega) | x_{n-1,j}^P(\omega), \theta) \right) \, d\mu(\omega) \\
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\theta}(\omega), \theta) p(x_{n,j}^{P,\theta}(\omega) | x_{n,j}^P(\omega), \theta) \right) \, d\mu(\omega) \\
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\theta}(\omega), \phi) p(x_{n,j}^{P,\theta}(\omega) | y_n^*, \phi) \cdot s  \right) \, d\mu(\omega) \\
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) p(x_{n,j}^{P,\phi}(\omega) | y_n^*, \phi) \cdot r \cdot s \right) \, d\mu(\omega) \\
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) p(x_{n,j}^{P, \phi}(\omega) | y_n^*, \phi) \cdot r \cdot s \right) \, d\mu(\omega) \\
-         &= \int_\Omega \left(
-         \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f(y_n^* | x_{n,j}^{P,\phi}(\omega), \phi) \cdot r \cdot s \right)  p(x_{1:N} | y_{1:N}^*, \phi) \,  d\mu(\omega) \\
-         &=: \int_\Omega \lik(\theta,\phi,\omega, J)\, d\mu(\omega).
-     \end{align}
-
-     The proof for an arbitrary functional under the particle measure follows analogously.
-\end{proof}
-
-\begin{lem}[Gradient of Doubly Off-Policy Particle Filter]
-    Let the system evolve according to $\phi \in \Theta,$ that is, with the process model $\process(\cdot | \phi)$ and resampling with probabilities proportional to $f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi})$. Also let $\theta \in \gN(\phi)$. When $\theta$ is evaluated at $\phi$, its gradient is the same as the estimator of \citet{poyiadjis11},
-    \begin{equation}
-        \nabla_\theta \hat\ell(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*).
-    \end{equation}
-\end{lem}
-
-\begin{proof}
-    It is known, from \cite{doucet2009tutorial}, that 
-    $$p_\theta(x_{1:N}|y_{1:N}) = \prod_{n=1}^N \frac{p(x_n|x_{n-1})p(y_n|x_n)}{p(y_n|y_{1:n-1})} = \prod_{n=1}^N \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{\lik_n(\theta)}.$$
-
-    From the above lemma, and the fact that the particle filter is unbiased for the likelihood, we know that
-    \begin{align*}
-        \lik(\theta)
-        &= \int_{x_{1:N}} \prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \int_{x_{1:N}} \left(\prod_{n=1}^N  p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \right) \frac{p_\theta(x_{1:N}|y_{1:N})}{p_\phi(x_{1:N}|y_{1:N})}p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}\\
-        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\theta) \right) \left(\prod_{n=1}^N \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n) \lik_n(\phi)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) \lik_n(\theta)}\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\ 
-        &= \int_{x_{1:N}} \left(\prod_{n=1}^N \lik_n(\phi) \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) }\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N}.
-    \end{align*}
-
-    Therefore, under regularity conditions that permit differentiating under the integral sign, using the log-derivative trick, we have
-    \begin{align*}
-        \nabla_\theta \lik(\theta)
-        &= \int_{x_{1:N}} \nabla_\theta \hat\lik(\theta) \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N}\\
-        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N \lik_n(\phi) \frac{p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)}{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n) }\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N \left(\frac{p_\phi(x_n|x_{n-1})p_\phi(y_n|x_n)}{\lik_n(\phi)}\right)^{-1} p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \int_{x_{1:N}} \nabla_\theta \left(\frac{1}{p_\phi(x_{1:N}|y_{1:N}) }\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)p_\phi(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \int_{x_{1:N}} \nabla_\theta \left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right) dx_{1:N} \\
-        &= \int_{x_{1:N}} \left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\nabla_\theta \log\left(\prod_{n=1}^N p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right) dx_{1:N} \\
-        &= \int_{x_{1:N}} p_\theta(x_{1:N},y_{1:N}) \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) dx_{1:N} \\
-        &= \int_{x_{1:N}} \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) p_\theta(x_{1:N}|y_{1:N}) \cdot \lik(\theta) \; dx_{1:N}. 
-    \end{align*}
-
-    Using the log-derivative trick again,
-    \begin{align*}
-        \nabla_\theta \ell(\theta)
-        &= \frac{\nabla_\theta \lik(\theta)}{\lik(\theta)} \\
-        &= \int_{x_{1:N}} \left(\sum_{n=1}^N \nabla_\theta \log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right) p_\theta(x_{1:N}|y_{1:N}) dx_{1:N} \\
-        &= \E_{x_{1:N}|y_{1:N}, \theta}\left[\nabla_\theta \left(\sum_{n=1}^N\log\left(p_\theta(x_n|x_{n-1})p_\theta(y_n|x_n)\right)\right)\right] \\
-        &= \E_{x_{1:N}|y_{1:N}, \theta}\left[\nabla_\theta\log p_\theta(x_{1:N},y_{1:N})\right] \\
-        &= \lim_{J\to\infty} \E_{x_{1:N}|y_{1:N}, \theta}\left[\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log p_\theta(x_{1:N,j}^{A,F},y_{1:N}^*)\right].
-    \end{align*}
-
-    But it also holds that
-    \begin{align*}
-        \nabla_\theta \ell(\theta)
-        &= \frac{\nabla_\theta \lik(\theta)}{\lik(\theta)} \\
-        &= \int_{x_{1:N}} \frac{\nabla_\theta \hat\lik(\theta)}{\lik(\theta)} \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N} \\
-        &= \int_{x_{1:N}} \nabla_\theta \hat\ell(\theta) \;p_\phi(x_{1:N}|y_{1:N})dx_{1:N}\\
-        &= \lim_{J\to\infty} \E_{x_{1:N}|y_{1:N}, \phi}\left[\nabla_\theta \hat\ell(\theta)\right].
-    \end{align*}
-
-    and we see that $$\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log p_\theta(x_{1:N,j}^{A,F},y_{1:N}^*)$$ and $$\nabla_\theta \hat\ell(\theta)$$ both converge to the same thing in expectation. They are both particle approximations under the posterior where the variance of each is bounded, therefore one can apply the particle CLT from \cite{chopin2004clt} to obtain that they are both consistent estimates of the score.
-
-    In fact, when $\theta=\phi,$ they are the same in distribution. \kevin{claim}
-
-    \kevin{This is a far weaker result than what I really wanted. This just gives consistency. Want equality in distribution.}
-\end{proof}
-
-
-\begin{lem}
-
-Consider the case of DOP-$\alpha$ when $\alpha=0$ and $\theta=\phi$. The gradient estimate is then
-
-    \begin{equation}
-        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta\right),
-    \end{equation}
-
-    yielding the gradient estimator of \cite{blei2018vsmc} that \cite{scibior2021dpf} show is the gradient of a vanilla particle filter when the resampling terms are dropped.
-
-\end{lem}
-
-\begin{proof}
-    When $\alpha=0,$ the likelihood estimate becomes
-\begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J r_{n,j}s_{n,j}}{\sum_{j=1}^J r_{n,j}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J r_{n,j}s_{n,j}.
-\end{equation}
-
-Its gradient when $\theta=\phi$ is therefore 
-\begin{align*}
-    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right) \\
-    &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J r_{n,j}s_{n,j}\right)} \\
-    &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta r_{n,j}s_{n,j}}{\sum_{j=1}^J r_{n,j}s_{n,j}} \\
-    &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{Y_n, X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)} \\
-    &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n,X_n|X_{n-1}}(y_n^*, x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta\right),
-\end{align*}
-where we use the log-derivative trick, observe that $\sum_{j=1}^J r_{n,j}s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. 
-\end{proof}
-
-
-\subsection{Off-Policy Weighted Differentiable Particle Filter}
-
-We are finally ready to introduce the off-policy weighted differentiable particle filter. In the event where a seed is fixed, all expressions in Algorithm \ref{alg:dop} can be considered to be conditional on $\omega \in \Omega$.  
+We present the doubly off-policy differentiable particle filter for completeness. 
+Here, we consider a doubly off policy particle filter, meaning that both \code{rprocess} and \code{dmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
+In the event where a seed is fixed, all expressions in Algorithm \ref{alg:dop} can be considered to be conditional on $\omega \in \Omega$.  
 
 \begin{algorithm}[ht]
 \centering
@@ -1047,9 +840,12 @@ We are finally ready to introduce the off-policy weighted differentiable particl
 \end{algorithm}
 
 
-Here, we consider a doubly off policy particle filter, meaning that both \code{rprocess} and \code{dmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
 
 \section{Measurement Off-Policy Particle Filters}
+
+
+Here, we consider an off-policy particle filter where \code{dmeasure} are computed at $\phi$ and we leverage the reparametrization trick to obtain derivatives with regard to the process model.
+In the event where a seed is fixed, all expressions in Algorithm \ref{alg:mop} can be considered to be conditional on $\omega \in \Omega$.  
 
 \begin{algorithm}[ht]
 \centering
@@ -1090,8 +886,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
 	\end{algorithmic}
 \end{algorithm}
 
-\begin{lem}
-    \label{lem:mop-1-formula}
+\begin{conj}
     Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The gradient estimate is then
 
     \begin{equation}
@@ -1099,7 +894,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     \end{equation}
 
     yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
-\end{lem}
+\end{conj}
 
 \begin{proof}
     
@@ -1129,7 +924,7 @@ So
 $$  \nabla_\theta \sum_{n=1}^N \log g_{n,j}^{A,\theta} = \nabla_\theta \log\left(\prod_{n=1}^N g_{n,j}^{A,\theta}\right) =  \nabla_\theta \log\left(\prod_{n=1}^N f_{Y_n|X_n}\left(y_n^* | x_{n,j}^{A, P,\theta}\right)\right) = \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right),$$
 
 and 
-$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
+$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{i=1}^N \nabla_\theta \log g_{n,k_j}^\theta = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
 
 Substituting, we have that
 \begin{equation*}
@@ -1143,8 +938,7 @@ and finally, observing that when $\theta=\phi$ we have that $w_{N,j}^{F,\theta}=
 yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
 \end{proof}
 
-\begin{lem}
-\label{lem:mop-0-formula}
+\begin{conj}
 
 Consider the case of MOP-$\alpha$ when $\alpha=0$ and $\theta=\phi$. The gradient estimate is then
 
@@ -1154,7 +948,7 @@ Consider the case of MOP-$\alpha$ when $\alpha=0$ and $\theta=\phi$. The gradien
 
     yielding the gradient estimator of \cite{blei2018vsmc} that \cite{scibior2021dpf} show is the gradient of a vanilla particle filter when the resampling terms are dropped -- when applied to the bootstrap filter.
 
-\end{lem}
+\end{conj}
 
 \begin{proof}
     When $\alpha=0,$ the likelihood estimate becomes
@@ -1174,7 +968,7 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 \end{proof}
 
 
-\kevin{I have no clue how to prove this. Help!}
+\kevin{I have no clue how to prove this. Someone, anyone, help!}
 \begin{conj}[MOP-1 Estimate Is Unbiased for the Likelihood and the Gradient of the Likelihood]
     Consider the case of MOP-$\alpha$ when $\alpha=1$, and resampling is carried out with either multinomial, residual, or systematic resampling at every timestep. Assume the gradient estimate obtained by the gradient of the likelihood estimate with J particles, $\nabla_\theta \hat\lik_J(\theta)$ is uniformly bounded for all $J$, and that the likelihood has two continuous derivatives. Then the likelihood estimate is unbiased for the likelihood and the gradient of the likelihood estimate is unbiased for the gradient of the likelihood. That is, it holds that
     $$\E[\hat\lik_J(\theta)] = \lik(\theta),\;\; \E[\nabla_\theta \hat\lik_J(\theta)] = \nabla_\theta \lik(\theta).$$
@@ -1197,76 +991,45 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
     \end{align*}
     
     
-%     Observe that our differentiable simulator $\process(\cdot, \theta)$ and choice of weights now satisfy:
+    Observe that our differentiable simulator $\process(\cdot, \theta)$ and choice of weights now satisfy:
 
-%     - A Feynman-Kac model $\left\{M_t, G_t\right\}$ such that:
+    - A Feynman-Kac model $\left\{M_t, G_t\right\}$ such that:
     
-% - the weight function $G_t$ may be evaluated pointwise (for all $t$ );
+- the weight function $G_t$ may be evaluated pointwise (for all $t$ );
 
-% - it is possible to simulate from $\mathbb{M}_0\left(\mathrm{~d} x_0\right)$ and from $M_t\left(x_{t-1}, \mathrm{~d} x_t\right)$ (for any $x_{t-1}$ and $t$ ).
+- it is possible to simulate from $\mathbb{M}_0\left(\mathrm{~d} x_0\right)$ and from $M_t\left(x_{t-1}, \mathrm{~d} x_t\right)$ (for any $x_{t-1}$ and $t$ ).
 
-% - The number of particles $N$.
+- The number of particles $N$.
 
-% - The choice of an unbiased resampling scheme (e.g. multinomial, residual, stratified, systematic), that is, an algorithm to generate variables $A_t^{1: N}$ in $1: N$ such that $\mathbb{E}\left[\sum_{m=1}^N \mathbbm{1}\left\{A_t^m=n\right\}\right]=N W_{t-1}^n$; see previous chapter for more details.
+- The choice of an unbiased resampling scheme (e.g. multinomial, residual, stratified, systematic), that is, an algorithm to generate variables $A_t^{1: N}$ in $1: N$ such that $\mathbb{E}\left[\sum_{m=1}^N \mathbbm{1}\left\{A_t^m=n\right\}\right]=N W_{t-1}^n$; see previous chapter for more details.
 \end{proof}
 
 
-\begin{lem}[Consistency of MOP-1 Gradient Estimate]
+\begin{conj}[Consistency of MOP-1 Gradient Estimate]
     Consider the case of MOP-$\alpha$ when $\alpha=1$. Assume the gradient estimate obtained by the gradient of the log-likelihood estimate with J particles, $\nabla_\theta \hat\ell_J(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta}$ is uniformly bounded by $G(\theta)$ for all $J$, and that the likelihood has two continuous derivatives. Then the gradient estimate, $\nabla_\theta \hat\ell_J(\theta)$, is consistent for the score.
-    \label{lem:mop-grad-consistency}
-\end{lem}
+\end{conj}
 \begin{proof}
 
-    % We know that the variance of the MOP-1 gradient estimate $\nabla_\theta \hat\ell_J(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta}$ goes to zero coordinate-wise as $J\to\infty$ by the particle filter law of large numbers for bounded functionals of particles (\kevin{Prove general LLN for functionals of MOP under boundedness assumptions in L2, but maybe Hoeffding may be enough to show this, because we only want convergence in probability, we just need to show the expectation converges}), so it suffices to show that it is asymptotically unbiased.
+    We know that the variance of the MOP-1 gradient estimate $\nabla_\theta \hat\ell_J(\theta) = \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta}$ goes to zero coordinate-wise as $J\to\infty$ by a particle filter law of large numbers for bounded functionals of particles (\kevin{Prove general LLN for functionals of MOP under boundedness assumptions}), so it suffices to show that it is asymptotically unbiased.
 
-    % Write $\hat\pi_{n,J}$ for the filtering distribution at timestep $n$ and with $J$ particles, $\hat\pi_{1:N,J}$ for the sequence of filtering distributions from timesteps $1$ to $N$, and $\pi_n, \pi_{1:N}$ for the respective posteriors. 
+    Write $\hat\pi_{n,J}$ for the filtering distribution at timestep $n$ and with $J$ particles, $\hat\pi_{1:N,J}$ for the sequence of filtering distributions from timesteps $1$ to $N$, and $\pi_n, \pi_{1:N}$ for the respective posteriors. 
 
-    % From Lemma \ref{lem:lik-proper-weight}, we know that $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1:n-1}^*, \theta)$ is consistently estimated by the conditional likelihood estimate obtained by MOP-1, for all $\theta$ in an open neighborhood of $\phi$. The likelihood is simply the product of the conditional likelihoods, and similarly for the estimates, so the likelihood $\lik(\theta)$ is also consistently estimated by the likelihood estimate obtained by MOP-1, $\hat\lik_J(\theta)$, for all $\theta$ in an open neighborhood of $\phi$, $\gN(\phi)$.
+    From Lemma \ref{lem:lik-proper-weight}, we know that $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1:n-1}^*, \theta)$ is consistently estimated by the conditional likelihood estimate obtained by MOP-1, for all $\theta$ in an open neighborhood of $\phi$. The likelihood is simply the product of the conditional likelihoods, and similarly for the estimates, so the likelihood $\lik(\theta)$ is also consistently estimated by the likelihood estimate obtained by MOP-1, $\hat\lik_J(\theta)$, for all $\theta$ in an open neighborhood of $\phi$, $\gN(\phi)$.
 
-    % We therefore have that 
-    % $$\lim_{J\to\infty} \E[\hat\lik_J(\theta)] = \lik(\theta)$$
-    % pointwise for all $\theta \in \gN(\phi)$. Given that the gradient is bounded uniformly for all $J$ and consistency for the likelihood estimate holds for all $\theta$ in an open neighborhood of $\phi$ (and therefore all $\theta'$ in a sufficiently small neighborhood of $\theta$), the bounded convergence theorem allows us to switch the expectation and derivative:
-    % $$\nabla_\theta \E[\hat\lik_J(\theta)] 
-    % = \E[\nabla_\theta \hat\lik_J(\theta)].$$ 
+    We therefore have that 
+    $$\lim_{J\to\infty} \E_{\hat\pi_{1:N,J}}[\hat\lik_J(\theta)] = \lik(\theta)$$
+    uniformly for all $\theta \in \gN(\phi)$. 
+    \kevin{Formalize this.}
+
+    \kevin{Need to show that gradients converge almost surely uniformly (doesn't this follow directly from boundedness?) to swap limits, according to Terry Tao.}
+
+    As the gradient is bounded uniformly for all $J$ and consistency for the likelihood estimate holds for all $\theta$ in an open neighborhood of $\phi$ (and therefore all $\theta'$ in a sufficiently small neighborhood of $\theta$), we can swap the derivative and limit by the bounded convergence theorem, and then the derivative and expectation by the very same, to find that 
+    $$\nabla_\theta\lik(\theta) 
+    = \nabla_\theta \lim_{J\to\infty} \E_{\hat\pi_{1:N,J}}[\hat\lik_J(\theta)] 
+    = \lim_{J\to\infty} \nabla_\theta \E_{\hat\pi_{1:N,J}}[\hat\lik_J(\theta)] 
+    = \lim_{J\to\infty} \E_{\hat\pi_{1:N,J}}[\nabla_\theta \hat\lik_J(\theta)].$$
     
-    % Take limits on both sides to find that 
-    % $$\lim_{J \to \infty} \nabla_\theta \E[\hat\lik_J(\theta)] 
-    % = \lim_{J \to \infty} \E[\nabla_\theta \hat\lik_J(\theta)].$$ 
-
-    % We then need to swap the limit and derivative on the left-hand side. This requires uniform convergence of $\lim_{J \to \infty} \nabla_\theta \E[\hat\lik_J(\theta)]$, i.e. that $$\sup_{\theta \in \gN(\phi)} ||  \nabla_\theta \E[\hat\lik_J(\theta)] - \lim_{J \to \infty} \nabla_\theta \E[\hat\lik_J(\theta)]||_{\infty} \to 0 \text{ as } J \to \infty,$$
-    % or that $\forall \epsilon>0$ $\exists N\in \mathbb{N}$ such that $n>N => ||  \nabla_\theta \E[\hat\lik_J(\theta)] - \lim_{J \to \infty} \nabla_\theta \E[\hat\lik_J(\theta)]||_{\infty} < \epsilon$ $\forall \theta \in \gN(\phi).$ However, it is easier to instead use an indirect argument. 
-
-    % We then need to swap the limit and derivative on the left-hand side. This requires uniform convergence. 
-    
-    Fix $\omega \in \Omega$, and set $\phi = \theta$, where $\theta$ is the point we wish to evaluate the gradient at. The sequence $(\nabla_\theta \hat\lik_J(\theta, \omega))_{J \in \mathbb{N}}$ is uniformly bounded over all $J$, by Assumption \ref{assump:local-bounded-derivative}. The sequence is also uniformly equicontinuous. To see this, by Assumption \ref{assump:local-bounded-derivative}, the second derivative of $\hat\lik_J(\theta, \omega)|_{\theta=\theta'}$ is also bounded by $H$ for almost every $\omega\in \Omega$ and every $\theta' \in \gN(\phi)$, including $\theta=\phi$. A set of functions with derivatives bounded by the same constant is uniformly Lipschitz, and therefore uniformly equicontinuous. So the sequence $(\nabla_\theta \hat\lik_J(\theta, \omega))_{J \in \mathbb{N}}$ is uniformly equicontinuous for almost every $\omega \in \Omega$. 
-    Explicitly, for almost every $\omega \in \Omega$ and every $\epsilon>0$, there exists some $\delta(\omega)>0$ such that for every $||\theta - \theta'||_{\infty}<\delta$ and every $J \in \mathbb{N}$ we have that
-    $$||\nabla_\theta \hat\lik_J(\theta, \omega)-\nabla_\theta \hat\lik_J(\theta', \omega)||_\infty < \epsilon.$$
-
-    \kevin{Our previous understanding was that the target is differentiable, and the sequence is differentiable in increasingly small open neighborhoods. This may not be true. The neighborhoods the sequence is differentiable in should be independent of $J$, as the resampling does not change with $\theta$ as it is dependent on $\phi$. Either way, the target is in each of the neighborhoods, and this may be sufficient in itself.} 
-
-    Then, by Arzela-Ascoli, there exists a uniformly convergent subsequence. We claim that there is only one subsequential limit. We know that when as the gradient is bounded by Assumption \ref{assump:local-bounded-derivative} we can treat the gradient as a bounded functional. So by Lemma \ref{lem:posterior-proper-weights} the sequence $(\nabla_\theta \hat\lik_J(\theta, \omega))_{J \in \mathbb{N}}$ converges pointwise for $\theta=\phi$ and almost every $\omega \in \Omega$, and there is therefore only one subsequential limit. The sequence therefore converges uniformly to its limit $\lim_{J \to \infty} \nabla_\theta \hat\lik_J(\theta, \omega).$ Therefore, with uniform convergence for the derivatives established, we can swap the limit and derivative, and obtain that for almost every $\omega \in \Omega$, 
-    $$\lim_{J \to \infty} \nabla_\theta \hat\lik_J(\theta, \omega) = \nabla_\theta \lim_{J \to \infty} \hat\lik_J(\theta, \omega).$$
-
-    From Lemma \ref{lem:lik-proper-weight}, we know that
-    $$\hat{\lik}_J(\theta, \omega) \stackrel{a.s.}{\to} \lik(\theta).$$
-
-    We then have that for almost every $\omega \in \Omega$, 
-    $$\lim_{J \to \infty} \nabla_\theta \hat\lik_J(\theta, \omega) = \nabla_\theta \lim_{J \to \infty} \hat\lik_J(\theta, \omega) = \nabla_\theta \lik(\theta),$$
-    as we wanted. The result then follows by the continuous mapping theorem. 
-    
-    
-
-    % Taking expectations on both sides and using the bounded convergence theorem to interchange limits and expectations, we see that
-    % $$\lim_{J \to \infty} \nabla_\theta \E[\hat\lik_J(\theta)] = \E[\lim_{J \to \infty} \nabla_\theta \hat\lik_J(\theta)] = \E[\nabla_\theta \lim_{J \to \infty} \hat\lik_J(\theta)] = \nabla_\theta \lim_{J \to \infty} \E[\hat\lik_J(\theta)].$$
-    
-
-    % It then follows that
-    % $$\nabla_\theta\lik(\theta) 
-    % = \nabla_\theta \lim_{J\to\infty} \E[\hat\lik_J(\theta)] 
-    % = \lim_{J\to\infty} \nabla_\theta \E[\hat\lik_J(\theta)] 
-    % = \lim_{J\to\infty} \E[\nabla_\theta \hat\lik_J(\theta)].$$
-    
-    % We then have mean-square consistency for the gradient of the likelihood estimate. The result then follows by the continuous mapping theorem. 
+    We then have mean-square consistency for the gradient of the likelihood estimate. The result then follows by the continuous mapping theorem. 
 
     \kevin{Explain that the difference in formula between this and Poyiadjis is due to us taking the derivative w.r.t. the particles in the chain rule. }
 
@@ -1281,54 +1044,10 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 \kevin{Show bias is order N, variance is order N when alpha below 1. That implies optimal choice of alpha is not 1. }
 
 
-\section{Analysis of MOP-$\alpha$ Variance}
-
-
-We first begin with a lemma based on the work of \cite{yu94}. \cite{kausik23} simplify this to the special case of Markov chains. We further adapt this to our setting below.
-\begin{lem}
-    Let $h: \gX^N \to \R^n$ be a bounded measurable function with bound $C$ on trajectories of points in the state space $\gX$ (by considering the domain $\gX^N$, this also encompasses functions of segments of trajectories). Further assume that the underlying Markov chain $(X_n)_{n=1}^N$ has mixing time $t_{\text {mix}}=t_{\text{mix}}\left(\frac{1}{4}\right)$. Consider the joint distribution $\chi$ over the product of the $\sigma$-algebras of $S$ such segments separated by $s$ timesteps, with marginals $\chi_i$. Let the product distribution of the marginals $\chi_i$ be called $\Xi$. Then, we have
-$$
-\left|\mathbb{E}_\chi h-\mathbb{E}_{\Xi} h\right| \leq \frac{4 C(S-1)}{4^{s\cdot t_{\text{mix}}}}.
-$$
-
-
-\end{lem}
-\begin{proof}
-    Remember that each of our Markov processes is mixing, so there exists $t_{m i x, j}=t_{m i x, j}\left(\frac{1}{4}\right)$ and a stationary distribution $d_j$ so that $T V\left(P_j^n(x, \cdot), d_j\right)<\frac{1}{4}$ for $n \geq t_{m i x, j}$. Let $t_{m i x}=\max _j t_{m i x, j}$. Since the decay in total variation distance is multiplicative, $T V\left(P_j^n(x, \cdot), d_j\right)<\left(\frac{1}{4}\right)^c$ for all $j$ and $n \geq c t_{m i x}$. This implies that
-    $$
-    \max _j T V\left(P_j^n(x, \cdot), d_j\right)<\left(\frac{1}{4}\right)^{\frac{T_n}{4 t_{m i x}}-1}=4 \lambda^n
-    $$
-    where $\lambda=\left(\frac{1}{4}\right)^{\frac{1}{t_{m i x}}}$.
-\end{proof}
-
-It is known from \cite{poyiadjis11} that the variance of MOP-1 is no smaller than $O(N^2)$, with an analogous upper bound on the MSE. We now address the case of $\alpha<1$.
-
-We can decompose the MOP-$\alpha$ estimator as follows. When $\theta=\phi$,
-$$\hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \phi}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \phi})^\alpha}.$$
-
-To illustrate the proof strategy, we first analyze the special case when $\alpha=0.$ We then have:
-\begin{equation}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J s_{n,j} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}.
-\end{equation}
-
-Similarly to the proof of Lemma \ref{lem:mop-0-formula}, its gradient when $\theta=\phi$ is therefore 
-\begin{align*}
-    \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right) \\
-    &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)} \\
-    &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta s_{n,j}}{\sum_{j=1}^J s_{n,j}} \\
-    &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)}{f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \phi}; \phi)} \\
-    &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
-\end{align*}
-where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. The point here was that we establish that the gradient of the log-likelihood estimate is given by the sum of terms over all $N$ and $J$:
-$$\nabla_\theta \hat{\ell}(\theta) = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right).$$
-
-
-
-
 \section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}
 \label{app:ifad}
 
-The analysis in this section roughly follows the analysis in \cite{mahoney16}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from Del Moral and Rio \cite{delmoral2011ci} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
+The analysis in this section roughly follows the analysis in Roosta-Khorasani and Mahoney \cite{mahoney2016subsampled}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from Del Moral and Rio \cite{delmoral2011ci} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
 
 
 The convergence analysis in Theorem \ref{thm:convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
@@ -1338,62 +1057,81 @@ The convergence analysis in Theorem \ref{thm:convergence} is limited to the case
 
 \kevin{Gradient linear map, bound conditional likelihoods at time n. Alternatively, convert del moral and doucet expectation bound to high-probability bound. https://arxiv.org/pdf/1905.11546.pdf for trick. Alternatively, concatenate previous states. }
 
-\begin{lem}[Concentration of Measure for Gradient Estimate]
+\begin{conj}[Concentration of Measure for Gradient Estimate]
     \label{lemma:grad_bound}
-    Consider the gradient estimate obtained by MOP-1, which we know by Lemma \ref{lem:mop-grad-consistency} is consistent for the score, where $\theta = \phi$. For $||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||_2$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
-    \begin{align}
-    J > \max\left\{2NG'(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8N^2G'(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\},
-    \end{align}
-    where $G'(\theta)$ is defined as in Assumption \ref{assump:bounded-measurement}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_N$ and $r_N$ are two additional finite model-specific constants that do not depend on $J$, but do depend on $N$, as defined in \cite{delmoral2011ci}. 
-
-    Equivalently, with probability at least $1-\delta$, it holds that
-    \begin{align}
-        ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G'(\theta)N\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right).
-    \end{align}
-\end{lem}
-
-\paragraph{Remark:} According to \cite{delmoral2011ci}, under some regularity conditions, $r_N$ and $\beta_N$ are linear in the trajectory length $N$. Additionally, if the system is stationary enough, $NG'(\theta)$ roughly scales with $G(\theta)$, so one can consider the error to be roughly linear in the trajectory length, $O(G(\theta)N) \approx O(G'(\theta)N^2)$, if all these conditions are fulfilled. This corresponds to the finding by \cite{poyiadjis11} that the variance of the estimate is quadratic in the trajectory length.
+    Assume $\text{osc} \left(\frac{\partial}{\partial_\theta} \hat{\ell}_\theta(x_{n,j}^P) \right) \leq 1$. For $||\nabla_\theta \hat{\loglik}_\theta(x_{n,j}^P) - \nabla_\theta \loglik_\theta(x^P)|| = ||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
+    \begin{equation}
+        J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right),\;\; \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2, \;\;\frac{G(\theta)^2}{\epsilon^2}p\log\left(\frac{6p}{\delta}\right)\right\}
+    \end{equation}
+    where $G(\theta)$ is defined as in Assumption \ref{assump:local-bounded-derivative}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_t$ and $r_t$ are two additional model-specific parameters that do not depend on $J$. 
+\end{conj}
 
 \begin{proof}
 
 
-We will seek to use the concentration inequality of \cite{delmoral2011ci} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. Fix some $\theta \in \gN(\phi)$.
-
-
-Recall that as $w_{N, j}^{F, \theta}=1$ when $\theta=\phi$,
-$$
-\nabla_\theta \hat{\ell}(\theta):=\frac{1}{J} \sum_{j=1}^J \nabla_\theta w_{N, j}^{F, \theta}=\frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N  w_{N, k_j}^{P, \theta} \nabla_\theta \log g_{n,k_j}^{A,\theta} = \frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N \nabla_\theta \log g_{n,k_j}^{A,\theta}.
-$$
-
-Define $\varphi_n^i(x_{n,j}^{F,\theta}) := \frac{\partial}{\partial\theta_i} \log g_{n,k_j}^{A,\theta}$, which is a functional of the filtering particles $x_{n,j}^{F,\theta} = x_{n,k_j}^{P,\theta}$. These are bounded measurable functionals bounded by $G'(\theta)$ by Assumption \ref{assump:bounded-measurement}. Therefore, these have bounded oscillation, satisfying the requirement that $\text{osc} \left(\frac{\partial}{\partial\theta_i} \varphi_i(x_{n,j}^{P,\theta}) \right) \leq G'(\theta)$. \cite{delmoral2011ci} in fact assume $\text{osc}(f) \leq 1$, so we simply scale their bound accordingly.
+We will seek to use the concentration inequality of \cite{delmoral2011ci} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. To use this, we will first need to resample the particles once more to reassign the normalized weights to $1/J$.
 
 \kevin{Put some justification/make the setup of delmoral2011ci concrete here. Concentration of gradient estimate under particle measure to limit under posterior measure}
 
-Apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delmoral2011ci} and a union bound over each $\varphi_n^i(x_{n,j}^{F,\theta})$, totaling $N$ timesteps and $p$ parameters, to find that
+Perform another resampling step at time $T$ to obtain indices $k_j \sim \text{Categorical}(\bar{w}_{T,1}, ..., \bar{w}_{T,J})$. Obtain ancestral trajectories of surviving time $T$ filtering particles $x_{k_j, 1:T}^{A}$. Define $g_j(\theta) = \nabla_\theta -\log L_{T, k_j}$, the gradient of the negative logarithm of the accumulated importance weights of particle $k_j$ along its ancestral trajectory.
 
+We can bound
 \begin{align}
-    \max_{n=1,...,N} \left\lVert\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell_n(\theta) \right\rVert_{\infty} \leq G'(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
+    ||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)|| 
+    \leq 
+    \left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert 
+    + \left\lVert\frac{1}{J}\sum_{j=1}^J g_j(\theta) - (\nabla_\theta -\loglik(\theta))\right\rVert
 \end{align}
 
-with probability at least $1-2Np\exp(-t)$. It therefore holds that with the same probability, that
+We begin by examining the first term. This term bounds the error of the gradient estimate that the differentiable particle filter provides from the gradient estimate after the final resampling step. 
+
+This amounts to solving the following problem. Say you have a weighted mean $\sum w_j x_j$, where $j=1,\dots,J$. The $x_j$ are fixed numbers bounded by some constant $G$ and the $w_j$ are non-negative and sum to $1$. Resample indices $k_j, j=1,\dots,J$ according to the multinomial distribution to get $x_{k_j}$ for each $j$, and also $J^{-1} \sum x_{k_j}$. We want to bound $|\sum w_j x_j - J^{-1} \sum x_{k_j}|$.
+
+By a simple application of Hoeffding's inequality and a union bound, we have
 
 \begin{align}
-    \left\lVert\frac{1}{J}\sum_{j=1}^J\sum_{n=1}^N\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell(\theta) \right\rVert_{\infty} \leq G'(\theta)N\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
+    \prob\left(\exists \; j \;s.t.\; \left|(\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right| \geq \epsilon \right)
+    &\leq 2p\exp\left(\frac{-2\epsilon^2J}{G(\theta)^2}\right) 
 \end{align}
 
+We require \begin{equation}
+    J > \frac{G(\theta)^2}{2\epsilon^2}\log(2p/\delta)
+\end{equation} particles to bound $\left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert_\infty < \epsilon$ with probability $1-\delta$, where $G(\theta)$ is defined as in Assumption \ref{assump:local-bounded-derivative}.
 
-We split the $\delta$ failure probability among these $2Np$ terms, to find $\delta\leq2Np\exp(-t) => t\leq\log(2Np/\delta)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+We can bound the sup norm by $||x||_\infty \leq \sqrt{p}||x||_2$. So to bound $\left\lVert (\nabla_\theta - \hat{\loglik}(\theta)) - \frac{1}{J}\sum_{j=1}^J g_j(\theta)\right\rVert < \epsilon$ with probability $1-\delta/3$, we scale the previous $\epsilon$ to $\epsilon/\sqrt{p}$ and therefore require
 
-The analogous bound for the 2-norm follows from scaling the right-hand side by $\sqrt{p}$, to require 
+\begin{equation}
+    J > \frac{G(\theta)^2}{2\epsilon^2}p\log\left(\frac{6p}{\delta}\right)
+\end{equation}
+    
+
+We now tackle the second term. Write $g_{ij}$ for the $i$-th component of the gradient of the negative log-likelihood with respect to the $j$-th particle, $(-\bar{w}_{T,\np} \nabla_\theta\log L_{T,j})_i$.
+
+Apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delmoral2011ci} and another union bound to find that  
 
 \begin{align}
-    ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G'(\theta)N\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right)
+    \left\lVert\frac{1}{J}\sum_{j=1}^J g_{ij} - \left(-\frac{\partial}{\partial \theta_i}\ell(\theta)\right)\right\rVert_\infty \leq \frac{r_t}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_t 
 \end{align}
 
-and we therefore need 
+with probability $1-2p\exp(-t)$. We split the remaining $2\delta/3$ failure probability among these two terms, to find $\delta/3=2p\exp(-t) => t=\log(6p/\delta)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+
+The analogous bound for the 2-norm falls out by scaling the right-hand side by $\sqrt{p}$, to require 
+
 \begin{align}
-    J > \max\left\{2NG'(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8N^2G'(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\}.
+    \epsilon = \frac{r_t\sqrt{p}}{J}(1+h^{-1}(\log(6p/\delta))) + \sqrt{\frac{2p\log(6p/\delta)}{J}}\beta_t
 \end{align}
+
+and therefore need 
+
+\begin{align}
+    J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right), \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2\right\}
+\end{align}
+
+Overall, we finally require
+
+\begin{equation}
+        J > \max\left\{\frac{r_t\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{6p}{\delta}\right)\right)\right),\;\; \frac{2p\log(6p/\delta)}{\epsilon^2}\beta_t^2, \;\;\frac{G(\theta)^2}{\epsilon^2}p\log\left(\frac{6p}{\delta}\right)\right\}
+\end{equation}
 
 \end{proof}
 
@@ -1402,9 +1140,9 @@ and we therefore need
 
 Should one choose to use a second-order method involving a particle Hessian estimate, we provide a guarantee for its positive-definiteness below.
 
-\begin{lem}[Minimum Eigenvalue Bound for Hessian Estimate]
+\begin{conj}[Minimum Eigenvalue Bound for Hessian Estimate]
     \label{lemma:hess_bound}
-    Assume that the Hessian of the negative log-likelihood $H=\sum_{j=1}^J \E H_j$ has a minimum eigenvalue $0<\gamma<1$, and that $\E \lambda_{\min} (H_j) = \gamma' > 0$. 
+    Assume that the Hessian of the negative log-likelihood $H=\sum_{j=1}^J \E H_j$ has a minimum eigenvalue $\gamma > 0$, that $\E \lambda_{\min} (H_j) = \gamma' > 0$, and finally that $\text{osc}(\lambda_{\min}) \leq 1$. 
     
     We then require 
     \begin{equation}
@@ -1412,7 +1150,7 @@ Should one choose to use a second-order method involving a particle Hessian esti
     \end{equation}
     
     for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$ and with probability at least $1-\exp(-t)$.
-\end{lem}
+\end{conj}
 \begin{proof}
 Write $\hat{H}(\theta) = \hat{H} = \sum_{j=1}^J H_j$ for the estimate of the negative of the Hessian, where $H_j$ is an element of the outer sum over the $J$ particles.
 
@@ -1454,15 +1192,15 @@ for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenv
 
 \begin{proof}
 
-In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney16}.
+In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney2016subsampled}.
 
-Define $\theta_\eta = \theta_n + \eta p_n$, where $p_n=-(H(\theta_n))^{-1}g(\theta_n)$. As in Roosta-Khorasani and Mahoney \cite{mahoney16}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
+Define $\theta_\eta = \theta_n + \eta p_n$, where $p_n=-(H(\theta_n))^{-1}g(\theta_n)$. As in Roosta-Khorasani and Mahoney \cite{mahoney2016subsampled}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
 \begin{equation}
     f(\theta_n+\eta p_n) \leq f(\theta_n) + \eta\beta p_n^Tg(\theta_n)
 \end{equation}
 holds for any $0< \eta < \tilde{\eta}$ and some $\beta \in (0,1)$.
 
-By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney16}, we have that choosing $J$ such that $||\nabla_\theta\hat{\ell}(\theta_n) - \nabla_\theta \ell(\theta_n)|| \leq \epsilon$ and $\lambda_{\min}(H(\theta_n)) \geq c$ with probability $(1-\delta)^2$ for each $n$ yields
+By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney2016subsampled}, we have that choosing $J$ such that $||\nabla_\theta\hat{\ell}(\theta_n) - \nabla_\theta \ell(\theta_n)|| \leq \epsilon$ and $\lambda_{\min}(H(\theta_n)) \geq c$ with probability $(1-\delta)^2$ for each $n$ yields
 
 \begin{align}
     f(\theta_\eta)-f(\theta_n) \leq \eta p_n^Tg(\theta_n) + \epsilon\eta||p_n|| + \eta^2 \Gamma ||p_n||^2 / 2

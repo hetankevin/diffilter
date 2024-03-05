@@ -325,7 +325,17 @@
 \begin{figure}
     \centering
     \includegraphics[scale=0.5]{imgs/mlegrad.png}
-    \caption{Gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate unbiased with high variance. When $\alpha=0$, lower variance but biased.}
+    \caption{Gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate close to unbiased with high variance. When $\alpha=0$, lower variance but biased.}
+    \label{fig:bias-variance}
+\end{figure}
+    
+\end{frame}
+
+\begin{frame}{Bias-Variance Tradeoff with $\alpha$}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{imgs/095/biasvar.png}
+    \caption{Bias-variance tradeoff for gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate close to unbiased with high variance. When $\alpha=0$, lower variance but biased. MSE seems to be minimized at $\alpha=0.97$.}
     \label{fig:bias-variance}
 \end{figure}
     
@@ -336,7 +346,7 @@
     \label{prop:mop-correctness}
     When either $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the posterior and is unbiased for the likelihood under $\theta$. 
     When $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. Its gradient when $\alpha=1$ is the estimate of \citet{poyiadjis11},
-    $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{1:N,j}^{A, F,\theta}, y_{1:N}^*),$$
+    $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{0:N}}(y_{1:N}^*|x_{1:N,j}^{A, F,\theta}),$$
     and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
     $$
         \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
@@ -449,13 +459,14 @@
          \hline
          Method & Best Log-Likelihood & Rank \\ [0.5ex] 
          \hline\hline
-         IFAD-0 & $\textbf{-3747.87}$ & 1\\
-         IFAD-1 & $\textbf{-3748.53}$ & 2\\
-         IF2 (Ours) & -3755.91 & 3\\
-         IF2 (\cite{ionides15}) & -3768.63 & 4\\ 
-         MOP-0 Alone & -3795.74 & 5\\
-         MOP-1 Alone & -3797.38 & 6\\
+         IFAD-0.97 & $\textbf{-3750.21}$ & 1\\
+         IFAD-0 & $-3752.17$ & 2\\
+         IFAD-1 & $-3754.63$ & 3\\
+         IF2 (Ours) & -3764.10 & 4\\
+         IF2 (\cite{ionides15}) & -3768.63 & 5\\ 
+         MOP-1 Alone (100 searches) & -3797.38 & 6\\
          \hline
+
         \end{tabular}
         \caption{\\
         -- IFAD performs the best among all methods, finding the MLE. \\
@@ -465,7 +476,7 @@
     
     \begin{itemize}
         \item Benchmarked IFAD against IF2 on a challenging global search problem. 
-        \item \pause Performed 100 searches each. 
+        \item \pause Performed 44 searches each. 
     \end{itemize}
     
 \end{frame}
