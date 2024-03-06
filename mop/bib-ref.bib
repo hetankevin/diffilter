@@ -1,4 +1,5 @@
 @article{Lee_haiticholera,
+  author={Lee, Elizabeth C and Chao, Dennis L and Lemaitre, Joseph C and Matrajt, Laura and Pasetto, Damiano and Perez-Saez, Javier and Finger, Flavio and Rinaldo, Andrea and Sugimoto, Jonathan D and Halloran, M Elizabeth and  Longini, Ira M and Ternier, Ralph and Vissieres,  Kenia and Azman,  Andrew S and Lessler, Justin  and  Ivers, Louise C},
 doi = {10.1016/S2214-109X(20)30310-7},
 issn = {2214109X},
 journal = {The Lancet Global Health},
@@ -42,7 +43,7 @@ year = {2006}
 }
 
 @article{Ionides_mcap,
-author = {Ionides, Edward L., Bret{\'{o}}, C., Park J., Smith R. A. and King, Aaron A.},
+author = {Ionides, Edward L. and Bret{\'{o}}, C. and Park J. and Smith R. A. and King, Aaron A.},
 doi = {10.1098/rsif.2017.0126},
 title = {Monte Carlo profile confidence intervals for dynamic systems},
 journal = {Journal of the Royal Society Interface},
@@ -495,17 +496,16 @@ year = {2021}
 @article{corenflos2021ot,
   title = 	 {Differentiable Particle Filtering via Entropy-Regularized Optimal Transport},
   author =       {Corenflos, Adrien and Thornton, James and Deligiannidis, George and Doucet, Arnaud},
-  booktitle = 	 {Proceedings of the 38th International Conference on Machine Learning},
+  journal = 	 {Proceedings of the 38th International Conference on Machine Learning},
   pages = 	 {2100--2111},
   year = 	 {2021},
-  editor = 	 {Meila, Marina and Zhang, Tong},
+  xeditor = 	 {Meila, Marina and Zhang, Tong},
   volume = 	 {139},
-  series = 	 {Proceedings of Machine Learning Research},
+  xseries = 	 {Proceedings of Machine Learning Research},
   month = 	 {18--24 Jul},
   publisher =    {PMLR},
   pdf = 	 {http://proceedings.mlr.press/v139/corenflos21a/corenflos21a.pdf},
-  url = 	 {https://proceedings.mlr.press/v139/corenflos21a.html},
-  abstract = 	 {Particle Filtering (PF) methods are an established class of procedures for performing inference in non-linear state-space models. Resampling is a key ingredient of PF necessary to obtain low variance likelihood and states estimates. However, traditional resampling methods result in PF-based loss functions being non-differentiable with respect to model and PF parameters. In a variational inference context, resampling also yields high variance gradient estimates of the PF-based evidence lower bound. By leveraging optimal transport ideas, we introduce a principled differentiable particle filter and provide convergence results. We demonstrate this novel method on a variety of applications.}
+  url = 	 {https://proceedings.mlr.press/v139/corenflos21a.html}
 }
 
 
@@ -652,24 +652,13 @@ year = {2021}
 }
 
 @article{scibior2021dpf,
-  doi = {10.48550/ARXIV.2106.10314},
-  
-  url = {https://arxiv.org/abs/2106.10314},
-  
-  author = {Ścibior, Adam and Wood, Frank},
-  
-  keywords = {Machine Learning (stat.ML), Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  
-  title = {Differentiable Particle Filtering without Modifying the Forward Pass},
-  
-  publisher = {arXiv},
-  
-  year = {2021},
-  
-  copyright = {Creative Commons Attribution Share Alike 4.0 International}
+  title={Differentiable particle filtering without modifying the forward pass},
+  author={{\'S}cibior, Adam and Wood, Frank},
+  journal={arXiv:2106.10314},
+  volume={},
+  year={2021}
 }
-
-
+ 
 @misc{lai2021vmpf,
   doi = {10.48550/ARXIV.2109.15134},
   
@@ -778,15 +767,6 @@ year = {2021}
 }
 
 
-@article{wheeler23,
-  title={Informing policy via dynamic models: Cholera in {H}aiti},
-  author={Wheeler, Jesse and Rosengart, AnnaElaine L and Jiang, Zhuoxun and Tan, Kevin and Treutle, Noah and Ionides, Edward L},
-  year={2023},
-  journal={arXiv:2301.08979}
-}
-
-
-
 @inproceedings{rosato22b,
   title={Inference of Stochastic Disease Transmission Models Using Particle-MCMC and a Gradient Based Proposal},
   author={Rosato, Conor and Harris, John and Panovska-Griffiths, Jasmina and Maskell, Simon},
@@ -845,12 +825,23 @@ year = {2021}
   
 	number = {3},
   
-	author = {Pierre Del Moral and Emmanuel Rio},
+	author = {Del Moral, Pierre and Rio, Emmanuel},
   
 	title = {Concentration inequalities for mean field particle models},
   
 	journal = {The Annals of Applied Probability}
 }
+
+@misc{wycoff2024voronoi,
+      title={Voronoi Candidates for Bayesian Optimization}, 
+      author={Nathan Wycoff and John W. Smith and Annie S. Booth and Robert B. Gramacy},
+      year={2024},
+      eprint={2402.04922},
+      archivePrefix={arXiv},
+      primaryClass={stat.ML}
+}
+
+
 
 @misc{mahoney2016subsampled,
       title={Sub-Sampled Newton Methods I: Globally Convergent Algorithms}, 
@@ -887,7 +878,7 @@ year={2017},
 publisher={Columbia Univ., New York, NY (United States); Harvard Univ., Cambridge, MA (United States)}
 }
 
-@software{jax2018github,
+@misc{jax2018github,
   author = {James Bradbury and Roy Frostig and Peter Hawkins and Matthew James Johnson and Chris Leary and Dougal Maclaurin and George Necula and Adam Paszke and Jake Vander{P}las and Skye Wanderman-{M}ilne and Qiao Zhang},
   title = {{JAX}: composable transformations of {P}ython+{N}um{P}y programs},
   url = {http://github.com/google/jax},
@@ -944,15 +935,11 @@ publisher={Columbia Univ., New York, NY (United States); Harvard Univ., Cambridg
 
 
 @book{delmoral2004feynman,
-author = {Del Moral, Pierre},
-year = {2004},
-month = {05},
-pages = {},
-title = {Feynman-Kac Formulae: Genealogical and Interacting Particle Systems With Applications},
-volume = {100},
-isbn = {0387202684},
-journal = {Journal of The American Statistical Association - J AMER STATIST ASSN},
-doi = {10.1007/978-1-4684-9393-1}
+Author = {Del Moral, P.}, 
+Year = {2004}, 
+Title = {{F}eynman-{K}ac Formulae: Genealogical and Interacting Particle Systems with Applications},
+Publisher = {Springer},
+Address = {New York}
 }
 
 @Article{king2016pomp,
@@ -996,4 +983,15 @@ journal = {Handbook of Nonlinear Filtering}
       eprint={2304.08612},
       archivePrefix={arXiv},
       primaryClass={cs.LG}
+}
+
+@article{berg2019pfilterimage,
+author = {Berg, Daniel and Bauser, Hannes and Roth, Kurt},
+year = {2019},
+month = {02},
+pages = {1163-1178},
+title = {Covariance resampling for particle filter – state and parameter estimation for soil hydrology},
+volume = {23},
+journal = {Hydrology and Earth System Sciences},
+doi = {10.5194/hess-23-1163-2019}
 }
