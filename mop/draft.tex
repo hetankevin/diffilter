@@ -1323,6 +1323,7 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 $$\nabla_\theta \hat{\ell}(\theta) = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right).$$
 
 
+\kevin{Ed: Claim 11.4.2, Chopin, is the key to reasoning about this. Establish geometric mixing, that $\text{Cov}(\nabla_\theta\hat\ell_n, \nabla_\theta\hat\ell_m) \leq \rho^{|n-m|}V_n$, where $V_n$ is asymptotically stable (the latter only holds for $\alpha<1$, as only then do we get asymptotic stability, otherwise it increases linearly in $n$). Geometrically decreasing covariances and stable variances over time are the same thing. Then, we can bound the total variance by $\text{Var}(\sum_n \nabla_\theta \hat\ell_n(\theta)) = \sum_{m,n} \text{Cov}(\nabla_\theta\hat\ell_n(\theta), \nabla_\theta\hat\ell_m(\theta)) = NV_n + 2(N-1)\rho V_n + 2(N-3)\rho^2V_n + ...$}
 
 
 \section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}
