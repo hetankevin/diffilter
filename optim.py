@@ -33,12 +33,33 @@ MONITORS = 1
 
 
 @partial(jit, static_argnums=2)
+def jgrad_pf(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.grad(pfilter_pf)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+
+
+@partial(jit, static_argnums=2)
+def jvg_pf(theta_ests, ys, J, covars, thresh, key=None):
+    return jax.value_and_grad(pfilter_pf)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+
+
+@partial(jit, static_argnums=2)
 def jgrad(theta_ests, ys, J, covars, thresh, key=None):
     return jax.grad(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
 
 @partial(jit, static_argnums=2)
 def jvg(theta_ests, ys, J, covars, thresh, key=None):
     return jax.value_and_grad(pfilter_mean)(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+
+
+@partial(jit, static_argnums=2)
+def jgrad_mop(theta_ests, ys, J, covars, alpha=0.97, key=None):
+    return jax.grad(mop_mean)(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
+
+@partial(jit, static_argnums=2)
+def jvg_mop(theta_ests, ys, J, covars, alpha=0.97, key=None):
+    return jax.value_and_grad(mop_mean)(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
+
+
 
 @partial(jit, static_argnums=2)
 def jhess(theta_ests, ys, J, covars, thresh, key=None):
@@ -64,7 +85,7 @@ def line_search(obj, curr_obj, pt, grad, direction, k=1, eta=0.9, xi=10, tau = 1
 
 
 #rerun with diff trajs each time
-def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20, beta=0.9, eta=0.0025, c=0.1, max_ls_itn=10, thresh=100, verbose=False, scale=False, ls=False): 
+def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20, beta=0.9, eta=0.0025, c=0.1, max_ls_itn=10, thresh=100, verbose=False, scale=False, ls=False, alpha=1): 
     Acopies = []
     grads = []
     hesses = []
@@ -76,12 +97,43 @@ def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20
         
         key = jax.random.PRNGKey(onp.random.choice(int(1e18)))
         if MONITORS == 1:
-            loglik, grad = jvg(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+            loglik, grad = jvg_mop(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
             loglik *= len(ys)
         else:
-            grad = jgrad(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
-            loglik = np.mean(np.array([pfilter(theta_ests, ys, J, covars=covars, thresh=thresh, key=key) for i in range(MONITORS)]))
-        
+            grad = jgrad_mop(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
+            loglik = np.mean(np.array([pfilter(theta_ests, ys, J, 
+                                               covars=covars, thresh=-1, key=key) 
+                                       for i in range(MONITORS)]))
+        '''
+        if alpha==1:
+            if MONITORS == 1:
+                loglik, grad = jvg(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+                loglik *= len(ys)
+            else:
+                grad = jgrad(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+                loglik = np.mean(np.array([pfilter(theta_ests, ys, J, 
+                                                   covars=covars, thresh=thresh, key=key) 
+                                           for i in range(MONITORS)]))
+        elif alpha==0:
+            if MONITORS == 1:
+                loglik, grad = jvg_pf(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+                loglik *= len(ys)
+            else:
+                grad = jgrad_pf(theta_ests, ys, J, covars=covars, thresh=thresh, key=key)
+                loglik = np.mean(np.array([pfilter(theta_ests, ys, J, 
+                                                   covars=covars, thresh=thresh, key=key) 
+                                           for i in range(MONITORS)]))
+        else:
+            if MONITORS == 1:
+                loglik, grad = jvg_mop(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
+                loglik *= len(ys)
+            else:
+                grad = jgrad_mop(theta_ests, ys, J, covars=covars, alpha=alpha, key=key)
+                loglik = np.mean(np.array([pfilter(theta_ests, ys, J, 
+                                                   covars=covars, thresh=-1, key=key) 
+                                           for i in range(MONITORS)]))
+        '''
+
         if method=='Newton':
             hess = jhess(theta_ests, ys, Jh, covars=covars, thresh=thresh, key=key)
             direction = -np.linalg.pinv(hess) @ grad
@@ -118,7 +170,10 @@ def train(theta_ests, ys, covars=None, J=5000, Jh=1000, method='Newton', itns=20
             
         eta = line_search(partial(pfilter, ys=ys, J=J, covars=covars, thresh=thresh, key=key), 
                           loglik, theta_ests, grad, direction, k=i+1, eta=beta, c=c, tau=max_ls_itn) if ls else eta
-        et = eta if len(eta) == 0 else eta[i]
+        try:
+            et = eta if len(eta) == 1 else eta[i]
+        except:
+            et = eta
 
         if i%1==0 and verbose:
             print(theta_ests, et, logliks[i])
@@ -158,6 +213,45 @@ def mif(theta, ys, sigmas, sigmas_init, covars=None, M=10,
         if monitor:
             loglik = np.mean(np.array([pfilter(thetas.mean(0), ys, J, covars=covars, thresh=thresh) 
                                        for i in range(MONITORS)]))
+            logliks.append(loglik)
+                  
+            if verbose:
+                print(loglik)
+                print(thetas.mean(0))
+        
+    return np.array(logliks), np.array(params)
+
+
+# PANEL ITERATED FILTERING: COVARS IS SHAPE (J, P, S), YS IS SHAPE (P, MEASUREMENTS)
+# P IS PANEL DIMENSION
+def pif(theta, ys, sigmas, sigmas_init, covars, M=10, 
+        a=0.9, J=100, thresh=100, monitor=False, verbose=False):
+    
+    logliks = []
+    params = []
+    
+    thetas = theta + sigmas_init*onp.random.normal(size=(J, theta.shape[-1]))
+    params.append(thetas)
+    P = covars.shape[1]
+    if monitor:
+        loglik = np.mean(np.array([pfilter(thetas.mean(0), ys, J, covars=covars[:,p,:], thresh=thresh) 
+                                   for p in range(P) for i in range(MONITORS)]))
+        logliks.append(loglik)
+        
+    # outer iterative loop 
+    for m in tqdm(range(M)):
+        # annealing pertubations
+        sigmas *= a
+        for p in range(P):
+            thetas += sigmas*onp.random.normal(size=thetas.shape)
+            loglik_ext, thetas = perfilter(thetas, ys, J, sigmas, covars=covars[:,p,:], a=a, thresh=thresh)
+        
+        params.append(thetas)
+        
+        #code for monitoring logliks and verbose output
+        if monitor:
+            loglik = np.mean(np.array([pfilter(thetas.mean(0), ys, J, covars=covars[:,p,:], thresh=thresh) 
+                                   for p in range(P) for i in range(MONITORS)]))
             logliks.append(loglik)
                   
             if verbose:

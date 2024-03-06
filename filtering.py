@@ -61,6 +61,85 @@ else:
 '''
 
 
+def mop_helper(t, inputs):
+    particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key = inputs
+    J = len(particlesF)
+    
+    if len(covars.shape) > 2:
+        key, *keys = jax.random.split(key, num=J*covars.shape[1]+1)
+        keys = np.array(keys).reshape(J, covars.shape[1], 2).astype(np.uint32)
+    else:    
+        key, *keys = jax.random.split(key, num=J+1)
+        keys = np.array(keys)
+        
+    # Discount weights by alpha in logspace
+    weightsP = alpha*weightsF
+    
+    # Get prediction particles 
+    if covars is not None:
+        particlesP = rprocess(particlesF, theta, keys, covars)# if t>0 else particlesF
+    else:
+        particlesP = rprocess(particlesF, theta, keys, None)
+        
+    measurements = dmeasure(ys[t], particlesP, theta)
+    if len(measurements.shape) > 1:
+        measurements = measurements.sum(axis=-1)
+    
+    # Using before-resampling conditional likelihood
+    loglik += (jax.scipy.special.logsumexp(weightsP + measurements) 
+               - jax.scipy.special.logsumexp(weightsP))
+    
+    # Obtain normalized measurement likelihoods for resampling
+    norm_weights, loglik_phi_t = normalize_weights(jax.lax.stop_gradient(measurements))
+
+    # Systematic resampling according to normalized measurement likelihoods
+    counts, particlesF, norm_weightsF = resampler(counts, particlesP, norm_weights)
+    
+    # Correct for theta/phi and resample
+    weightsF = (weightsP + measurements - jax.lax.stop_gradient(measurements))[counts]
+
+    #jax.debug.print(loglik, loglik_t)
+    return [particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key]
+
+    
+# test on linear gaussian toy model again
+@partial(jit, static_argnums=2)
+def mop(theta, ys, J, covars=None, alpha=0.97, key=None):
+    if key is None:
+        key = jax.random.PRNGKey(onp.random.choice(int(1e18)))
+    
+    particlesF = rinit(theta, J, covars=covars)
+    weights = np.log(np.ones(J)/J)
+    weightsF = np.log(np.ones(J)/J)
+    counts = np.ones(J).astype(int)
+    loglik = 0
+    
+    particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key = jax.lax.fori_loop(
+                lower=0, upper=len(ys), body_fun=mop_helper, 
+                 init_val=[particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key])
+    
+    return -loglik
+
+# test on linear gaussian toy model again
+@partial(jit, static_argnums=2)
+def mop_mean(theta, ys, J, covars=None, alpha=0.97, key=None):
+    if key is None:
+        key = jax.random.PRNGKey(onp.random.choice(int(1e18)))
+    
+    particlesF = rinit(theta, J, covars=covars)
+    weights = np.log(np.ones(J)/J)
+    weightsF = np.log(np.ones(J)/J)
+    counts = np.ones(J).astype(int)
+    loglik = 0
+    
+    particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key = jax.lax.fori_loop(
+                lower=0, upper=len(ys), body_fun=mop_helper, 
+                 init_val=[particlesF, theta, covars, loglik, weightsF, counts, ys, alpha, key])
+    
+    return -loglik/len(ys)
+
+
+
 def pfilter_helper(t, inputs):
     particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key = inputs
     J = len(particlesF)
@@ -222,6 +301,76 @@ def perfilter_mean(theta, ys, J, sigmas, covars=None, a=0.9, thresh=100, key=Non
                  init_val=[particlesF, thetas, sigmas, covars, loglik, norm_weights, counts, ys, thresh, key])
     
     return -loglik/len(ys), thetas
+
+
+
+def resampler_pf(counts, particlesP, norm_weights):
+    J = norm_weights.shape[-1]
+    counts = resample(norm_weights)
+    particlesF = particlesP[counts]
+    return counts, particlesF, np.log(np.ones(J)) - np.log(J)
+
+
+def pfilter_helper_pf(t, inputs):
+    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key = inputs
+    J = len(particlesF)
+    
+    if len(covars.shape) > 2:
+        key, *keys = jax.random.split(key, num=J*covars.shape[1]+1)
+        keys = np.array(keys).reshape(J, covars.shape[1], 2).astype(np.uint32)
+    else:    
+        key, *keys = jax.random.split(key, num=J+1)
+        keys = np.array(keys)
+        
+    # Get prediction particles 
+    if covars is not None:
+        particlesP = rprocess(particlesF, theta, keys, covars)# if t>0 else particlesF
+    else:
+        particlesP = rprocess(particlesF, theta, keys, None)
+        
+    measurements = dmeasure(ys[t], particlesP, theta)
+    if len(measurements.shape) > 1:
+        measurements = measurements.sum(axis=-1)
+    
+    # Multiply weights by measurement model result
+    weights = norm_weights + measurements
+
+    # Obtain normalized weights
+    norm_weights, loglik_t = normalize_weights(weights)
+    loglik += loglik_t
+
+    oddr = np.exp(np.max(norm_weights))/np.exp(np.min(norm_weights))
+    # Systematic resampling
+    # Here we resample before calculating dmeasure at timestep t!
+    # so we resample with the old weights, not the new ones! wrong.
+    # if resampling, resample with dmeasure
+    # if not resampling, just propagate
+    counts, particlesF, norm_weights = jax.lax.cond(oddr > thresh, 
+                                               resampler_pf, 
+                                               no_resampler, 
+                                               counts, particlesP, norm_weights)
+
+    #jax.debug.print(loglik, loglik_t)
+    return [particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key]
+
+
+# test on linear gaussian toy model again
+@partial(jit, static_argnums=2)
+def pfilter_pf(theta, ys, J, covars=None, thresh=100, key=None):
+    if key is None:
+        key = jax.random.PRNGKey(onp.random.choice(int(1e18)))
+    
+    particlesF = rinit(theta, J, covars=covars)
+    weights = np.log(np.ones(J)/J)
+    norm_weights = np.log(np.ones(J)/J)
+    counts = np.ones(J).astype(int)
+    loglik = 0
+    
+    particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key = jax.lax.fori_loop(
+                lower=0, upper=len(ys), body_fun=pfilter_helper_pf, 
+                 init_val=[particlesF, theta, covars, loglik, norm_weights, counts, ys, thresh, key])
+    
+    return -loglik/len(ys)
 
 
 

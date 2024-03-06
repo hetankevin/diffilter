@@ -1,0 +1,269 @@
+\documentclass[9pt,twocolumn,twoside]{pnas-new}
+%\documentclass[9pt,twocolumn,pnasresearcharticle]{pnas-new}
+%\documentclass[9pt,twocolumn,twoside]{pnas-new}
+% Use the lineno option to display guide line numbers if required.
+
+\input{macros}
+
+
+\templatetype{pnasresearcharticle} % Choose template
+% {pnasresearcharticle} = Template for a two-column research article
+% {pnasmathematics} %= Template for a one-column mathematics article
+% {pnasinvited} %= Template for a PNAS invited submission
+
+\begin{document}
+
+\title{Inference for Dynamic and Latent Variable Models via Plug-and-Play Automatically Differentiable Particle Filtering}
+
+% Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
+\author[a]{Kevin Tan}
+\author[a]{Giles Hooker}
+\author[b,1]{Edward L. Ionides}
+%\author[a]{Author Three}
+
+\affil[a]{University of Pennsylvania}
+\affil[b]{University of Michigan}
+%\affil[c]{Affiliation Three}
+
+% Please give the surname of the lead author for the running footer
+\leadauthor{Tan}
+
+% Please add a significance statement to explain the relevance of your work
+\significancestatement{Many scientific models involve highly nonlinear stochastic dynamical systems which can be observed only via noisy and incomplete measurements. Under the Markov assumption on system dynamics, previous work has provided methods of performing inference for these models. In particular, prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method outperforms previous approaches on a challenging problem in epidemiology.}
+
+% Please include corresponding author, author contribution and author declaration information
+\authorcontributions{K.T. and E.L.I. planned the study; K.T. developed the numerical results; all authors wrote the manuscript.}
+\authordeclaration{The authors declare no competing interests.}
+\correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: ionides@umich.edu}
+
+% At least three keywords are required at submission. Please provide three to five keywords, separated by the pipe symbol.
+\keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
+
+\begin{abstract}
+  Automatic differentiation has driven recent advances in machine learing, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods.
+  This progress has required simultaneous advances in algorithms, software and hardware.  
+  Partially observed nonlinear stochastic dynamic systems have proved resistant to the benefits of automatic differentiation techniques; despite various attempts, widely applicable methods have not yet emerged.
+  We present a new approach which is applicable to a general class of models, possesses a theoretical foundation, and is demonstrated to beat current state-of-the-art methods on a challenging scientific benchmark problem.
+  Our algorithm is compatible with parallel computation on a graphical processing unit, and enjoys the plug-and-play property that its software implementation requires only a simulator for the scientific dynamic model as input (in addition to data, and a measurement model).
+   
+\end{abstract}
+
+\dates{This manuscript was compiled on \today}
+\doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
+
+
+\maketitle
+\thispagestyle{firststyle}
+\ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
+
+\firstpage{3}
+% Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
+
+
+% If your first paragraph (i.e. with the \dropcap) contains a list environment (quote, quotation, theorem, definition, enumerate, itemize...), the line after the list may have some extra indentation. If this is the case, add \parshape=0 to the end of the list environment.
+\dropcap{T}he particle filter is a widely used Monte Carlo algorithm which provides an unbiased estimate of the likelihood function for partially observed Markov process (POMP) models \ed{REFS}.
+Maximization of the likelihood permits computation of the maximum likelihood parameter estimate, as well as profile likelihood confidence intervals, and model selection by likelihood ratio tests or Akaike's information criterion.
+The particle filter involves a random resampling step in which particles inconsistent with the data are likely to be pruned out and the most consistent particles are replicated.
+Applying automatic differentiation (AD) to supply the optimization with gradient information is complicated by the disctete nature of this resampling step.
+Simulations of discrete random variables are necessarily discontinuous, specifically piecewise constant, as a function of the unknown parameters for a fixed value of the seed for the random number generator.
+As a result of this, the Monte Carlo expectation of the derivative is not equal to the derivative of the Monte Carlo expectation.
+Various strategies have been proposed to address this phenomenon \ed{REFS}, but none of these algorithms have found widespread practical applicability.
+
+A significant practical strength of the particle filter is its applicability to arbitrarily nonlinear stochastic systems, requiring only a simulator for the dynamic model.
+This is called the plug-and-play property \ed{refs}, and this property is critical in some applications, such as disease modeling, where the models are complex enough that obtaining the density is intractable.
+Some extensions of the particle filter to parameter estimation require availability of transition probabilities for the dynamic model \ed{refs} which violates the plug-and-play property.
+We have developed an AD algorithm for the particle filter which preserve the plug-and-play property while providing useful derivative estimates which demonstrably improve our ability to search for the maximum of the likelihood.
+
+Our key insights are as follows:
+\begin{enumerate}
+\item We consider a novel one-parameter family of plug-and-play AD gradient estimators allowing flexibility in the tradeoff between Monte Carlo bias and variance. For our target problem, the results are insensitive to the choice of this parameter.
+ 
+\item ADPF stochastic gradient optimization has complementary strengths to iterated filtering algorithms that are widely used for plug-and-play likelihood maximization for POMP models. Iterated filtering algorithms provide a computationally efficient way to approach the maximum, but they are poor at identifying the precise location of the maximum.
+Combining both these algorithms substantially out-performs either alone.
+
+\item The IFAD algorithm can be implemented on a GPU to achieve massive parallelization. 
+\end{enumerate}
+Together, these innovations lead to methodology which advances capability for statistical analysis of scientific models arising in biological sciences and elsewhere \ed{refs}.
+Our benchmark task is a model previously used to evaluate iterated filtering algorithms \ed{refs}.
+
+
+\subsection*{Historical cholera transmission in Dacca, Bangladesh}.
+We tested our method on the cholera transmission model and data of \citep{king08}.
+This is a POMP model based on the fundamental Susceptible-Exposed-Infected-Recovered (SEIR) epidemiological model, but incorporating additional features that are required for practical application of this model to various real disease systems.
+Seasonality is included as a periodic cubic B-spline covariate process.
+Loss of immunity is modeled by return from the Recovered class to the Susceptible class.
+Asymptomatic infections can be modeled separately to allow for the possibility that they differ from symptomatic infections in their infectivity and acquired immunity.
+This model, and the Dacca case reports to which it was originally fitted, provide a benchmark for a challening scientific model fitting exercise.
+It was used oringally to test IF1 \citep{ionides06-pnas} and IF2  \citep{ionides15}, and a simplified version has been used to compare with alternative methodologies \citep{fasiolo16}.
+We will therefore benchmark on this well-established model before moving on to target the methods on models with anticipated scientific goals.
+
+
+\begin{figure}%[tbhp]
+\centering
+\includegraphics[width=.8\linewidth]{23-09-05-adpf-vs-if2.png}
+\caption{Comparing the ADPF algorithm with IF2 on the Dacca model and data of \citep{king08}}
+  \label{fig:dacca-fit}
+\end{figure}
+
+
+\subsection*{Assorted draft stuff}
+  
+[naive ADPF] intruduces bias into the Monte Carlo estimate of the derivative.
+This bias has previously been reported to be non-negligible [REF].
+An approach to avoiding this bias is the REINFORCE estimator, also known as the stop-gradient trick \cite{scibior21}.
+The Monte Carlo variance of this estimator has been found to be problematic \cite{scibior21}
+
+1. A new derivation of the stop-gradient estimator. We show that this estimator can be obtained as the fixed seed derivative of an extension of the basic particle filter which we call the off policy particle filter.
+
+2. Combining the reparameterization trick with the stop-gradient estimator to obtain a plug-and-play gradient estimator.
+
+3. Apply this gradient estimator within a stochastic gradient descent algorithm using a normalized gradient.
+
+4. Multiple searches from diverse starting points to reduce, quantify and control maximization error due to multimodality and Monte Carlo variability.
+
+
+
+
+%\dropcap{M}
+Many approaches to inference in highly nonlinear stochastic dynamical systems assume access to the probability density of next states given the current state.
+
+
+Still, maximum likelihood parameter estimation can be challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Existing methods like the improved iterated filtering algorithm of Ionides et. al. \cite{ionides15} converge quickly to a neighborhood of the MLE, but struggle to optimize the last few units of log-likelihood. 
+
+\kevin{TODO: (1) Fix beta smoothness to d(n) at no more than O(n), (2) add story to say that no one spotted that it could have been plug-and-play because of e.g. reasons why they would stumble, (3) }
+
+\kevin{Previous literature: Doucet waymo only applicable to policy plus deterministic dynamics}
+
+
+%We propose a hybrid algorithm that u
+
+%Unlike IF2, we explicitly characterize our method's rate of convergence
+
+% IF2 is SGD that iterates through the data sequentially in the 1:N sense, and noisy/mini-batch GD in the 1:J sense. 
+% ADPF is batch GD in the 1:N sense, and noisy/mini-batch GD in the 1:J sense. 
+
+
+Algorithmic differentiation potentially facilitates numerical optimization, but currently its use for particle filters is limited. We investigate ways to use algorithmic differentiation of particle filters within the confines of the plug-and-play property, with the goal of enhancing current inference capabilities for general POMP models.
+
+
+\textbf{The issue:} Particle filters provide convenient approaches to evaluating the log-likelihood function for partially observed Markov process (POMP) models. However, using this evaluator to obtain a maximum likelihood parameter estimate can be challenging -- especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. Empirically, methods such as the improved iterated filtering algorithm (IF2) from Ionides et. al. \cite{ionides15} rapidly converge to a neighborhood of the optimum but struggle at finding the exact optimum due to Monte Carlo variance, even with an annealing random walk standard deviation. 
+
+A potential solution to this could lie in auto-differentiation (AD). This would allow for the use of first and second-order iterative optimization techniques. However, though AD could potentially facilitate numerical optimization, its use for plug-and-play particle filters has so far been limited. This is potentially because particle filtering methods are inherently non-differentiable due to the resampling step that may take place in between iterations. 
+
+\subsection*{The importance of the plug-and-play property:} Performing inference in highly nonlinear stochastic dynamical systems is a challenging problem. Although many methods for inference assume access to the density of state transitions, this is often not available, especially in critical applications like epidemiology.
+
+Basic particle filtering algorithms do not require evaluation of the transition density of the latent Markov process, in a feature known as the \textbf{plug-and-play property} \cite{breto09} since it enables an arbitrary model simulator to be plugged into the algorithm. We investigate ways to use algorithmic differentiation of particle filters within the confines of the plug-and-play property, with the goal of enhancing current inference capabilities for general POMP models.
+
+\subsection*{Other potential applications:} This has applications beyond the obvious one of learning model parameters via first or second-order optimization routines. For example, it could be a step towards developing very general Hamiltonian Monte Carlo methods for particle MCMC, as Rosato et. al. \cite{rosato22b} do by using previous work such as \cite{scibior21, poyiadjis11} (and we conjecture that the seed-fixing derivatives of Rosato et. al. are the same as these as an immediate consequence of section \ref{subsec:scibiorrel}) to differentiate the particle filter. 
+
+%% \subsection*{Author Affiliations}
+
+%% Include department, institution, and complete address, with the ZIP/postal code, for each author. Use lower case letters to match authors with institutions, as shown in the example. PNAS strongly encourages authors to supply an \href{https://orcid.org/}{ORCID identifier} for each author. Individual authors must link their ORCID account to their PNAS account at \href{http://www.pnascentral.org/}{www.pnascentral.org}. For proper authentication, authors must provide their ORCID at submission and are not permitted to add ORCIDs on proofs.
+
+\subsection*{Format}
+
+Many authors find it useful to organize their manuscripts with the following order of sections: title, author line and affiliations, keywords, abstract, significance statement, introduction, results, discussion, materials and methods, acknowledgments, and references. Other orders and headings are permitted.
+
+%% \subsection*{Manuscript Length}
+
+%% A standard 6-page article is approximately 4,000 words, 50 references, and 4 medium-size graphical elements (i.e., figures and tables). The preferred length of articles remains at 6 pages, but PNAS will allow articles up to a maximum of 12 pages.
+
+%% \subsection*{References}
+
+%% References should be cited in numerical order as they appear in text; this will be done automatically via bibtex,
+
+\subsection*{Data Archival}
+
+PNAS must be able to archive the data essential to a published article. Where such archiving is not possible, deposition of data in public databases, such as GenBank, ArrayExpress, Protein Data Bank, Unidata, and others outlined in the \href{https://www.pnas.org/author-center/editorial-and-journal-policies#materials-and-data-availability}{Information for Authors}, is acceptable.
+
+
+
+\begin{table}[t!]
+\centering
+\caption{Comparison of the fitted potential energy surfaces and ab initio benchmark electronic energy calculations}
+\begin{tabular}{lrrr}
+Species & CBS & CV & G3 \\
+\midrule
+1. Acetaldehyde & 0.0 & 0.0 & 0.0 \\
+2. Vinyl alcohol & 9.1 & 9.6 & 13.5 \\
+3. Hydroxyethylidene & 50.8 & 51.2 & 54.0\\
+\bottomrule
+\end{tabular}
+
+\addtabletext{nomenclature for the TSs refers to the numbered species in the table.}
+\end{table}
+
+
+%% \subsection*{Digital Figures}
+
+%% EPS, high-resolution PDF, and PowerPoint are preferred formats for figures that will be used in the main manuscript. Authors may submit PRC or U3D files for 3D images; these must be accompanied by 2D representations in TIFF, EPS, or high-resolution PDF format. Color images must be in RGB (red, green, blue) mode. Include the font files for any text.
+
+%% Images must be provided at final size, preferably 1 column width (8.7cm). Figures wider than 1 column should be sized to 11.4cm or 17.8cm wide. Numbers, letters, and symbols should be no smaller than 6 points (2mm) and no larger than 12 points (6mm) after reduction and must be consistent.
+
+%% Figures and tables should be labelled and referenced in the standard way using the \verb|\label{}| and \verb|\ref{}| commands.
+
+%% Figure \ref{fig:dacca-fit} shows an example of how to insert a column-wide figure. To insert a figure wider than one column, please use the \verb|\begin{figure*}...\end{figure*}| environment. Figures wider than one column should be sized to 11.4 cm or 17.8 cm wide. Use \verb|\begin{SCfigure*}...\end{SCfigure*}| for a wide figure with side legends.
+
+
+%\begin{SCfigure*}[\sidecaptionrelwidth][t!]
+%\centering
+%\includegraphics[width=11.4cm,height=11.4cm]{frog.pdf}
+%\caption{This legend would be placed at the side of the figure, rather than below it.}\label{fig:side}
+%\end{SCfigure*}
+
+
+%% \subsection*{Tables}
+%% Tables should be included in the main manuscript file and should not be uploaded separately.
+
+
+%% \subsection*{Single column equations}
+
+%% Authors may use 1- or 2-column equations in their article, according to their preference.
+
+%% To allow an equation to span both columns, use the \verb|\begin{figure*}...\end{figure*}| environment mentioned above for figures.
+
+%% Note that the use of the \verb|widetext| environment for equations is not recommended, and should not be used.
+
+%% \begin{figure*}[bt!]
+%% \begin{align*}
+%% (x+y)^3&=(x+y)(x+y)^2\\
+%%        &=(x+y)(x^2+2xy+y^2) \numberthis \label{eqn:example} \\
+%%        &=x^3+3x^2y+3xy^3+x^3.
+%% \end{align*}
+%% \end{figure*}
+
+
+
+\subsection*{Supporting Information Appendix (SI)}
+
+Authors should submit SI as a single separate SI Appendix PDF file, combining all text, figures, tables, movie legends, and SI references. SI will be published as provided by the authors; it will not be edited or composed. Additional details can be found in the \href{https://www.pnas.org/authors/submitting-your-manuscript#manuscript-formatting-guidelines}{PNAS Author Center}. The PNAS Overleaf SI template can be found \href{https://www.overleaf.com/latex/templates/pnas-template-for-supplementary-information/wqfsfqwyjtsd}{here}. Refer to the SI Appendix in the manuscript at an appropriate point in the text. Number supporting figures and tables starting with S1, S2, etc.
+
+Authors who place detailed materials and methods in an SI Appendix must provide sufficient detail in the main text methods to enable a reader to follow the logic of the procedures and results and also must reference the SI methods. If a paper is fundamentally a study of a new method or technique, then the methods must be described completely in the main text.
+
+\subsubsection*{SI Datasets}
+
+Supply .xlsx, .csv, .txt, .rtf, or .pdf files. This file type will be published in raw format and will not be edited or composed.
+
+
+
+\matmethods{Please describe your materials and methods here. This can be more than one paragraph, and may contain subsections and equations as required.
+
+\subsection*{Subsection for Method}
+Example text for subsection.
+}
+
+\showmatmethods{} % Display the Materials and Methods section
+
+\acknow{Please include your acknowledgments here, set in a single paragraph. Please do not include any acknowledgments in the Supporting Information, or anywhere else in the manuscript.}
+
+\showacknow{} % Display the acknowledgments section
+
+
+%\bibsplit[2]
+%Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
+
+%\bibliographystyle{pnas-new}
+% Bibliography
+\bibliography{bib-ifad}
+
+\end{document}

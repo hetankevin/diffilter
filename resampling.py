@@ -23,6 +23,8 @@ tfpk = tfp.math.psd_kernels
 import matplotlib.pyplot as plt
 plt.style.use('matplotlibrc')
 
+
+
     
 def resample(norm_weights):
     J = norm_weights.shape[-1]

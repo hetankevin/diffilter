@@ -1,0 +1,128 @@
+\documentclass{beamer}
+\setbeamertemplate{caption}[numbered]
+\usepackage{tikz}
+\usepackage{graphicx}
+\usetheme{AnnArbor}
+%\usecolortheme{wolverine}
+\title[AD for POMPs]{Automatic Differentiation Accelerates Inference for Partially Observed Stochastic Processes}
+\subtitle{\small{Inference for Partially Observed Structured Dynamic Systems}}
+\author[Kevin Tan]{Kevin Tan \\\vspace{0.5cm} \small{Joint work with Giles Hooker and Edward Ionides}}
+\date[\today]{\today}
+
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{mathtools}
+\usepackage{bbold}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{pifont}
+%\usepackage[left=1in,right=1in,]{geometry}
+\usepackage{multicol,lipsum,xcolor}
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{amsmath,amsthm,amssymb,bm}
+\usepackage{bbold}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{enumerate}
+%\usepackage{enumitem}
+\usepackage{natbib}
+\usepackage{parskip}
+\usepackage{comment}
+\usepackage{microtype}
+\usepackage{diagbox}
+\usepackage{tikz}
+\usepackage{fancyhdr}
+
+
+\newcommand{\Prob}{\displaystyle \mathbb {P}}
+\newcommand{\jac}{\bigg| \frac{\dif x}{\dif y} \bigg|}
+\newcommand{\inftyint}{\int_{-\infty}^{\infty}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\C}{\mathbb{C}}
+
+% best package ever
+%\usepackage{realhats}
+
+\def\mathfamilydefault{\rmdefault}
+
+\usepackage{color}
+\usepackage{xcolor}
+\definecolor{hlpink}{rgb}{0.96, 0.76, 0.76}
+\definecolor{hlblue}{rgb}{0.54, 0.81, 0.94}
+\definecolor{hlyellow}{rgb}{0.98, 0.91, 0.71}
+\definecolor{hlgreen}{rgb}{0.7, 0.93, 0.36}
+\definecolor{hlpurple}{rgb}{0.8, 0.8, 1.0}
+
+\newcommand{\highlight}[2][yellow]{\mathchoice%
+  {\colorbox{#1}{$\displaystyle#2$}}%
+  {\colorbox{#1}{$\textstyle#2$}}%
+  {\colorbox{#1}{$\scriptstyle#2$}}%
+  {\colorbox{#1}{$\scriptscriptstyle#2$}}}%
+  
+ \AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+
+\include{mop/macros}
+  
+\begin{document}
+
+
+
+\maketitle
+
+
+\section{Background}
+
+
+\begin{frame}{Partially Observed Markov Processes}
+    
+\end{frame}
+
+
+\section{Introduction}
+
+\begin{frame}{Maximum Likelihood Inference is Hard in POMPs}
+    
+\begin{enumerate}
+    \item \textbf{Intractable likelihood functions}! Bypassed with e.g. simulated likelihood, likelihood-free inference, particle filters, etc. 
+    \item Want to perform inference without having access to the transition density of the latent Markov process, using only  a \textbf{simulator} (\cite{welch2009abc, wood2010sl, doucet2010pmcmc, ionides08, ionides15}). 
+    \item \textbf{Significant Monte-Carlo noise in the likelihood estimate} makes accurate parameter estimation difficult.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{When Does IF2 Struggle?}
+
+\begin{itemize}
+    \item IF2 is great at approaching the MLE quickly! 
+    \item Performs parameter updates at every timestep, 
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.5]{imgs/095/optim.png}
+    \label{fig:enter-label}
+\end{figure}
+    
+\end{frame}
+
+
+\bibliographystyle{apalike}
+\bibliography{mop/bib-ifad, mop/bib-ref}
+
+
+
+\end{document}
+
