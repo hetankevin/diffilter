@@ -158,17 +158,24 @@ Lastly, we require the following regularity conditions.
 \begin{aspt}[Continuity of the Likelihood] $\ell(\theta)$ proper is continuous in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$.
 \end{aspt}
 
+\begin{aspt}[Bounded Process Model]
+\label{assump:bounded-process}
+    There exist $\underbar{M}, \bar{M}$ such that $0 < \underbar{M} \leq f_{X_n|X_{n-1}}(x_n | x_{n-1}) \leq \bar{M} < \infty$. 
+\end{aspt}
+
+
 \begin{aspt}[Bounded Measurement Model]
 \label{assump:bounded-measurement}
-There is an $\epsilon>0$ such that $\epsilon^{-1}>f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)>\epsilon$ and a $G'(\theta)>0$ such that $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty < G'(\theta)$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
+There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G} < \infty$ and $\infty > G' \geq G'(\theta)>0$ such that $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty < G'(\theta) \leq G'$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
 \end{aspt}
+
 
 \begin{aspt}[Locally Bounded Derivatives]
 \label{assump:local-bounded-derivative}
 Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and constants $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$, $H=\sup _{\theta \in \mathcal{N}} H(\theta)<\infty$ such that
     $$
-    \|\nabla_\theta \ell(\theta, \phi, \omega, J)\|_\infty <G(\theta) \leq G<\infty, \;\;
-    \|\nabla^2_\theta \ell(\theta, \phi, \omega, J)\|_\infty <G(\theta) \leq G<\infty
+    \|\nabla_\theta \ell(\theta, \phi, \omega, J)\|_\infty < NG'(\theta) \leq G(\theta) \leq G<\infty, \;\;
+    \|\nabla^2_\theta \ell(\theta, \phi, \omega, J)\|_\infty <N^2G'(\theta)^2 \leq G(\theta)^2 \leq G^2<\infty
     $$
     for every $\phi \in \mathcal{M}, \theta \in \mathcal{N}_J(\phi)$, and almost every $\omega \in \Omega$.
 \end{aspt}
@@ -206,6 +213,7 @@ There exists an open neighborhood $\mathcal{N}(\phi)$ around any $\phi \in \Thet
 
     As a remark, we note that the neighborhoods the sequence is differentiable in are independent of $J$, as the resampling does not change with $\theta$ -- it is dependent on $\phi$. 
 \end{proof}
+
 
 
 \subsubsection{Doubly Off-Policy Particle Filter}
@@ -1105,7 +1113,7 @@ Here, we consider a doubly off policy particle filter, meaning that both \code{r
     
 Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. The likelihood estimate becomes
 \begin{equation*}
-    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\phi}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\phi}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
+    \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}}= \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\theta}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
 \end{equation*}
 as we have a telescoping product. Then, as
 
@@ -1119,17 +1127,17 @@ which we decompose as follows.
 
 Observe that as $\alpha=1$,
 
-$$w_{n,j}^{P,\theta} = w_{n-1,\theta}^{F,\theta}\frac{g_{n,j}^\theta}{g_{n,j}^\phi} = \prod_{i=1}^n \frac{g_{i,j}^{A,\theta}}{g_{i,j}^{A,\phi}},$$
-where we use the $(\cdot)^A$ superscript to denote the ancestral trajectory of the $j$-th particle at timestep $n$.
+$$w_{n,j}^{P,\theta} = w_{n-1,j}^{F,\theta}\frac{g_{n,j}^\theta}{g_{n,j}^\phi} = \prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}},$$
+where we use the $(\cdot)^A$ superscript to denote the ancestral trajectory of the $j$-th prediction or filtering particle at timestep $n$.
 
 Using the log-derivative identity again,
-$$\frac{\nabla_\theta w_{n,j}^{P,\theta}}{w_{n,j}^{P,\theta}} = \nabla_\theta \log w_{n,j}^{P,\theta} = \nabla_\theta \log \left(\prod_{i=1}^n \frac{g_{i,j}^{A,\theta}}{g_{i,j}^{A,\phi}}\right) = \nabla_\theta \sum_{i=1}^n \left(\log g_{i,j}^{A,\theta} - \log g_{i,j}^{A,\phi}\right) = \sum_{i=1}^n \nabla_\theta \log g_{i,j}^{A,\theta}.$$
+$$\frac{\nabla_\theta w_{n,j}^{P,\theta}}{w_{n,j}^{P,\theta}} = \nabla_\theta \log w_{n,j}^{P,\theta} = \nabla_\theta \log \left(\prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}}\right) = \nabla_\theta \sum_{i=1}^n \left(\log g_{i,j}^{A,P,\theta} - \log g_{i,j}^{A,P,\phi}\right) = \sum_{i=1}^n \nabla_\theta \log g_{i,j}^{A,P,\theta}.$$
 
 So 
-$$  \nabla_\theta \sum_{n=1}^N \log g_{n,j}^{A,\theta} = \nabla_\theta \log\left(\prod_{n=1}^N g_{n,j}^{A,\theta}\right) =  \nabla_\theta \log\left(\prod_{n=1}^N f_{Y_n|X_n}\left(y_n^* | x_{n,j}^{A, P,\theta}\right)\right) = \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right),$$
+$$  \nabla_\theta \sum_{n=1}^N \log g_{n,j}^{A,\theta} = \nabla_\theta \log\left(\prod_{n=1}^N g_{n,j}^{A,P,\theta}\right) =  \nabla_\theta \log\left(\prod_{n=1}^N f_{Y_n|X_n}\left(y_n^* | x_{n,j}^{A, P,\theta}\right)\right) = \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right),$$
 
 and 
-$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
+$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,P,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
 
 Substituting, we have that
 \begin{equation*}
@@ -1142,6 +1150,12 @@ and finally, observing that when $\theta=\phi$ we have that $w_{N,j}^{F,\theta}=
 
 yielding the gradient estimators of \cite{poyiadjis11, scibior2021dpf} when applied to the bootstrap filter. 
 \end{proof}
+
+Note that one would believe that the variance blows up the moment $\theta\neq\phi$. This is true, as 
+\begin{equation*}
+    \nabla_\theta \hat{\ell}(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta} =\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,k_j}^{P,\theta} = \frac{1}{J}\sum_{j=1}^J w_{N,k_j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,k_j}^{A, P,\theta}\right),
+\end{equation*}
+and when $\theta\neq\phi$, $w_{N,k_j}^{P,\theta} = O(c^N)$. When $\theta=\phi$, this is a special case of the \cite{poyiadjis11} estimator, which has $O(N^2)$ variance by a property of functionals of the particle filter by \cite{delMoral03}. 
 
 \begin{lem}
 \label{lem:mop-0-formula}
@@ -1281,30 +1295,12 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 \kevin{Show bias is order N, variance is order N when alpha below 1. That implies optimal choice of alpha is not 1. }
 
 
-\section{Analysis of MOP-$\alpha$ Variance}
+\section{Analysis of MOP-$\alpha$ Error and Variance}
 
-
-We first begin with a lemma based on the work of \cite{yu94}. \cite{kausik23} simplify this to the special case of Markov chains. We further adapt this to our setting below.
-\begin{lem}
-    Let $h: \gX^N \to \R^n$ be a bounded measurable function with bound $C$ on trajectories of points in the state space $\gX$ (by considering the domain $\gX^N$, this also encompasses functions of segments of trajectories). Further assume that the underlying Markov chain $(X_n)_{n=1}^N$ has mixing time $t_{\text {mix}}=t_{\text{mix}}\left(\frac{1}{4}\right)$. Consider the joint distribution $\chi$ over the product of the $\sigma$-algebras of $S$ such segments separated by $s$ timesteps, with marginals $\chi_i$. Let the product distribution of the marginals $\chi_i$ be called $\Xi$. Then, we have
-$$
-\left|\mathbb{E}_\chi h-\mathbb{E}_{\Xi} h\right| \leq \frac{4 C(S-1)}{4^{s\cdot t_{\text{mix}}}}.
-$$
-
-
-\end{lem}
-\begin{proof}
-    Remember that each of our Markov processes is mixing, so there exists $t_{m i x, j}=t_{m i x, j}\left(\frac{1}{4}\right)$ and a stationary distribution $d_j$ so that $T V\left(P_j^n(x, \cdot), d_j\right)<\frac{1}{4}$ for $n \geq t_{m i x, j}$. Let $t_{m i x}=\max _j t_{m i x, j}$. Since the decay in total variation distance is multiplicative, $T V\left(P_j^n(x, \cdot), d_j\right)<\left(\frac{1}{4}\right)^c$ for all $j$ and $n \geq c t_{m i x}$. This implies that
-    $$
-    \max _j T V\left(P_j^n(x, \cdot), d_j\right)<\left(\frac{1}{4}\right)^{\frac{T_n}{4 t_{m i x}}-1}=4 \lambda^n
-    $$
-    where $\lambda=\left(\frac{1}{4}\right)^{\frac{1}{t_{m i x}}}$.
-\end{proof}
-
-It is known from \cite{poyiadjis11} that the variance of MOP-1 is no smaller than $O(N^2)$, with an analogous upper bound on the MSE. We now address the case of $\alpha<1$.
+We made Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} to leverage the results from \cite{karjalainen2023} on the forgetting of the particle filter. This is required to show error bounds on the gradient estimates that we provide -- namely that the error of the MOP-$1$ estimator that corresponds to that of \cite{poyiadjis11} is $O(N^2)$, and that the variance of MOP-$\alpha$ for any $\alpha<1$ is $O(N)$. 
 
 We can decompose the MOP-$\alpha$ estimator as follows. When $\theta=\phi$,
-$$\hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \phi}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \phi})^\alpha}.$$
+$$\hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \theta}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \theta})^\alpha}.$$
 
 To illustrate the proof strategy, we first analyze the special case when $\alpha=0.$ We then have:
 \begin{equation}
@@ -1322,14 +1318,104 @@ Similarly to the proof of Lemma \ref{lem:mop-0-formula}, its gradient when $\the
 where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. The point here was that we establish that the gradient of the log-likelihood estimate is given by the sum of terms over all $N$ and $J$:
 $$\nabla_\theta \hat{\ell}(\theta) = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right).$$
 
+Therefore,
+\begin{align*}
+    \text{Var}(\nabla_\theta \hat\ell(\theta) &= \frac{1}{J^2}\text{Var}\left(\sum_{n=1}^N\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &= \frac{1}{J^2}\sum_{n=1}^N\text{Var}\left(\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &+ 2\sum_{m<n}\text{Cov}\left(\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_m|X_{m}}(y_m^*|x_{m,j}^{F, \theta}; \theta)\right), \sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &= \sum_{n=1}^N \text{Var}(\nabla_\theta\hat\ell_n(\theta)) + 2\sum_{m<n} \text{Cov}(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta)).
+\end{align*}
+
+Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen2023} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
+$$\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+i.e. the mixing time of the particle filter is $O(\log(J))$. 
+
+The particle filter itself is therefore strongly mixing, with $\alpha$-mixing coefficients $\alpha(k) \leq (1-\epsilon)^{\floor{k/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra). Therefore, by Davydov's inequality and noting that $\nabla_\theta\hat\ell_n(\theta)\leq G'(\theta)$ by Assumption \ref{assump:bounded-measurement}, 
+
+$$\text{Cov}(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)) \leq G'(\theta)^2(1-\epsilon)^{\floor{\frac{|n-m|}{2c\log(J)}}}.$$
+
+We can then conclude with Popoviciu's inequality that 
+\begin{align*}
+    \text{Var}(\nabla_\theta \hat\ell(\theta)) &= \sum_{n=1}^N \text{Var}(\nabla_\theta\hat\ell_n(\theta)) + 2\sum_{m<n} \text{Cov}(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta))\\
+    &\leq \frac{NG'(\theta)^2}{4J} + 2\sum_{n=1}^{N-1} (N-n) G'(\theta)^2(1-\epsilon)^{\floor{\frac{n}{2c\log(J)}}}\frac{G'(\theta)^2}{4J} \\
+    &\leq \frac{G'(\theta)^2}{4J} \left(N + 2\sum_{n=1}^{N-1} (N-n) G'(\theta)^2(1-\epsilon)^{\floor{\frac{n}{2c\log(J)}}}\right) \\
+    &\lesssim \frac{NG'(\theta)^2}{J}.
+\end{align*}
+
+\paragraph{Remark:} Note that the factor of $N$ that pops up here is due to the use of the unnormalized gradient. If one divides the gradient estimate by $N$ before usage, the variance does not depend on the horizon. 
+
+\kevin{https://math.stackexchange.com/questions/3274996/is-a-transformed-mixing-process-is-still-mixing}
+
+%$$\text{Cov}(x_{n,1:J}^P, x_{m, 1:J}^P) \leq (1-\epsilon)^{\floor{\frac{|n-m|}{c\log(J)}}}$$
 
 \kevin{Ed: Claim 11.4.2, Chopin, is the key to reasoning about this. Establish geometric mixing, that $\text{Cov}(\nabla_\theta\hat\ell_n, \nabla_\theta\hat\ell_m) \leq \rho^{|n-m|}V_n$, where $V_n$ is asymptotically stable (the latter only holds for $\alpha<1$, as only then do we get asymptotic stability, otherwise it increases linearly in $n$). Geometrically decreasing covariances and stable variances over time are the same thing. Then, we can bound the total variance by $\text{Var}(\sum_n \nabla_\theta \hat\ell_n(\theta)) = \sum_{m,n} \text{Cov}(\nabla_\theta\hat\ell_n(\theta), \nabla_\theta\hat\ell_m(\theta)) = NV_n + 2(N-1)\rho V_n + 2(N-3)\rho^2V_n + ...$}
+
+Next, we analyze the case for $\alpha \in (0,1)$. 
+
+Notice that
+\begin{align*}
+    w_{n,j}^{F,\theta}
+    &= \left(w_{n-1,k_j}^{F, \theta}\right)^\alpha\frac{g_{n,k_j}^\theta}{g_{n,k_j}^\phi} \\
+    &= \left(\left(w_{n-2,j}^{A,F, \theta}\right)^\alpha\frac{g_{n-1,j}^{A,F,\theta}}{g_{n-1,j}^{A,F,\phi}}\right)^\alpha\frac{g_{n,j}^{A,F,\theta}}{g_{n,j}^{A,F,\phi}} \\
+    &= \prod_{i=1}^n \left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}.
+\end{align*}
+
+Then, we have that
+\begin{align*}
+    \nabla_\theta\hat\ell(\theta) 
+    &= \sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^Jw_{n,j}^{F,\theta}}{\sum_{j=1}^J\left(w_{n-1,j}^{F, \theta}\right)^\alpha}\right)= \sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right).
+\end{align*}
+
+Consider the modified estimator, where we truncate weights beyond $k$ timesteps:
+\begin{align*}
+    \hat{s}_k(\theta) 
+    &:= \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right).
+\end{align*}
+
+Write $$w_{n,j}^{F,\theta,k} := \prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}$$ for the $k$-truncated weights.
+
+By Assumption \ref{assump:bounded-measurement} we have that 
+
+\begin{align*}
+   w_{n,j}^{F,\theta} 
+    &\leq w_{n,j}^{F,\theta,k} \prod_{i=1}^{n-k}\left(\frac{\bar{G}}{\underbar{G}}\right)^{\alpha(n-i)}\\
+    &\leq w_{n,j}^{F,\theta,k} \left(\frac{\bar{G}}{\underbar{G}}\right)^{\alpha \sum_{i=1}^{n-k}(n-i)} \\
+    &\leq w_{n,j}^{F,\theta,k} \left(\frac{\bar{G}}{\underbar{G}}\right)^{\alpha\frac{n(n-1)-k(k-1)}{2}}
+\end{align*}
+
+We can then bound $||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||$:
+\begin{align*}
+    &\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \\
+    &= \sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) - \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) \\
+    &= \sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)- \log\left(\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\\
+    &\qquad\qquad -\log\left(\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right) + \log\left(\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\Bigg) \\
+    &= \sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,k}\right)
+    -\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta}\right) + \log\left(\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\Bigg)
+\end{align*}
+
+
+We first bound $||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||$:
+\begin{align*}
+    &\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \\
+    &= \sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) - \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) \\
+    &= \sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)- \log\left(\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\\
+    &\qquad\qquad -\log\left(\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right) + \log\left(\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\Bigg) \\
+    &=  \sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=n-k}^{n}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) + \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}\right) 
+\end{align*}
+
+By two applications of the log-derivative rule,
+\begin{align*}
+    \nabla_\theta \log\left(\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)
+    &= \frac{\sum_{j=1}^J\nabla_\theta \prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}}{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}} \\
+    &= \frac{\sum_{j=1}^J \left(\left(\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right) \nabla_\theta \log\left(\prod_{i=1}^n \left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}\right)\right)}{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}} \\
+    &= \frac{\sum_{j=1}^J \left(\left(\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)} \right)\left(\sum_{i=1}^n \alpha(n-i)\nabla_\theta \log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)\right)\right)}{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha(n-i)}} 
+\end{align*}
 
 
 \section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}
 \label{app:ifad}
 
-The analysis in this section roughly follows the analysis in \cite{mahoney16}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from Del Moral and Rio \cite{delmoral2011ci} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
+The analysis in this section roughly follows the analysis in \cite{mahoney16}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from \cite{delmoral2011ci} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
 
 
 The convergence analysis in Theorem \ref{thm:convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
@@ -1343,17 +1429,24 @@ The convergence analysis in Theorem \ref{thm:convergence} is limited to the case
     \label{lemma:grad_bound}
     Consider the gradient estimate obtained by MOP-1, which we know by Lemma \ref{lem:mop-grad-consistency} is consistent for the score, where $\theta = \phi$. For $||\nabla_\theta \hat{\loglik}(\theta) - \nabla_\theta \loglik(\theta)||_2$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
     \begin{align}
-    J > \max\left\{2NG'(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8N^2G'(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\},
+    J > \max\left\{2G(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8G(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\},
     \end{align}
-    where $G'(\theta)$ is defined as in Assumption \ref{assump:bounded-measurement}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_N$ and $r_N$ are two additional finite model-specific constants that do not depend on $J$, but do depend on $N$, as defined in \cite{delmoral2011ci}. 
+    where $NG'(\theta) \leq G(\theta)$ are defined in Assumptions \ref{assump:bounded-measurement} and \ref{assump:local-bounded-derivative}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_N$ and $r_N$ are two additional finite model-specific constants that do not depend on $J$, but do depend on $N$ and $p$, as defined in \cite{delmoral2011ci}. 
 
     Equivalently, with probability at least $1-\delta$, it holds that
     \begin{align}
-        ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G'(\theta)N\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right).
+        ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G(\theta)\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right).
     \end{align}
 \end{lem}
 
-\paragraph{Remark:} According to \cite{delmoral2011ci}, under some regularity conditions, $r_N$ and $\beta_N$ are linear in the trajectory length $N$. Additionally, if the system is stationary enough, $NG'(\theta)$ roughly scales with $G(\theta)$, so one can consider the error to be roughly linear in the trajectory length, $O(G(\theta)N) \approx O(G'(\theta)N^2)$, if all these conditions are fulfilled. This corresponds to the finding by \cite{poyiadjis11} that the variance of the estimate is quadratic in the trajectory length.
+\paragraph{Remark:} According to \cite{delmoral2011ci}, under some regularity conditions, $r_N$ and $\beta_N$ are linear in the trajectory length $N$. This corresponds to the finding by \cite{poyiadjis11} that the variance of the estimate is at least quadratic in the trajectory length, and their remark that the result of \cite{delMoral03} establishes that the $L_p$ error is bounded by $O(N^2J^{-1/2})$ after accounting for the sum over timesteps. Either way, usually in practice one considers the estimate normalized through dividing it by $N$, in which case we only need
+$$J > \max\left\{2G'(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8G'(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\}.$$
+Equivalently,
+$$||N^{-1}(\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta))||_2 \leq G'(\theta)\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right).$$
+
+It is well-known that bounds like these hide an exponential dependence in the dimension of the state space $p$. We take care to keep track of the terms depending on $p$ when they arise in front of us, but are unable to do so for the terms that arise from the analysis of \cite{delmoral2011ci}. 
+
+\kevin{This is slightly alarming, in that the estimate really has $O(N^4)$ variance after accounting for summing over timesteps. In contrast, MOP-0 has only $O(N)$ variance after summing over timesteps. }
 
 \begin{proof}
 
@@ -1376,10 +1469,12 @@ Apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{d
     \max_{n=1,...,N} \left\lVert\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell_n(\theta) \right\rVert_{\infty} \leq G'(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
 \end{align}
 
-with probability at least $1-2Np\exp(-t)$. It therefore holds that with the same probability, that
+with probability at least $1-2Np\exp(-t)$. Note that the concentration inequality only considers the error from the expectation under the filtering distribution -- but we invoke the consistency of MOP-$1$ shown in Lemma \ref{lem:mop-grad-consistency} to establish that the expectation under the filtering distribution is in fact the score. It therefore holds that with the same probability, that when summing over $N$, as $NG'(\theta) \leq G(\theta)$, 
 
 \begin{align}
-    \left\lVert\frac{1}{J}\sum_{j=1}^J\sum_{n=1}^N\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell(\theta) \right\rVert_{\infty} \leq G'(\theta)N\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
+    \left\lVert\frac{1}{J}\sum_{j=1}^J\sum_{n=1}^N\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell(\theta) \right\rVert_{\infty} 
+    &\leq G'(\theta)N\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)\\
+    &\leq G(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
 \end{align}
 
 
@@ -1388,12 +1483,12 @@ We split the $\delta$ failure probability among these $2Np$ terms, to find $\del
 The analogous bound for the 2-norm follows from scaling the right-hand side by $\sqrt{p}$, to require 
 
 \begin{align}
-    ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G'(\theta)N\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right)
+    ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G(\theta)\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right)
 \end{align}
 
 and we therefore need 
 \begin{align}
-    J > \max\left\{2NG'(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8N^2G'(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\}.
+    J > \max\left\{2G(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8G(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\}.
 \end{align}
 
 \end{proof}
