@@ -1512,7 +1512,7 @@ To interpret this result, if there exists some $k$ such that $$N \geq k \geq \fr
 we can choose such a $k$, as well as $k=N$, to see that
 \begin{align*}
     \text{Var}(\nabla_\theta \hat\ell(\theta)) 
-    &\lesssim \min_k\left(\frac{c_p^2k^2G'(\theta)^2N}{J} + \frac{4\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2 \right)\\
+    &\lesssim \min_{k\leq N}\left(\frac{c_p^2k^2G'(\theta)^2N}{J} + \frac{4\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2 \right)\\
     &\lesssim \min\left\{1+\frac{c_p^2G'(\theta)^2N}{J}, \frac{c_p^2G'(\theta)^2N^3}{J}\right\} \\
     &\leq \min\left\{1+\frac{c_p^2G'(\theta)^2N}{J}, \frac{c_p^2G(\theta)^2N}{J}\right\},
 \end{align*}
@@ -1531,10 +1531,15 @@ Using the log-derivative trick and that $w_{n,j}^{F,\theta,1} = w_{n,j}^{F,\thet
     &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log\left(w_{n,j}^{F,\theta,1}\right)-\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log\left(w_{n,j}^{F,\theta,\alpha}\right)\right\rVert_{\infty} \\
     &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\log\left(w_{n,j}^{F,\theta,1}\right)-\log\left(w_{n,j}^{F,\theta,\alpha}\right)\right)\right\rVert_{\infty}\\
     &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\sum_{i=1}^n\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) - \sum_{i=1}^n{\alpha^{(n-i)}}\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)\right)\right\rVert_{\infty} \\
-    &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) \right)\right\rVert_{\infty}\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_{\infty}\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)G'(\theta)\\
-    &\leq G'(\theta)\left(\frac{n-\alpha n + \alpha^n - 1}{1-\alpha}\right),
+    &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) \right)\right\rVert_{\infty}.
+\end{align*}
+
+Now we establish the bound:
+\begin{align*}
+     \nabla_\theta \left(\sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) \right)
+     &\leq \sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_{\infty}\\
+    &\leq \sum_{i=1}^n\left(1-\alpha^{(n-i)}\right)G'(\theta)\\
+    &\leq G'(\theta)\left(\frac{n-\alpha n + \alpha^n - 1}{1-\alpha}\right)
 \end{align*}
 where the second-last line follows from Assumption \ref{assump:bounded-measurement}.
 
