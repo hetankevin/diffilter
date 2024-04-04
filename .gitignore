@@ -17,6 +17,7 @@ __pycache__/
 *.aux
 *.bbl
 *.blg
+*.out
 
 # Distribution / packaging
 .Python
