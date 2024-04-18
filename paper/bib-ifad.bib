@@ -312,6 +312,9 @@ publisher={Columbia Univ., New York, NY (United States); Harvard Univ., Cambridg
      year = {2004}
     }
 
+
+
+
 @misc{chen24,
       title={Normalising Flow-based Differentiable Particle Filters}, 
       author={Xiongjie Chen and Yunpeng Li},
@@ -320,6 +323,23 @@ publisher={Columbia Univ., New York, NY (United States); Harvard Univ., Cambridg
       archivePrefix={arXiv},
       primaryClass={cs.LG}
 }
+
+@article{chopin13,
+author = {Chopin, N. and Jacob, P. E. and Papaspiliopoulos, O.},
+title = {SMC2: an efficient algorithm for sequential analysis of state space models},
+journal = {Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
+volume = {75},
+number = {3},
+pages = {397-426},
+keywords = {Iterated batch importance sampling, Particle filtering, Particle Markov chain Monte Carlo methods, Sequential Monte Carlo sampling, State space models},
+doi = {https://doi.org/10.1111/j.1467-9868.2012.01046.x},
+url = {https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2012.01046.x},
+eprint = {https://rss.onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-9868.2012.01046.x},
+abstract = {Summary. We consider the generic problem of performing sequential Bayesian inference in a state space model with observation process y, state process x and fixed parameter θ. An idealized approach would be to apply the iterated batch importance sampling algorithm of Chopin. This is a sequential Monte Carlo algorithm in the θ-dimension, that samples values of θ, reweights iteratively these values by using the likelihood increments and rejuvenates the θ-particles through a resampling step and a Markov chain Monte Carlo update step. In state space models these likelihood increments are intractable in most cases, but they may be unbiasedly estimated by a particle filter in the x-dimension, for any fixed θ. This motivates the SMC2 algorithm that is proposed in the paper: a sequential Monte Carlo algorithm, defined in the θ-dimension, which propagates and resamples many particle filters in the x-dimension. The filters in the x-dimension are an example of the random weight particle filter. In contrast, the particle Markov chain Monte Carlo framework that has been developed by Andrieu and colleagues allows us to design appropriate Markov chain Monte Carlo rejuvenation steps. Thus, the θ-particles target the correct posterior distribution at each iteration t, despite the intractability of the likelihood increments. We explore the applicability of our algorithm in both sequential and non-sequential applications and consider various degrees of freedom, as for example increasing dynamically the number of x-particles. We contrast our approach with various competing methods, both conceptually and empirically through a detailed simulation study, and based on particularly challenging examples.},
+year = {2013}
+}
+
+
 
 @book{chopin20,
     author = {Chopin, Nicolas and Papaspiliopoulos, Omiros},
@@ -568,6 +588,23 @@ pages = "271--283 "
   month     = nov,
   doi       = {10.1098/rspb.2013.1174},
   pmid      = {24026815}
+}
+
+@article{homan14,
+author = {Homan, Matthew D. and Gelman, Andrew},
+title = {The No-U-turn sampler: adaptively setting path lengths in Hamiltonian Monte Carlo},
+year = {2014},
+issue_date = {January 2014},
+publisher = {JMLR.org},
+volume = {15},
+number = {1},
+issn = {1532-4435},
+abstract = {Hamiltonian Monte Carlo (HMC) is a Markov chain Monte Carlo (MCMC) algorithm that avoids the random walk behavior and sensitivity to correlated parameters that plague many MCMC methods by taking a series of steps informed by first-order gradient information. These features allow it to converge to high-dimensional target distributions much more quickly than simpler methods such as random walk Metropolis or Gibbs sampling. However, HMC's performance is highly sensitive to two user-specified parameters: a step size ε and a desired number of steps L. In particular, if L is too small then the algorithm exhibits undesirable random walk behavior, while if L is too large the algorithm wastes computation. We introduce the No-U-Turn Sampler (NUTS), an extension to HMC that eliminates the need to set a number of steps L. NUTS uses a recursive algorithm to build a set of likely candidate points that spans a wide swath of the target distribution, stopping automatically when it starts to double back and retrace its steps. Empirically, NUTS performs at least as efficiently as (and sometimes more effciently than) a well tuned standard HMC method, without requiring user intervention or costly tuning runs. We also derive a method for adapting the step size parameter ε on the fly based on primal-dual averaging. NUTS can thus be used with no hand-tuning at all, making it suitable for applications such as BUGS-style automatic inference engines that require efficient "turnkey" samplers.},
+journal = {J. Mach. Learn. Res.},
+month = {jan},
+pages = {1593–1623},
+numpages = {31},
+keywords = {Bayesian inference, Hamiltonian Monte Carlo, Markov chain Monte Carlo, adaptive Monte Carlo, dual averaging}
 }
 
 @article{houtekamer98,
