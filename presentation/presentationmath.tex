@@ -5,9 +5,7 @@
 \usetheme{AnnArbor}
 %\usecolortheme{wolverine}
 \title[AD for POMPs]{Automatic Differentiation Accelerates Inference for Partially Observed Stochastic Processes}
-\subtitle{\small{Inference for Partially Observed Structured Dynamic Systems}}
 \author[Kevin Tan]{Kevin Tan \\ \small{University of Pennsylvania, Department of Statistics and Data Science} \\\vspace{0.5cm} \small{Joint work with Giles Hooker and Edward Ionides}}
-\date[January 4, 2024]{IMS Asia Pacific Rim Meeting \\ January 4, 2024}
 
 \usepackage{amsmath}
 \usepackage{tabularx}
@@ -91,8 +89,9 @@
 \begin{frame}{Partially Observed Markov Processes}
 
     \begin{itemize}
-        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.
+        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$. Write $X_n := X_{t_n}$.
         \item \pause Unknown parameter $\theta \in \Theta$, to be estimated.
+        \item $X_t \in \gX \subseteq \R^d$, $Y_n \in \gY$, $\theta \in \Theta \subseteq \R^p$.\pause
         \item \textbf{Notation:}
         \begin{itemize}
             \item $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ is the \textbf{process model}.
@@ -102,6 +101,35 @@
     \end{itemize}
 \end{frame}
 
+\begin{frame}{Partially Observed Markov Processes}
+
+    \begin{itemize}
+        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.
+        \item \pause Problems to solve:
+        \begin{itemize}
+            \item \pause The \textbf{filtering problem}:
+            \begin{itemize}
+                \item \pause Find the density of the hidden state at time $n$, given all observations until time $n$.
+                \item \pause $f_{X_n|Y_{1:n}}(x_n|y_{1:n}^*;\theta)$.
+            \end{itemize}
+            \item \pause Related problem, estimating the \textbf{posterior} distribution of hidden states:
+            \begin{itemize}
+                \item \pause Find the density of the hidden states at timesteps $1$ to $n$, given all observations till time $n$. 
+                \item \pause $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*;\theta)$.
+            \end{itemize}
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{The Bayes Filter}
+    \begin{enumerate}
+        \item Maintain a belief on the state at time $n$, $f_{X_{n}|Y_{1:n}}$. 
+        \item \pause Predict the next timestep, $x_{n+1}^P \sim f_{X_{n+1}|X_{n}}$.
+        \item \pause Observe observation at time $n+1$, $y_{n+1}^*$.
+        \item \pause Update belief on current state at time $n+1$, $f_{X_{n+1}|Y_{1:n+1}}$.
+    \end{enumerate}
+\end{frame}
+
 
 \begin{frame}{Particle Filters}
 
@@ -109,7 +137,7 @@
         \centering
         \begin{minipage}[c]{0.5\textwidth}
             \centering
-            \includegraphics[scale=0.15]{imgs/pfilter.png}
+            \includegraphics[scale=0.125]{imgs/pfilter.png}
             \end{minipage}
         \begin{minipage}[c]{0.45\textwidth}
             \caption{
@@ -126,11 +154,28 @@
     \begin{itemize}
         \item Monte Carlo approximation of the Bayes filter.
         \begin{itemize}
-            \item \pause Maintain belief on current state $x_n^F$. 
-            \item \pause Simulate forward to get $x_{n+1}^P$, observe observation $y_{n+1}^*$.
-            \item \pause Update $x_{n+1}^F$ accordingly.
+            \item \pause Maintain $J$ weighted particles, weighted Dirac approximation of the current state $(x_{n,j}^F)_{j=1}^J$. 
+            \item \pause Simulate each of the $J$ particles forward to get $x_{n+1,j}^P \sim f_{X_{n+1}|X_n}(\cdot | x_{n,j}^F; \theta)$.
+            \item \pause Observe observation $y_{n+1}^*$, update $(x_{n+1,j}^F)_{j=1}^J$ by resampling according to their likelihoods.
         \end{itemize}
     \end{itemize}
+\end{frame}
+
+\begin{frame}{Likelihood Estimate}
+    \begin{block}{Conditional Likelihood}
+        The conditional likelihood $L_n$ under $\theta$ is given by $f_{Y_n|Y_{1:n}}(y_{n}^*|y_{1:n-1};\theta)$.
+    \end{block}
+    \pause
+    \begin{block}{Likelihood}
+        \begin{align*}
+            \mathcal{L}(\theta)&=f_{Y_{1: N}}\left(y_{1: N}^* ; \theta\right)
+            = \prod_{n=1}^N L_n(\theta)\\
+            &=\prod_{n=1}^N \int f_{Y_n \mid X_n}\left(y_n^* \mid x_n ; \theta\right) f_{X_n \mid Y_{1: n-1}}\left(x_n \mid y_{1: n-1}^* ; \theta\right) d x_n.
+        \end{align*}
+    \pause
+    An unbiased estimate of the likelihood from the particle filter is then
+        $$\hat\lik(\theta) = \prod_{n=1}^N \frac{1}{J}\sum_{j=1}^J f_{Y_n|X_n}(y_n^*|x_{n,j}^P;\theta).$$
+    \end{block}
 \end{frame}
 
 
@@ -153,6 +198,18 @@
         \item \pause Traverses computational graph (of primitive functions) with chain rule.
     \end{itemize}
     
+\end{frame}
+
+\begin{frame}{Maximum Likelihood for POMPs}
+    \begin{block}{Iterated Filtering}
+        \begin{itemize}
+            \item Augment the state space by assigning each particle $x_{n,j}$ its own set of parameters $\theta_{n,j}$. \pause
+            \item Parameters thought of as latent states that evolve according to Brownian motion on $\Theta$.  \pause
+            \item Yields a Monte Carlo approximation to the (extended) filtering distribution $f_{\theta_n,X_n|Y_{1:n}}(\theta_{n,j},x_{n,j}^F|y_{1:n}^*)$, given a Gaussian random walk prior on $\theta_{n,j} \sim \gN(\theta_{n-1,j},\sigma^2)$. \pause
+            \item Repeat procedure again and again, while shrinking $\sigma^2$.\pause
+            \item Yields convergence of the parameter swarm $\theta_{n,j}^{(m)}$ to the MLE. 
+        \end{itemize}
+    \end{block}
 \end{frame}
 
 
@@ -246,52 +303,41 @@
     \end{block}
     \pause 
     \begin{block}{Idea}
-        Don't differentiate $\hat\ell(\theta)$ directly, differentiate through a (suitably) reweighted bootstrap filter.
+        Don't differentiate $\hat\ell(\theta)$ directly, differentiate through a simulator and a series of measurement density ratios.
     \end{block}
     \begin{itemize}
         \item \pause Particle filter run with state transitions \& resampling under $\phi \in \Theta$. 
-        \item \pause Reweight to evaluate likelihood at nearby $\theta \in \Theta$ (same resampling).
-        \item \pause Fix seed to treat particles, weights under $\phi$ as constants.
-        \item \pause \textbf{Now only need to differentiate through likelihood ratios!}
+        \item \pause Get a coupled (same seed) set of particles according to the process model at $\theta \in \Theta$, but resampling indices from the run at $\phi$. 
+        \item \pause Reweight conditional likelihoods by a correction factor accumulated over time, to account for resampling under $\phi$. 
+        \item \pause If $\theta=\phi$, need only one run, else need two runs at same seed. 
     \end{itemize}
 \end{frame}
 
-\begin{frame}{What is this reweighting?}
-    Ordinarily, the likelihood estimate for $\phi$ is 
-    $$\hat\lik(\phi) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J \left(\underbrace{f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi)}_{\textcolor{blue}{\text{Measurement Model}}}
-    \cdot 
-    \underbrace{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi)}_{\textcolor{red}{\text{Process model}}}\right).$$
+\begin{frame}{What is the correction?}
+    \begin{block}{Correction}
+        \begin{itemize}
+            \item Write:\pause
+            \begin{itemize}
+                \item $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for the measurement density.\pause
+                \item $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$ for the conditional likelihood estimate under $\phi$.\pause
+                \item $k_j \sim \text{Categorical}(g^{\phi}_{n,1},...,g^{\phi}_{n,J})$ for the resampling indices under $\phi$. \pause
+            \end{itemize}
+            \item Estimate conditional likelihood under $\theta$ as
+            \pause
+            \begin{equation}
+     \label{eq:mop-conditional-likelihood}
+     \underbrace{L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}}_{\textcolor{blue}{\text{\tiny{Usual way to estimate functionals under particle filter.}}}} \text{ or } \underbrace{L_n^{A,\theta,\alpha} = L_n^\phi\cdot \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}}_{\textcolor{red}{\text{\tiny{Higher variance, but useful for derivations.}}}},
+    \end{equation}
     \pause
-    So to estimate the likelihood for $\theta$, we can correct 
-    $$
-        \hat\lik(\theta) 
-        = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi) \cdot 
-        f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi) 
-        \cdot \underbrace{s_{n,j} \cdot r_{n,j}}_{\text{Correction Term}},
-    $$
+    recursively weighting each particle by 
     \pause
-    where the multiplicative correction terms are
-    $$
-        \underbrace{s_{n,j}=\frac{g_{n,j}^\theta}{g_{n,j}^{\phi}}=\frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi}; \theta)}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P,\phi}; \phi)}}_{\textcolor{blue}{\text{Measurement Model Likelihood Ratios}}},\;\; \underbrace{r_{n,j}=\frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi}|x_{n-1,j}^{F, \phi}; \phi)}}_{\textcolor{red}{\text{Process Model Likelihood Ratios}}}.
-    $$
-        
-\end{frame}
-
-\begin{frame}{New Problem}
-    \begin{block}{Problem}
-        Need likelihood ratios w.r.t. process and measurement models!
+    \begin{equation}
+        \label{eq:weighting-scheme}
+        \underbrace{w_{n,j}^{P,\theta} = (w_{n-1,j}^{F,\theta})^\alpha}_{\textcolor{red}{\text{\tiny{Bias-variance tradeoff.}}}}, \;\; \underbrace{w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}}_{\textcolor{blue}{\text{\tiny{Resampling correction.}}}}, \;\; w^{F,\theta}_{0,j}= 1.
+    \end{equation}
+        \end{itemize}
     \end{block}
-    \pause 
-    \begin{block}{Solution}
-        Offload process model derivatives to differentiable simulator. 
-    \end{block}
-    \begin{itemize}
-        \item \pause Run particle filter twice under same seed: one with process model at $\phi$, another with process model at $\theta$. Resample according to $\phi$.
-        \item \pause Correct only with resampling likelihood ratios. 
-        \item \pause Introduce additional discounting parameter $\alpha$ for bias-variance tradeoff.
-    \end{itemize}
 \end{frame}
-
 
 
 \begin{frame}{Algorithm: Measurement Off-Policy, MOP-$\alpha$}
@@ -336,27 +382,161 @@
 \begin{figure}
     \centering
     \includegraphics[scale=0.5]{imgs/095/biasvar.png}
-    \caption{Bias-variance tradeoff for gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate close to unbiased with high variance. When $\alpha=0$, lower variance but biased. MSE seems to be minimized at $\alpha=0.97$.}
+    \caption{Bias-variance tradeoff for gradient estimates at MLE for trend in \cite{king08} cholera model. When $\alpha=1$, estimate close to unbiased with high variance. When $\alpha=0$, lower variance but biased. MSE minimized at $\alpha=0.97$.}
     \label{fig:bias-variance}
 \end{figure}
     
 \end{frame}
 
-\begin{frame}{Guarantee}
-    \begin{prop}[Correctness of MOP-$\alpha$]
-    \label{prop:mop-correctness}
-    When either $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the posterior and is unbiased for the likelihood under $\theta$. 
-    When $\theta$ is evaluated at $\phi$, the likelihood estimate agrees with the bootstrap filter. Its gradient when $\alpha=1$ is the estimate of \citet{poyiadjis11},
-    $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{0:N}}(y_{1:N}^*|x_{1:N,j}^{A, F,\theta}),$$
-    and when $\alpha=0,$ is the gradient estimator of \cite{blei2018vsmc},
-    $$
-        \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
-    $$
-    i.e. differentiating through a vanilla particle filter (\cite{scibior21}).
-\end{prop}
+
+\section{Theoretical Guarantees}
+
+\begin{frame}{Assumptions}
+    
+\begin{itemize}
+    \item \textbf{Continuity of the Likelihood.} $\ell(\theta)$ has more than two continuous derivatives in a neighborhood of the MLE.
+    \pause
+    \item \textbf{Bounded Process Model.} There exist $\underbar{M}, \bar{M}$ bounding the process density from below/above.
+    \pause
+    \item \textbf{Bounded Measurement Model.} $\underbar{G}, \bar{G}$ bound the measurement density from below/above, and $G'(\theta)<\infty$ bounding its gradients.
+    \pause
+    \item \textbf{Bounded Gradient Estimates.} There are functions $G(\theta), H(\theta): \Theta \to [0,\infty)$ so the MOP-$\alpha$ gradient and Hessian estimates at $\theta=\phi$ are bounded by $G(\theta)$ and $H(\theta)$.
+    \pause
+    \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density $f_{Y_n|X_n}(y_n^*|x; \theta)$ and simulator have more than two continuous derivatives in $\theta$.
+\end{itemize}
 \end{frame}
 
+\begin{frame}{MOP-$\alpha$ Works}
+    \begin{thm}[MOP-$\alpha$ Targets the Posterior and Likelihood]
+    \label{thm:mop-targeting}
+    When $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood, as the number of particles $J \to \infty$.
+    
+    \pause
+    That is, for $\pi_n(\theta)=f_{X_{1:n}|Y_{1:n} ; \theta}$ and any measurable bounded functional $h$, 
+    \pause
+    \begin{equation}
+        \underbrace{\frac{\sum_{j=1}^J h(x_{n,j}^{A,F, \theta}) w_{n,j}^{A,F,\theta}}{\sum_{j=1}^J w_{n,j}^{A,F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} h,}_{\textcolor{blue}{\text{\tiny{Particle estimates of functionals under the posterior are consistent.}}}} \;\; \underbrace{\hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).}_{\textcolor{red}{\text{\tiny{Likelihood estimate is consistent.}}}}
+    \end{equation}
+\end{thm}
+\end{frame}
 
+\begin{frame}{Proof Sketch}
+    \begin{itemize}
+        \item This also serves as a strong law of large numbers result for triangular arrays of particles with ``off-policy'' resampling.\pause
+        \item When $\theta=\phi$, the ratio ${g_{n,j}^\theta}/{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter! Everything is as per usual. \pause
+        \item  When $\alpha=1$ and $\theta\neq\phi,$ suppose inductively that $\{(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j})\}_{j=1}^J$ targets $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.\pause 
+        \begin{itemize}
+            \item We show $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.\pause
+            \item $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$. \pause
+            \item And that weighting by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}/ g^\phi_{n,a(j)})$ and resampling with probabilities $g^\phi_{n,j}$, targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.\pause
+        \end{itemize}
+        \item Result relies on three lemmas that are ``common-sense'' but require somewhat technical arguments to prove. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{MOP-$\alpha$ Special Cases}
+    \begin{thm}[MOP-$0$ and MOP-$1$ Functional Forms]
+    \label{thm:mop-functional-forms}
+    Write $\nabla_\theta \hat\ell^\alpha(\theta)$ for the gradient estimate yielded by MOP-$\alpha$ when $\theta=\phi$ and we use the after-resampling conditional likelihood estimate. When $\alpha=0$,
+    \pause
+    \begin{equation}
+        \nabla_\theta \hat\ell^0(\theta) 
+        = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+        \vspace*{-2.5mm}
+    \end{equation}
+    \pause
+    yielding \cite{blei2018vsmc} on the bootstrap filter. When $\alpha=1$,
+    \pause
+    \begin{equation}
+        \nabla_\theta \hat{\ell}^1(\theta) 
+        = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
+    \vspace*{-2.5mm}
+    \end{equation}
+    \pause
+    yielding the estimator of \cite{poyiadjis11} with the bootstrap filter.
+\end{thm}
+\pause
+Proof: Very tedious algebra.
+\end{frame}
+
+\begin{frame}{MOP-$1$ Is Strongly Consistent for the Score}
+    \begin{itemize}
+        \item But \cite{poyiadjis11} use $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}, X_{1:N}}\left(y_{1:N}^* , x_{1:n,j}^{A, F,\theta}; \theta\right)$ in general. \pause
+        \item The bootstrap estimate of $\nabla_\theta \hat{\ell}^1(\theta) 
+        = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right)$ has a different functional forms, and is not the same a-priori! \pause
+        \item So we directly show the consistency of the MOP-$1$ gradient estimate. 
+    \end{itemize}
+    \pause
+    \begin{thm}[Consistency of MOP-$1$ Gradient Estimate]
+        The gradient estimate of MOP-$\alpha$ when $\alpha=1$, $\theta=\phi$ is strongly consistent for the score: $\nabla_\theta \hat\ell_J^1(\theta) \stackrel{a.s.}{\to} \nabla_\theta \ell(\theta)$ as $J \to \infty$.
+        \label{thm:mop-grad-consistency}
+    \end{thm}
+\end{frame}
+
+\begin{frame}{Proof of MOP-$1$ Gradient Estimate Consistency}
+    \begin{itemize}
+        \item The sequence $(\hat\lik_J^1(\theta)(\omega))_{J \in \mathbb{N}}$ has two derivatives uniformly bounded over all $J$, by assumption. \pause
+        \item So $(\nabla_\theta \hat\lik_J^1(\theta)( \omega))_{J \in \mathbb{N}}$ is uniformly Lipschitz, and therefore uniformly equicontinuous for almost every $\omega \in \Omega$.\pause
+        \item By Arzela-Ascoli, there is a uniformly convergent subsequence. \pause
+        \item But there is only one subsequential limit by Theorem \ref{thm:mop-targeting}!\pause
+        \item So the whole sequence must converge uniformly with $\hat{\lik}_J^1(\theta, \omega) \stackrel{a.s.}{\to} \lik(\theta)$. \pause
+        \item So we can swap the limit and derivative and obtain that for almost every $\omega \in \Omega$, 
+    $\lim_{J \to \infty} \nabla_\theta \hat\lik_J^1(\theta)(\omega) = \nabla_\theta \lim_{J \to \infty} \hat\lik_J^1(\theta)(\omega) = \nabla_\theta \lik(\theta).$\pause
+        \item The result then follows by the continuous mapping theorem. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{MOP-$\alpha$ Variance Bound}
+    \begin{thm}[MOP-$\alpha$ Variance Reduction]
+        The variance of the MOP-$\alpha$ gradient estimate, for $\alpha<1$, is given by
+        \pause
+        $$\text{Var}(\nabla_\theta \hat\ell^\alpha(\theta)) \lesssim \min_{k\leq N} \left(\underbrace{\frac{k^2G'(\theta)^2N}{(1-\alpha)^2J}}_{\textcolor{blue}{\tilde O(Nk^2/J)}} + \underbrace{\frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2}_{\textcolor{red}{\text{\tiny{Decreasing exponentially in $k$.}}}} \right).$$
+    \end{thm}
+    \pause
+    \begin{itemize}
+        \item Low-variance MOP-$0$ from \cite{blei2018vsmc} has $\tilde{O}(N/J)$ variance (we show this).\pause
+        \item High-variance MOP-$1$ from \cite{poyiadjis11} has $\tilde{O}(N^4/J)$ variance. \pause
+        \item MOP-$\alpha$ interpolates through both of these results to balance a bias-variance tradeoff. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Proof Sketch of MOP-$\alpha$ Variance Bound}
+    \begin{itemize}
+        \item Long and ugly.\pause
+        \item Consider a ``truncated'' version of the MOP-$\alpha$ estimate, where the weight correction is truncated at $k$ timesteps. This is easier to analyze. \pause
+        \item Call the conditional log-likelihood estimate $\hat{s}_{n,k}$, log-likelihood estimate $\hat{s}_{k}$, score estimate $\nabla_\theta \hat{s}_{k}$.\pause
+        \item By tedious algebra, the deviation of the truncated score estimate from the MOP-$\alpha$ score estimate is $\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_\infty \leq  \frac{2\alpha^k}{1-\alpha}NG'(\theta)$.\pause
+        \item Single-timestep variance is bounded by $\E\left[||\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)||_\infty^2\right]^{1/2} \leq \frac{Cr^2G'(\theta) k}{\sqrt{J}}.$
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Proof Sketch, Continued}
+\begin{align*}
+    \text{Var}(\nabla_\theta \hat s_k(\theta)) 
+    &= \sum_{n=1}^N\text{Var}\left(\hat s_{n,k}(\theta)\right)+ 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \\
+    &\lesssim \frac{r^2k^2G'(\theta)^2N}{J} + 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right).
+\end{align*}
+\pause
+    \begin{itemize}
+        \item How do we control the covariance? Mixing argument!\pause
+        \item Mixing time of the particle filter is $O(\log(J))$, \cite{karjalainen2023}. \pause
+        \item $\hat s_{n,k}$ is strong mixing at lag $k+1$, as weights beyond $k$ timesteps are truncated. \pause
+        \item So the $\alpha$-mixing coefficients for $(\hat s_{n,k}(\theta))_{n=1}^N$ are given by $\alpha(l) \leq (1-\epsilon)^{\floor{l/(c(1+k+\log(J)))}}$. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Proof Sketch, Continued}
+    \begin{itemize}
+        \item By Davydov's inequality and Lemma 2 of \cite{karjalainen2023}, we can show that \pause
+    $$\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \lesssim (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2G'(\theta)^2}{J}.$$
+    \pause
+    \item Recall that $||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||_\infty \leq \frac{2\alpha^k}{1-\alpha}NG'(\theta)$.\pause
+    \item So we have that for any $k\leq N$,
+    $$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \frac{k^2r^2G'(\theta)^2N}{J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2.$$
+    \pause
+    \item Take the minimum over $k$ to get the result. 
+    \end{itemize}
+\end{frame}
 
 \section{Practical Maximum Likelihood Inference}
 
@@ -372,10 +552,10 @@
 
 
 \begin{frame}{Convergence Analysis}
-    \begin{prop}[Convergence of IFAD-1]
+    \begin{prop}[Linear Convergence of IFAD-1]
         \label{thm:convergence}
         
-        Consider a variant of IFAD-1 where one stops if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$. Define $G$ as in Assumption \ref{assump:local-bounded-derivative}.
+        Consider a variant of IFAD-1 stopping if the gradient estimate $||g(\theta_n)|| \leq \sigma \epsilon$. Assume $-\ell$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. $\sigma = \frac{4 \Gamma}{(1-\beta)}> 4$.
         
         Let $H(\theta_n)$ be a matrix possibly dependent on $\theta_n$ with minimum eigenvalue always greater than some $c>0$. Choose learning rate $\eta$ and error tolerance $\epsilon$ such that, where $\beta$ is the Armijo condition hyperparameter,
         \begin{equation*}
@@ -501,12 +681,8 @@
     
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.28]{imgs/095/boxplot.png}
-    \includegraphics[scale=0.31]{imgs/095/boxplotall.png}
-    \caption{\\
-    -- \textbf{Left:} Results of best run out of every ten runs, simulating procedure of running a few searches and choosing the best one. \\
-    -- \textbf{Right:} MOP alone drastically underperforms all other methods, failing to get close to the MLE. \\
-    -- IF2 warm-start necessary in challenging nonconvex and noisy problems.}
+    \includegraphics[scale=0.5]{imgs/095/boxplot.png}
+    \caption{Results of best run out of every ten runs, simulating procedure of running a few searches and choosing the best one. IFAD outperforms IF2, and tuning $\alpha$ ultimately helps a lot.}
     \label{fig:boxplot-search}
 \end{figure}
 
@@ -543,6 +719,14 @@
     \end{enumerate}
 \end{frame}
 
+\section{Extension to Bayesian Inference}
+
+\begin{frame}{Particle MCMC}
+    \begin{itemize}
+        \item One can use the 
+    \end{itemize}
+\end{frame}
+
 \section{Conclusions and Future Work}
 
 \begin{frame}{Conclusion}
@@ -566,193 +750,8 @@
 
 
 \bibliographystyle{apalike}
-\bibliography{mop/bib-ifad, mop/bib-ref}
+\bibliography{paper/bib-ifad, paper/bib-ref}
 
-\appendix
-\section{Appendix}
-
-
-\begin{frame}{Previous Work}
-
-    
-    \begin{itemize}
-        \item \cite{poyiadjis11}, particle approximation of the score. \pause \\ \cite{scibior21}: AD + "stop-gradient trick". 
-        \item 
-        \pause \cite{blei2018vsmc}, backpropagate through vanilla particle filter.
-        \item 
-        \pause \cite{corenflos21}, optimal transport resampling.
-        \item 
-        \pause \cite{singh22}, fixed-lag smoothing.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Previous Work: Issues}
-    \begin{itemize}
-        \item Not (yet) compatible with desire for simulation-based inference.
-        \begin{itemize}
-            \item \pause Need modifications to use the bootstrap filter.
-            \item \pause Sometimes special cases needed, e.g. transitions factoring into a policy and deterministic model (\cite{singh22}).
-        \end{itemize}
-        \item \pause Computationally expensive, quadratic in number of particles.
-        \begin{itemize}
-            \item \pause Optimal transport resampling (\cite{corenflos21}), marginal particle filters (\cite{scibior21}).
-        \end{itemize}
-        \item \pause High variance, or asymptotically biased.
-        \begin{itemize}
-            \item \pause Either one drops resampling terms and accepts asymptotic bias (\cite{blei2018vsmc}), or has variance quadratic in horizon (\cite{poyiadjis11}, \cite{scibior21})
-        \end{itemize}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{(Improved) Iterated Filtering (\cite{ionides15})}
-    \begin{itemize}
-        \item Only (practical) full-information, frequentist method of parameter estimation in POMPs that does not need transition densities. 
-        \begin{itemize}
-            \item \pause Each particle has its own set of parameters.
-            \item \pause Particle parameters perturbed at every timestep.
-            \item \pause Parameters resampled with their particles according to likelihood.
-        \end{itemize}
-        \item \pause Treats parameters as augmentations of the state space, evolving according to a random walk.
-        \item \pause \textbf{Consistent estimates} via viewing this as a sequential Bayes map on the parameter distribution.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{When Does IF2 Struggle?}
-
-\begin{itemize}
-    \item \textbf{IF2 is great at approaching the MLE quickly!}
-    \item \pause Performs parameter updates at every timestep, so it does not need to wait to filter through the entire trajectory before each update.
-    \item \pause \textbf{But struggles at squeezing out the last few units of log-likelihood.}
-    \begin{itemize}
-        \item \pause Especially true in highly nonlinear, nonconvex, and noisy settings, e.g. \textbf{disease models}. 
-    \end{itemize}
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}{Assumptions}
-        
-    \begin{aspt}[Smooth Neighborhood]
-    \label{assump:smooth-nbhd}
-    There exists a neighborhood $\mathcal{N}(\phi)$ around any $\phi \in \Theta$ where for all $\theta \in \mathcal{N}(\phi)$ and almost every $\omega \in \Omega$, the Monte Carlo estimate of the likelihood at $\theta \in \mathcal{N}(\phi)$ with the system evolving according to $\phi$ conditional on $\omega$, $\hat\lik(\theta,\phi,\omega, J)$, is twice differentiable in $\theta$. 
-    \end{aspt}
-
-    \begin{itemize}
-        \item \pause \textbf{Justification:} For suitably nearby $\theta$ and $\phi$, the resampling indices for $\hat\lik(\theta,\phi,\omega, J)$ and $\hat\lik(\phi,\phi,\omega, J)$ are the same.
-        \item \pause This eliminates any discontinuities from resampling.
-        \item \pause For small enough $\mathcal{N}(\phi)$, the likelihood ratios are bounded. 
-        \item \pause The likelihood only changes by a factor of the likelihood ratios, which are bounded and smooth in $\theta$ if the densities used in the calculation are. 
-    \end{itemize}
-    
-\end{frame}
-
-\begin{frame}{Assumptions}
-    
-    \begin{aspt}[Continuity of the Likelihood] $\ell(\theta)$ proper is continuous in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$.
-    \end{aspt}
-    \pause 
-    \begin{aspt}[Bounded Measurement Model] There is an $\epsilon>0$ with $\epsilon^{-1}>f_{Y_n \mid X_n}\left(y_n{ }^* \mid x_n; \theta\right)>\epsilon$ for all $1 \leq n \leq N, x_n \in \gX$ and $\theta \in \Theta.$
-    \end{aspt}
-    \pause 
-    \begin{aspt}[Locally Bounded Derivative]
-    \label{assump:local-bounded-derivative}
-    Let $\mathcal{M}$ be an open subset of $\Omega$. There exists some function $G(\theta)$ and a constant $G=\sup _{\theta \in \mathcal{N}} G(\theta)<\infty$ such that
-        $$
-        \|\nabla \ell(\theta, \phi, \omega, J)\|_2<G(\theta) \leq G<\infty
-        $$
-        for every $\phi \in \mathcal{M}, \theta$ in smooth neighborhood $\mathcal{N}(\phi)$, and almost every $\omega \in \Omega$.
-    \end{aspt}
-\end{frame}
-
-
-\begin{frame}{Algorithm: Measurement Off-Policy, MOP-$\alpha$}
-    \begin{figure}
-        \centering
-        \includegraphics[scale=0.4]{imgs/mop.png}
-        \caption{MOP-$\alpha$ algorithm.}
-        \label{fig:mop}
-    \end{figure}
-\end{frame}
-
-
-\begin{frame}{Why did we bother with this?}
-    \begin{itemize}
-        \item Lets us work with only a differentiable simulator.
-        \item \pause Discounting parameter $\alpha$ helps with a bias-variance tradeoff (explained later). 
-        \item \pause Gradients returned by the likelihood estimate $$\hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$$ have nice properties.
-    \end{itemize}
-\end{frame}
-
-
-\begin{frame}{Iterated Filtering with Automatic Differentiation (IFAD)}
-    \begin{figure}
-        \centering
-        \includegraphics[scale=0.45]{imgs/ifad.png}
-        \caption{Warm-starting first/second order iterative optimization with IF2.}
-        \label{fig:ifad}
-    \end{figure}
-\end{frame}
-
-
-\begin{frame}{Why does this help?}
-    \begin{itemize}
-        \item IF2 converges quickly, but struggles with last few log-likelihood units. 
-        \item \pause Gradient descent gets stuck in saddle points and poor local minima when the likelihood is nonconvex. 
-        \item \pause Warm-starting gradient methods with IF2:
-        \begin{itemize}
-            \item \pause Under regularity conditions, the likelihood is well-behaved near the MLE.
-            \item \pause Issues with saddle points and local minima alleviated. 
-        \end{itemize}
-        \item \pause Combining these two lets us enjoy the best of both worlds.
-    \end{itemize}
-\end{frame}
-
-\begin{frame}{Convergence Analysis}
-
-    Guarantee currently only holds for IFAD-1, as it forms a particle approximation of the score as in \cite{poyiadjis11}.
-    \begin{itemize}
-        \item \pause Can be extended if the bias for the gradient estimate given by MOP-$\alpha$ for $\alpha < 1$ is small enough.
-        \item \pause e.g. $\alpha$ close to 1, or $y_{n+1:N}^*$ uninformative of current state $x_n$ given past and current measurements $y_{0:n}^*$.
-        \item \pause Otherwise, need to handle biased gradient descent.
-    \end{itemize}
-
-\end{frame}
-
-
-
-
-\begin{frame}{Cholera in Bangladesh}
-    The \textbf{transition dynamics} follow this series of stochastic differential equations driven by Brownian motion:
-    \begin{align*}
-        d S&=\left(k \epsilon R_k+\delta(S-H)-\lambda(t) S\right) d t+d H-(\sigma S I / H) d B, \\ 
-        d I&=\left(\lambda(t) S-(m+\delta+\gamma) I\right) d t+(\sigma S I / P) d B, \\ 
-        d R_1&=\left(\gamma I-(k \epsilon+\delta) R_1\right) d t, \\ 
-        \vdots \\ 
-        d R_k&=\left(k \epsilon R_{k-1}-(k \epsilon+\delta) R_k\right) d t,
-    \end{align*}
-\end{frame}
-
-\begin{frame}{Cholera in Bangladesh}
-The \textbf{force of infection}, $\lambda(t)$, is modeled by splines $s_j$, 
-    \begin{equation*}
-        \lambda(t)=\exp \left\{\beta_{\text {trend }}\left(t-t_0\right)+\sum_{j=1}^{6} \beta_j s_j(t)\right\}(I / P) + \exp \left\{\sum_{j=1}^{6} \omega_j s_j(t)\right\},
-    \end{equation*}
-    where
-    \begin{itemize}
-        \item \pause $\beta_j$ model seasonality in the force of infection.
-        \item \pause $\beta_{\text{trend}}$ models the trend in the force of infection.
-        \item \pause $\omega_j$ represent seasonality of a non-human environmental reservoir of disease.
-    \end{itemize}
-    
-\end{frame}
-
-\begin{frame}{Cholera in Bangladesh}
-    The \textbf{measurement model} for observed monthly cholera deaths is given by 
-    \begin{equation*}
-        Y_n \sim \gN(M_n, \tau^2M_n^2),
-    \end{equation*}
-    where $M_n$ is the true number of cholera deaths in that month.
-\end{frame}
 
 \end{document}
 

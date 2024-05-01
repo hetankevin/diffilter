@@ -611,7 +611,7 @@ While we make the first steps towards developing a Python counterpart to the pop
 
 \kevin{Reach: PNAS. Else try for JRSSB, try to get Chopin for Annals AE. Would need to change bracketing conventions for Biometrika. If submitting to PNAS, JASA, Biometrika, or JRSSB, highlight the different statistical gradient estimator and finite sample performance, rewrite introduction, maybe create a way to use the gradients for inference rather than using profiling. Try to rewrite it as a breakthrough in statistics. Safety: JMLR}
 
-\bibliography{bib-ifad,bib-ref}
+\bibliography{paper/bib-ifad, paper/bib-ref}
 \bibliographystyle{apalike}
 
 \appendix
@@ -1344,20 +1344,20 @@ By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is
 \end{align*}
 
 To bound this, we use the fact that $$\E[(\nabla_\theta\hat\ell_n(\theta))^4] = \E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^4]+\E[(\nabla_\theta\hat\ell_n(\theta))^2]^2$$
-alongside Theorem 2 of \cite{delMoral03}, which shows that
-$$\E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^4] \lesssim \frac{c_d^4G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^2] \lesssim \frac{c_d^2G'(\theta)^2}{J},$$
-where $c_d$ is a term depending only on the dimension of the state space $d$ (but where the dependence may be exponential), to find that 
-$$\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{c_d^4G'(\theta)^4}{J^2}+\left(\frac{c_d^2G'(\theta)^2}{J}\right)^2} = \frac{c_d^2G'(\theta)^2}{J},$$
+alongside Lemma 2 of \cite{karjalainen2023}, which shows that
+$$\E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^4] \lesssim \frac{G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^2] \lesssim \frac{G'(\theta)^2}{J},$$
+to find that 
+$$\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{G'(\theta)^4}{J^2}+\left(\frac{G'(\theta)^2}{J}\right)^2} = \frac{G'(\theta)^2}{J},$$
 and conclude that 
-$$\text{Cov}(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c\log(J)}}}\frac{c_d^2G'(\theta)^2}{J}.$$
+$$\text{Cov}(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c\log(J)}}}\frac{G'(\theta)^2}{J}.$$
 
 
 Putting it all together, we see that
 \begin{align*}
     \text{Var}(\nabla_\theta \hat\ell(\theta)) &= \sum_{n=1}^N \text{Var}(\nabla_\theta\hat\ell_n(\theta)) + 2\sum_{m<n} \text{Cov}(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta))\\
-    &\leq \frac{Nc_d^2G'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\frac{c_d^2G'(\theta)^2}{J} \\
-    &\leq \frac{c_d^2G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\right) \\
-    &\lesssim \frac{c_d^2G'(\theta)^2N}{J}.
+    &\leq \frac{NG'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\frac{G'(\theta)^2}{J} \\
+    &\leq \frac{G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\right) \\
+    &\lesssim \frac{G'(\theta)^2N}{J}.
 \end{align*}
 
 
@@ -1440,18 +1440,18 @@ Then,
 \end{align*}
 
 
-Note that $$\hat s_{n,k}(\theta) := \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \nabla_\theta \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)$$ is a function bounded by $C\frac{G'(\theta)(1-\alpha^k)}{1-\alpha} =: CG'(\theta)r$ in each coordinate for some constant $C$ (by Assumption \ref{assump:bounded-measurement}) that depends only on $k$ timesteps, and not $n$. We can therefore invoke Theorem 2 of \cite{delMoral03} to bound the $L_2$ error of this functional from its expectation under the posterior by $CrG'(\theta)c_dJ^{-1/2}d(k)$ where $d(k)$ is a term linear in $k$ and $c_d$ is a term possibly exponential in the dimension of the state space $d$. That is, from Theorem 2 of \cite{delMoral03} we have that
-$$\E\left[||\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)||_\infty^2\right]^{1/2} \leq \frac{Cr^2G'(\theta)c_dd(k)}{\sqrt{J}}.$$
+Note that $$\hat s_{n,k}(\theta) := \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \nabla_\theta \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)$$ is a function bounded by $C\frac{G'(\theta)(1-\alpha^k)}{1-\alpha} =: CG'(\theta)r$ in each coordinate for some constant $C$ (by Assumption \ref{assump:bounded-measurement}) that depends only on $k$ timesteps, and not $n$. We can therefore invoke Lemma 2 of \cite{karjalainen2023} to bound the $L_2$ error of each of the $k$ (from time $n-k$ to time $n$) functionals from its expectation under the posterior by $CrG'(\theta)J^{-1/2}k$. That is, we have that
+$$\E\left[||\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)||_\infty^2\right]^{1/2} \leq \frac{Cr^2G'(\theta) k}{\sqrt{J}}.$$
 
 
-By the bias-variance decomposition, this in turn bounds the variance at a single timestep by $C^2r^2G'(\theta)^2c_d^2J^{-1}d(k)^2$. Concretely, we have that
-$$\text{Var}\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{c_d^2r^2k^2G'(\theta)^2}{J}.$$
+By the bias-variance decomposition, this in turn bounds the variance at a single timestep by $C^2r^2G'(\theta)^2J^{-1}k^2$. Concretely, we have that
+$$\text{Var}\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{r^2k^2G'(\theta)^2}{J}.$$
 
 It now remains to bound the variance of $\hat s_k(\theta)$ by considering the covariance of each of the $N$ terms that comprise it. We decompose
 \begin{align*}
     \text{Var}(\nabla_\theta \hat s_k(\theta)) &= \text{Var}\left(\sum_{n=1}^N \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \\
     &= \sum_{n=1}^N\text{Var}\left(\hat s_{n,k}(\theta)\right)+ 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \\
-    &\lesssim \frac{c_d^2r^2k^2G'(\theta)^2N}{J} + 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right).
+    &\lesssim \frac{r^2k^2G'(\theta)^2N}{J} + 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right).
 \end{align*}
 
 Similarly to the proof of the MOP-$0$ case, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen2023} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
@@ -1460,9 +1460,9 @@ i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ an
 
 We now derive the $\alpha$-mixing coefficients of $(\hat s_{n,k}(\theta))_{n=1}^N$. Observe that $\hat s_{n,k}$ is strong mixing at lag $k+1$, as all weights beyond $k$ timesteps are truncated. We therefore have that the mixing time of $\hat s_k(\theta)$ is $O(1+k+\log(J))$, and that the $\alpha$-mixing coefficients for $(\hat s_{n,k}(\theta))_{n=1}^N$ are given by $\alpha(l) \leq (1-\epsilon)^{\floor{l/(c(1+k+\log(J)))}}$.
 
-Therefore, by Davydov's inequality and Theorem 2 of \cite{delMoral03}, and noting that $\hat s_{n,k}(\theta) \leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, by a similar argument to the MOP-0 case, we find that 
+Therefore, by Davydov's inequality and Lemma 2 of \cite{karjalainen2023}, and noting that $\hat s_{n,k}(\theta) \leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, by a similar argument to the MOP-0 case, we find that 
 
-$$\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \lesssim (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{c_d^2r^2G'(\theta)^2}{J}.$$
+$$\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \lesssim (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2G'(\theta)^2}{J}.$$
 
 Concretely, noting that $\nabla_\theta\hat s_{n,k}(\theta)\leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and WLOG assuming $\E[(\nabla_\theta\hat\hat s_{m,k}(\theta))^4]^{1/4}\leq\E[(\nabla_\theta\hat\hat s_{n,k}(\theta))^4]^{1/4}$, we apply Davydov's inequality to see that
 \begin{align*}
@@ -1472,20 +1472,20 @@ Concretely, noting that $\nabla_\theta\hat s_{n,k}(\theta)\leq CrG'(\theta)$ by 
 \end{align*}
 
 To bound this, we use the fact that $$\E[(\nabla_\theta\hat s_{n,k}(\theta))^4] = \E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^4]+\E[(\nabla_\theta\hat s_{n,k}(\theta))^2]^2$$
-alongside Theorem 2 of \cite{delMoral03}, which shows that
-$$\E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^4] \lesssim \frac{c_d^4r^4G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^2] \lesssim \frac{c_d^2r^2G'(\theta)^2}{J},$$
-where $c_d$ is a term depending only on the dimension of the state space $d$ (but where the dependence may be exponential), to find that 
-$$\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{c_d^4r^4G'(\theta)^4}{J^2}+\left(\frac{c_d^2r^2G'(\theta)^2}{J}\right)^2} = \frac{c_d^2r^2G'(\theta)^2}{J},$$
+alongside Lemma 2 of \cite{karjalainen2023}, which shows that
+$$\E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^4] \lesssim \frac{r^4G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^2] \lesssim \frac{r^2G'(\theta)^2}{J},$$
+to find that 
+$$\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{r^4G'(\theta)^4}{J^2}+\left(\frac{r^2G'(\theta)^2}{J}\right)^2} = \frac{r^2G'(\theta)^2}{J},$$
 and conclude that 
-$$\text{Cov}(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{c_d^2r^2G'(\theta)^2}{J}.$$
+$$\text{Cov}(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2G'(\theta)^2}{J}.$$
 
 
 Putting it all together, we see that
 \begin{align*}
     \text{Var}(\nabla_\theta \hat s_{k}(\theta)) &= \sum_{n=1}^N \text{Var}(\nabla_\theta\hat s_{n,k}(\theta)) + 2\sum_{m<n} \text{Cov}(\nabla_\theta\hat s_{m,k}(\theta),\nabla_\theta\hat s_{n,k}(\theta))\\
-    &\leq \frac{Nc_d^2r^2k^2G'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\frac{c_d^2r^2G'(\theta)^2}{J} \\
-    &\leq \frac{c_d^2r^2k^2G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\right) \\
-    &\lesssim \frac{c_d^2k^2r^2G'(\theta)^2N}{J}.
+    &\leq \frac{Nr^2k^2G'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\frac{r^2G'(\theta)^2}{J} \\
+    &\leq \frac{r^2k^2G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\right) \\
+    &\lesssim \frac{k^2r^2G'(\theta)^2N}{J}.
 \end{align*}
 
 We will now use this result to bound $\text{Var}(\nabla_\theta \hat s_k(\theta)$ proper. For random variables $X,Y$ where $|X-Y|$ is bounded almost surely by some $M$, we have that 
@@ -1493,16 +1493,16 @@ $$X-\E X - 2M \leq Y - \E Y \leq X - \E X + 2M$$
 so,
 $$(Y-\E Y)^2 \leq (X-\E X - 2M)^2 + (X-\E X +2M)^2.$$
 Taking expectations, we get
-$$\text{Var}(X) \leq \text{Var}(Y) \leq \text{Var}(Y) + 8M^2.$$
+$$\text{Var}(Y) \leq \text{Var}(X) + 8M^2.$$
 
 It follows from this result and the result we proved earlier, namely that
 $$||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||_\infty \leq \frac{2\alpha^k}{1-\alpha}NG'(\theta),$$
 that the variance of MOP-$\alpha$ proper is bounded by, for any $k \leq N$,
 that the variance of MOP-$\alpha$ proper is bounded by
-$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \frac{c_d^2k^2r^2G'(\theta)^2N}{J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2.$$
+$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \frac{k^2r^2G'(\theta)^2N}{J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2.$$
 
 As the above holds for any $k \leq N$,
-$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \min_{k\leq N} \left(\frac{c_d^2k^2G'(\theta)^2N}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2 \right).$$
+$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \min_{k\leq N} \left(\frac{k^2G'(\theta)^2N}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N^2G'(\theta)^2 \right).$$
 
 % To interpret this result, we can choose $k$ such that
 % \begin{align*}
@@ -1566,6 +1566,20 @@ So the bias of MOP-$\alpha$ is the bias of MOP-$1$ arising from the logarithm in
 where we note that the bias vanishes as $\alpha$ goes to $1$ as
 $$\lim_{\alpha\to1}\left(\frac{N-\alpha N + \alpha^N - 1}{1-\alpha}\right) = 0.$$ 
 
+
+\subsection{An Improved Bound by Mixing}
+
+We decompose
+$$\E||\nabla_\theta\ell_\theta - \nabla_\theta \hat\ell^\alpha(\theta)||_\infty \leq \E||\nabla_\theta\ell_\theta - \nabla_\theta\hat s_k^1(\theta)||_\infty + \E||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_\infty + \E||\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)||_\infty.$$
+
+The broad idea is that the first term can be controlled by a mixing argument, the second term garners $O(Nk^2)$ error, and the third term is $O\left(\frac{N}{1-\alpha}\right)$. It is unclear whether the bias can be reduced further -- the gradient is a sum of $N$ terms, and is therefore $O(N)$ itself. 
+
+The first term -- bound ground truth of conditional scores from particle approximation conditional on correct filtering distribution at time $n-k$, bound that from particle approximation conditional on arbitrary filtering distribution at time $n-k$. First term sums up $k$ terms, $O(Nk^2)$ error, second term bounded by $k$ applications of the Markov kernel, so just apply forgetting of the particle filter result. 
+
+But you can get an MSE bound like this! Simply decompose
+$$||\nabla_\theta\ell_\theta - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 \leq ||\nabla_\theta\ell_\theta - \nabla_\theta\hat s_k^1(\theta)||_2^2 + ||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_2^2 + ||\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)||_2^2,$$
+and observe that 
+$$||\nabla_\theta\ell_\theta - \nabla_\theta \hat\ell^\alpha(\theta)||_\infty =  \left\lVert\sum_{n=1}^N \nabla_\theta \hat\ell_n^\alpha(\theta) - \sum_{n=1}^N \nabla_\theta \ell_n(\theta)\right\rVert_\infty \leq \sum_{n=1}^N\left\lVert \nabla_\theta \hat\ell_n^\alpha(\theta) -  \nabla_\theta \ell_n(\theta)\right\rVert_\infty.$$
 
 
 \section{Finite-Particle Analysis of Gradient Methods with Algorithm \ref{alg:ifad}}

@@ -234,6 +234,8 @@ where $M_n$ is the true number of cholera deaths in that month.
 
 We benchmarked IFAD against IF2 on a challenging global search problem. We re-implemented IF2 in order to do so, but chose to benchmark our results with the results of \cite{ionides15} (labeled "IF2 2015"). We note that our re-implementation ourperforms that of \cite{ionides15}, likely due to a better choice of parameters. For each method, we performed 100 searches, initialized with 100 initial starting parameter vectors drawn uniformly from the same wide bounding box used in \cite{ionides15}. We summarize our findings below. 
 
+\kevin{Dynamically save to a tex file and load from there}
+
 \begin{table}[h!]
 \centering
 \begin{tabular}{||c c c||} 
@@ -261,18 +263,17 @@ We benchmarked IFAD against IF2 on a challenging global search problem. We re-im
 IFAD, in comparison, manages to (1) approach the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:scatter-optim}) and (2) refine the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures \ref{fig:scatter-optim} and \ref{fig:boxplot-search}. IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone. 
 
 
+\kevin{Increase size of font in legend, notch rest of font up by one point. Make figure aspect ratio to be taller than wider.}
 \begin{figure}[htbp!]
-    \centering
-    \includegraphics[scale=0.27]{../imgs/095/pairs.png}
-    \includegraphics[scale=0.27]{../imgs/095/qq.png}
+    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/pairs.png}
+    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/qq.png}
     \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
     \label{fig:scatter-optim}
 \end{figure}
 
 \begin{figure}[ht]
-    \centering
-    \includegraphics[width=\textwidth/4]{../imgs/095/boxplot.png}
-    \includegraphics[width=\textwidth/5]{../imgs/095/optim.png}
+    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/boxplot.png}
+    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/optim.png}
     \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, simulating the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and the gradient steps improve on the warm-start given by running 40 IF2 iterations. 
     \textbf{Right:} Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD -- IFAD has better tail control and successfully reaches the MLE. 
     We use a dotted red line to display the MLE.}
@@ -297,11 +298,11 @@ The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two 
 
 \subsection{MOP-$\alpha$ Targets the Posterior}
 
-We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. While the result is presented here as specific to MOP-$\alpha$, the full proof relies on a handful of technical lemmas presented in the supplementary material that may be useful in their own right, and Theorem \ref{thm:mop-targeting} can also serve as a more general result for other particle filters with ``off-policy'' resampling.
+We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. While the result is presented here as specific to MOP-$\alpha$, the full proof relies on a handful of technical lemmas presented in the supplementary material that may be useful in their own right, and Theorem \ref{thm:mop-targeting} can also serve as a more general result as a strong law of large numbers for triangular arrays of particles with ``off-policy'' resampling.
 
 \begin{thm}[MOP-$\alpha$ Targets the Posterior and Likelihood]
     \label{thm:mop-targeting}
-    When $\alpha=1$ or $\phi=\theta$, MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. That is, for $\pi_n(\theta)=f_{X_{1:n}|Y_{1:n} ; \theta}$ and any measurable and bounded functional $h$ and for $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\prod_{n=1}^N L_n^{B,\theta,\alpha}$, it holds that
+    When $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. That is, for $\pi_n(\theta)=f_{X_{1:n}|Y_{1:n} ; \theta}$ and any measurable and bounded functional $h$ and for $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\prod_{n=1}^N L_n^{B,\theta,\alpha}$, it holds that
     \vspace*{-2.5mm}
     \begin{equation}
         \frac{\sum_{j=1}^J h(x_{n,j}^{A,F, \theta}) w_{n,j}^{A,F,\theta}}{\sum_{j=1}^J w_{n,j}^{A,F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} h, \;\; \hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).
@@ -315,8 +316,8 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
     When $\theta=\phi$, regardless of the value of $\alpha$, the ratio ${g_{n,j}^\theta}/{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter.
     
     When $\alpha=1$ and $\theta\neq\phi,$ suppose inductively that $\{(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j})\}_{j=1}^J$ targets $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
-    It can then be shown that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$, that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$, and that the resampling rule given by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}/ g^\phi_{n,a(j)})$ where $a(\cdot)$ is the ancestor function,
-    with resampling weights proportional to $g^\phi_{n,j}$, also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+    It can then be shown that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$, that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$, and that weighting the particles by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}/ g^\phi_{n,a(j)})$ where $a(\cdot)$ is the ancestor function,
+    resampling with probabilities proportional to $g^\phi_{n,j}$, also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
 
     If the likelihood is estimated with the before-resampling conditional likelihoods $\hat\lik(\theta) = \prod_{n=1}^N L_n^{B,\theta,\alpha}$, the strong consistency is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$. 
 \end{proof}
