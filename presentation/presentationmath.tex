@@ -5,7 +5,8 @@
 \usetheme{AnnArbor}
 %\usecolortheme{wolverine}
 \title[AD for POMPs]{Automatic Differentiation Accelerates Inference for Partially Observed Stochastic Processes}
-\author[Kevin Tan]{Kevin Tan \\ \small{University of Pennsylvania, Department of Statistics and Data Science} \\\vspace{0.5cm} \small{Joint work with Giles Hooker and Edward Ionides}}
+\author[Kevin Tan]{Kevin Tan \\ \small{University of Pennsylvania, Department of Statistics and Data Science\\\vspace{0.5cm} \small{Advised by Giles Hooker and Edward Ionides}}}
+
 
 \usepackage{amsmath}
 \usepackage{tabularx}
@@ -89,9 +90,8 @@
 \begin{frame}{Partially Observed Markov Processes}
 
     \begin{itemize}
-        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$. Write $X_n := X_{t_n}$.
-        \item \pause Unknown parameter $\theta \in \Theta$, to be estimated.
-        \item $X_t \in \gX \subseteq \R^d$, $Y_n \in \gY$, $\theta \in \Theta \subseteq \R^p$.\pause
+        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $Y_1,...,Y_N \in \gY$ taking values $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$. Write $X_n := X_{t_n} \subseteq \R^d$.
+        \item \pause Unknown parameter $\theta \in \Theta \subseteq \R^p$, to be estimated.
         \item \textbf{Notation:}
         \begin{itemize}
             \item $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ is the \textbf{process model}.
@@ -101,21 +101,58 @@
     \end{itemize}
 \end{frame}
 
+
+\begin{frame}{Partially Observed Markov Processes}
+
+    
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=1.5]
+
+\node[black] (X_0) at (-3,0) {$X_0$};
+\node[black] (Xdot0) at (-2,0) {$...$};
+\node[black] (X_{n-1}) at (-1,0) {$X_{n-1}$};
+\node[black] (X_n) at (0,0) {$X_n$};
+\node[black] (X_{n+1}) at (1,0) {$X_{t+1}$};
+\node[black] (Xdot{n+1}) at (2,0) {$...$};
+\node[black] (X_N) at (3,0) {$X_T$};
+\node[black] (Y_0) at (-3,-1) {$Y_0$};
+\node[black] (Ydot0) at (-2,-1) {$...$};
+\node[black] (Y_{n-1}) at (-1,-1) {$Y_{n-1}$};
+\node[black] (Y_n) at (-0,-1) {$Y_n$};
+\node[black] (Y_{n+1}) at (1,-1) {$Y_{n+1}$};
+\node[black] (Ydot{n+1}) at (2,-1) {$...$};
+\node[black] (Y_N) at (3,-1) {$Y_N$};
+\path[->, black] (X_0) edge (Xdot0);
+\path[->, black] (Xdot0) edge (X_{n-1});
+\path[->, black] (X_{n-1}) edge (X_n);
+\path[->, black] (X_n) edge (X_{n+1});
+\path[->, black] (X_{n+1}) edge (Xdot{n+1});
+\path[->, black] (Xdot{n+1}) edge (X_N);
+\path[->, black] (X_0) edge (Y_0);
+\path[->, black] (X_{n-1}) edge (Y_{n-1});
+\path[->, black] (X_n) edge (Y_n);
+\path[->, black] (X_{n+1}) edge (Y_{n+1});
+\path[->, black] (X_N) edge (Y_N);
+\end{tikzpicture}
+\caption{Directed acyclic graph (DAG) of a POMP model. The latent states $(X_t)_{t_0\leq t \leq T}$ follow a Markov process, and the observations $Y_n$ are conditionally independent given the latent state. }
+\label{fig:pomp}
+\end{figure}
+\end{frame}
+
+
 \begin{frame}{Partially Observed Markov Processes}
 
     \begin{itemize}
-        \item Unobserved Markov process $\{X_t, t \geq t_0\}$, observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.
-        \item \pause Problems to solve:
+        \item Problems to solve:
         \begin{itemize}
             \item \pause The \textbf{filtering problem}:
             \begin{itemize}
-                \item \pause Find the density of the hidden state at time $n$, given all observations until time $n$.
-                \item \pause $f_{X_n|Y_{1:n}}(x_n|y_{1:n}^*;\theta)$.
+                \item \pause Find the density of the hidden state at time $n$, given all observations until time $n$, $f_{X_n|Y_{1:n}}(x_n|y_{1:n}^*;\theta)$.
             \end{itemize}
             \item \pause Related problem, estimating the \textbf{posterior} distribution of hidden states:
             \begin{itemize}
-                \item \pause Find the density of the hidden states at timesteps $1$ to $n$, given all observations till time $n$. 
-                \item \pause $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*;\theta)$.
+                \item \pause Find the density of the hidden states at timesteps $1$ to $n$, given all observations till time $n$, $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*;\theta)$.
             \end{itemize}
         \end{itemize}
     \end{itemize}
@@ -260,20 +297,20 @@
          \hline
          Authors & Method \\ [0.5ex] 
          \hline\hline
-         \cite{poyiadjis11} & Particle approximation of score
-         \\ & $O(N^2)$ variance, unbiased \\
+         \cite{poyiadjis11} & Particle approximation of score.
+         \\ & $O(N^2)$ variance, consistent. \\
          \hline
-         \cite{blei2018vsmc} & Backprop through vanilla PF \\ 
-         & Asymptotic bias \\
+         \cite{blei2018vsmc} & Backprop through vanilla PF. \\ 
+         & Asymptotic bias. \\
          \hline
-         \cite{corenflos21} & Optimal transport resampling \\
-         & Consistent, $O(J^2)$ runtime \\
+         \cite{corenflos21} & Optimal transport resampling. \\
+         & Consistent, $O(J^2)$ runtime. \\
          \hline
-         \cite{scibior21} & Stop-gradient trick \\ 
-         & Recovers \cite{poyiadjis11} with AD \\
+         \cite{scibior21} & Stop-gradient trick. \\ 
+         & Recovers \cite{poyiadjis11} with AD. \\
          \hline 
-         \cite{singh22} & Fixed-lag smoothing \\ 
-         & Need transition densities \\ 
+         \cite{singh22} & Fixed-lag smoothing. \\ 
+         & Need transition densities. \\ 
          \hline
         \end{tabular}
         \label{table:lit-review}
@@ -358,7 +395,9 @@
     \item $\alpha$ balances a tradeoff between:
     \begin{itemize}
         \item \pause Maintaining memory of each particle's ancestral trajectory (most extreme when $\alpha=1$).
+        \item \pause High-variance, but consistent.
         \item \pause Considering only the single-step transition dynamics (when $\alpha=0$).
+        \item \pause Low-variance, but asymptotically biased.
     \end{itemize}
     \item \pause\textbf{Exponentially-weighted moving average} where $\alpha$ controls the amount of discounting.
     \item \pause Bias small if $y_{n+1:N}^*$ not informative for $x_n$ given $y_{0:n}^*$ (\cite{corenflos21}).
@@ -722,9 +761,25 @@ Proof: Very tedious algebra.
 \section{Extension to Bayesian Inference}
 
 \begin{frame}{Particle MCMC}
-    \begin{itemize}
-        \item One can use the 
-    \end{itemize}
+    One can use the likelihood estimate from the particle filter to perform MCMC. But the random walk proposal is very bad!
+    
+\begin{figure}[t!]
+    \centering
+    \includegraphics[width = \textwidth/\real{1.5}]{imgs/pmcmc/mh.png}
+    \caption{Convergence diagnostics for the Metropolis-Hastings variant particle MCMC with the random walk proposal and an informative empirical prior from IF2. Here, we display the results for the trend parameter in the Dhaka cholera model of \cite{king08}.}
+    \label{fig:mh}
+\end{figure}
+\end{frame}
+
+\begin{frame}{MOP-$\alpha$ Speeds up the Mixing of Particle MCMC}
+    Using the gradient estimate from MOP-$\alpha$ within a NUTS sampler (initialized with an informative prior estimated with IF2) works wonders -- burn-in period of $700,000$ in \cite{fasiolo16} reduced to $500$ here.
+    \begin{figure}[t!]
+    \centering
+    \includegraphics[width=\textwidth/\real{1.5}]{imgs/pmcmc/nuts_eb.png}
+    \caption{Convergence diagnostics for a No U-Turn Sampler with the informative prior from IF2. The NUTS sampler mixes quickly, and the posterior estimates from each chain posterior modes.}
+    \label{fig:nuts-eb}
+\end{figure}
+
 \end{frame}
 
 \section{Conclusions and Future Work}

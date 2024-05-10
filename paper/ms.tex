@@ -74,6 +74,8 @@ In particular, Scibior and Wood \cite{scibior21} show that the estimators derive
 
 %We show that another simple tweak enables this compatibility and corresponds to a special case of our MOP-$\alpha$ algorithm. 
 
+\kevin{Can someone who's reading through the words and glazing through the math get the idea that (1) we're running AD on the PF, and (2) using an off-policy resampling trick to get our estimator. Should I hedge by writing the SI in Del Moral language? }
+
 \subsection{Our Contributions}
 We develop a new approach to statistical inference via AD for particle filters which addresses the above concerns. We construct a new theoretical framework that bypasses the paradox of differentiating through a Monte-Carlo algorithm with discontinuous resampling.
 
@@ -161,7 +163,39 @@ This yields a suitably reweighted particle filter that targets the posterior und
 
 \subsection{Discounting Weights for a Bias-Variance Tradeoff}
 
-As mentioned earlier, the correction factors accumulate over time. If $\theta$ and $\phi$ coincide, one can discount the correction factors from previous timesteps by some $\alpha \in [0,1]$, as seen in Equation \ref{eq:weighting-scheme}, while still targeting the posterior and likelihood at $\theta$. This lets us optimize a bias-variance tradeoff for the MOP-$\alpha$ score estimate. When $\alpha=1$, MOP-$1$ maintains the memory of each particle's ancestral trajectory, recovering the consistent but high-variance gradient estimate from \cite{poyiadjis11, scibior21}. When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{blei2018vsmc}. $\alpha$ therefore controls an exponentially-weighted moving average, determining how much "memory" the resulting gradient estimate has over ancestral trajectories. This is illustrated in Figure \ref{fig:biasvar}, in the context of the Dhaka cholera model of \cite{king08}. 
+As mentioned earlier, the correction factors accumulate over time. If $\theta$ and $\phi$ coincide, one can discount the correction factors from previous timesteps by some $\alpha \in [0,1]$, as seen in Equation \ref{eq:weighting-scheme}, while still targeting the posterior and likelihood at $\theta$. This lets us optimize a bias-variance tradeoff for the MOP-$\alpha$ score estimate. When $\alpha=1$, MOP-$1$ maintains the memory of each particle's ancestral trajectory, recovering the consistent but high-variance gradient estimate from \cite{poyiadjis11, scibior21}. When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{blei2018vsmc}. 
+
+
+\subsection{MOP-$\alpha$ Encompasses the Estimators of \cite{poyiadjis11, scibior21, blei2018vsmc}}
+
+\cite{scibior21} show that the estimate of \cite{blei2018vsmc} is the gradient of a vanilla particle filter when resampling terms are dropped, and also recover the estimate of \cite{poyiadjis11} through applying a ``stop-gradient trick" to the particle filter. It turns out that both of these, when applied on the bootstrap filter, correspond to special cases of MOP-$\alpha$.
+
+
+$\alpha$ therefore controls an exponentially-weighted moving average, determining how much "memory" the resulting gradient estimate has over ancestral trajectories. This is illustrated in Figure \ref{fig:biasvar}, in the context of the Dhaka cholera model of \cite{king08}. 
+
+\begin{thm}[MOP-$0$ and MOP-$1$ Functional Forms]
+    \label{thm:mop-functional-forms}
+    Write $\nabla_\theta \hat\ell^\alpha(\theta)$ for the gradient estimate yielded by MOP-$\alpha$ when $\theta=\phi$ and we use the after-resampling conditional likelihood estimate so that $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A, \theta, \alpha}$. Then, when $\alpha=0$,
+    \vspace*{-2.5mm}
+    \begin{equation}
+        \nabla_\theta \hat\ell^0(\theta) 
+        = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+        \vspace*{-2.5mm}
+    \end{equation}
+    yielding \cite{blei2018vsmc} on the bootstrap filter. When $\alpha=1$,
+    \vspace*{-2.5mm}
+    \begin{equation}
+        \nabla_\theta \hat{\ell}^1(\theta) 
+        = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
+    \vspace*{-2.5mm}
+    \end{equation}
+    yielding the estimator of \cite{poyiadjis11, scibior21} with the bootstrap filter.
+\end{thm}
+
+We defer the proof to the supplementary material. It relies on a useful decomposition of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$ that yields a telescoping product in the MOP-$1$ case. Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting that when $\theta=\phi$, that $w_{n,j}^{P,\theta}$ evaluates to $1$, yield the result. 
+
+This further illustrates how $\alpha$ dictates the "memory" of the gradient estimate. As \cite{scibior2021dpf} remark, the MOP-$0$ estimator of \cite{blei2018vsmc} only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate of \cite{poyiadjis11} only considers the surviving particles at time $N$, fully tracking dependencies over time. 
+
 
 \begin{figure}[ht!]
     \centering
@@ -184,6 +218,11 @@ If $\theta$ is evaluated at $\phi$, the particles at $\theta$ and $\phi$ coincid
 
 This still leaves us with the question of designing an effective procedure for likelihood maximization with MOP-$\alpha$. We propose a simple algorithm we call Iterated Filtering with Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad} that runs a few iterations of IF2 to warm-start an iterative first or second-order method that uses the MOP-$\alpha$ gradient estimate. This leverages IF2's quick empirical convergence to a neighborhood of the MLE, overcoming the tendency of gradient methods to get stuck in saddle points and local minima. Conversely, switching to gradient ascent with MOP-$\alpha$ score estimates lets one bypass the difficulty that IF2 has with optimizing the last few units of log-likelihood. Combining these two methods in this way lets us enjoy the best of both worlds.
 \kevin{source for this}
+
+\subsection{Linear Convergence Rates}
+\begin{thm}
+    \label{thm:mop-convergence}
+\end{thm}
 
 %The warm start allows gradient methods to shine, as regularity conditions ensure that the likelihood surface is well-behaved enough in this neighborhood that the aforementioned issues with saddle points and local minima are alleviated. 
 
@@ -298,7 +337,10 @@ The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two 
 
 \subsection{MOP-$\alpha$ Targets the Posterior}
 
-We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. While the result is presented here as specific to MOP-$\alpha$, the full proof relies on a handful of technical lemmas presented in the supplementary material that may be useful in their own right, and Theorem \ref{thm:mop-targeting} can also serve as a more general result as a strong law of large numbers for triangular arrays of particles with ``off-policy'' resampling.
+
+We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood. While the result is presented here as specific to MOP-$\alpha$, we actually prove a more general result in the supplementary material. That is, we show a strong law of large numbers for triangular arrays of particles with ``off-policy'' resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest, to weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
+
+\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
 \begin{thm}[MOP-$\alpha$ Targets the Posterior and Likelihood]
     \label{thm:mop-targeting}
@@ -309,6 +351,8 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
     \vspace*{-2.5mm}
     \end{equation}
 \end{thm}
+
+\kevin{Write the supplement formally with Del Moral-lite language, going into full detail with the proofs and calculations.}
 
 \begin{proof}
     We provide a proof sketch here, deferring most of the details, and discussion of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$, to the supplementary information. 
@@ -323,32 +367,6 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
 \end{proof}
 
 
-\subsection{MOP-$\alpha$ Encompasses the Estimators of \cite{poyiadjis11, scibior21, blei2018vsmc}}
-
-\cite{scibior21} show that the estimate of \cite{blei2018vsmc} is the gradient of a vanilla particle filter when resampling terms are dropped, and also recover the estimate of \cite{poyiadjis11} through applying a``stop-gradient trick" to the particle filter. It turns out that both of these, when applied on the bootstrap filter, correspond to special cases of MOP-$\alpha$.
-
-\begin{thm}[MOP-$0$ and MOP-$1$ Functional Forms]
-    \label{thm:mop-functional-forms}
-    Write $\nabla_\theta \hat\ell^\alpha(\theta)$ for the gradient estimate yielded by MOP-$\alpha$ when $\theta=\phi$ and we use the after-resampling conditional likelihood estimate so that $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A, \theta, \alpha}$. Then, when $\alpha=0$,
-    \vspace*{-2.5mm}
-    \begin{equation}
-        \nabla_\theta \hat\ell^0(\theta) 
-        = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
-        \vspace*{-2.5mm}
-    \end{equation}
-    yielding \cite{blei2018vsmc} on the bootstrap filter. When $\alpha=1$,
-    \vspace*{-2.5mm}
-    \begin{equation}
-        \nabla_\theta \hat{\ell}^1(\theta) 
-        = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
-    \vspace*{-2.5mm}
-    \end{equation}
-    yielding the estimator of \cite{poyiadjis11, scibior21} with the bootstrap filter.
-\end{thm}
-
-We defer the proof to the supplementary material. It relies on a useful decomposition of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$ that yields a telescoping product in the MOP-$1$ case. Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting that when $\theta=\phi$, that $w_{n,j}^{P,\theta}$ evaluates to $1$, yield the result. 
-
-This further illustrates how $\alpha$ dictates the "memory" of the gradient estimate. As \cite{scibior2021dpf} remark, the MOP-$0$ estimator of \cite{blei2018vsmc} only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate of \cite{poyiadjis11} only considers the surviving particles at time $N$, fully tracking dependencies over time. 
 
 
 \subsection{MOP-$1$ Is Consistent for the Score}
@@ -373,12 +391,24 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
+    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$, are:
+    \vspace*{-1ex}
+    \begin{align*}
+        &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
+        \\
+        &\lesssim \min_{k \leq N} NpG'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right),\\[-1ex]
+        &\text{Var}(\nabla_\theta \hat\ell^{\alpha}(\theta)) \lesssim \min_{k\leq N} NpG'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
+        \end{align*}
 \end{thm}
+\kevin{Explain exactly what $\epsilon$ is here, and interpret the rates as agreeing with our intuition. Talk about the relationship between the theory and the empirical results in the bias-variance tradeoff figure above, as well as the phase transition between $Nk^2/J$ and $N^4/J$ variance with MOP-$\alpha$ and MOP-$1$, where $k$ is really a surrogate for $\alpha$ -- with more memory, you truncate less. }
 
-\subsection{Convergence Rates}
-\begin{thm}
-    \label{thm:mop-convergence}
-\end{thm}
+
+We defer the proof to the supplementary material in favor of a very brief outline here. 
+
+
+\kevin{Say that our framework suggests whole new classes of algorithms, as it includes Naesseth and Poyiadjis. Interpolating between them with discounting is only one way to interpolate, we can also e.g. truncate at a fixed lag. Remark that the analysis is similar for MOP-$(1,k)$ as a fixed-lag filter, with slightly better rates but a less natural interpretation. We leave empirical studies of its performance to future work. }
+
+
 
 
 
