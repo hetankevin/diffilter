@@ -43,7 +43,7 @@
 \keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
 
 \begin{abstract}
-  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques as widely used particle filter algorithms yield a likelihood function that is discontinuous as a function of the model parameters. Furthermore, most approaches are not compatible with the desire for simulation-based inference without access to the system's transition probabilities. We propose a new representation that embeds existing methods in a theoretical framework that readily permits extension to a new class of algorithms, providing opportunities for optimizing a bias/variance tradeoff. Further, we develop optimization algorithms suited to the Monte Carlo properties of the derivative estimate, including a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from iterated filtering can beat current state-of-the-art methods on a challenging scientific benchmark problem.
+  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estiamated likelihood function that is discontinuous as a function of the model parameters. Furthermore, most approaches to avoid this problem require access to the system's transition probabilities, and this can be prohibitive. We propose a new representation that embeds existing AD methods in a theoretical framework that readily permits extension to a new class of algorithms, providing opportunities for optimizing a bias/variance tradeoff. Further, we develop optimization algorithms suited to the Monte Carlo properties of the derivative estimate, including a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm can beat current state-of-the-art methods on a challenging scientific benchmark problem.
 \end{abstract}
 
 \dates{This manuscript was compiled on \today}
@@ -54,17 +54,25 @@
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\firstpage{5}
+\firstpage{3}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
 
 
-% If your first paragraph (i.e. with the \dropcap) contains a list environment (quote, quotation, theorem, definition, enumerate, itemize...), the line after the list may have some extra indentation. If this is the case, add \parshape=0 to the end of the list environment.
-\dropcap{M}any scientific models involve highly nonlinear stochastic dynamic systems, where there may be significant uncertainty in both the process dynamics and the measurements of the system. Despite the ubiquity of such partially observed stochastic processes with the Markov property (also known as, continuous-state continuous-time hidden Markov models (HMMs), partially-observed Markov processes (POMPs), or partially-observed stochastic nonlinear dynamical systems) in fields as diverse as epidemiology \cite{he10, stocks17}, ecology \cite{knape12}, and finance \cite{kim08, breto14}, estimation and inference within this class of models is a difficult problem with several challenges. 
+\dropcap{M}any scientific models involve highly nonlinear stochastic dynamic systems possessing significant random variation in both the process dynamics and the measurements.
+Commonly, the latent system is modeled as a Markov process, giving rise to a partially observed Markov process (POMP) model, also known as a hidden Markov models or a state space model.
+POMP models arise in fields as diverse as epidemiology \cite{he10, stocks17}, ecology \cite{knape12}, and finance \cite{kim08, breto14}.
+Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
 
-Popular methods for estimation and inference in these scenarios (such as the EM algorithm, the various Kalman filter variants, and MCMC) either struggle with complex models that have intractable likelihood functions, or assume access to state transition densities. This is a problem in some critical applications, such as disease modeling, where transition densities are unavailable. However, in such cases a simulator may be readily available. In this case, the particle filter with the bootstrap proposal, a popular method for solving the filtering problem in partially-observed dynamical systems, provides an unbiased estimate of the likelihood \cite{delmoral2004feynman} without requiring evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm. 
-
-A series of related algorithms \cite{welch2009abc, wood2010sl, doucet2010pmcmc, ionides08, ionides15} enable parameter estimation within these models. In particular, the improved iterated filtering algorithm (IF2) \cite{ionides15} is the only simulation-based full-information maximum likelihood method available, whereas particle MCMC \cite{doucet2010pmcmc} and $\text{SMC}^2$ \cite{chopin13} are the only simulation-based full-information Bayesian methods available in the literature thus far. However, accurate parameter estimation with significant Monte-Carlo noise in the likelihood estimate is challenging, especially when the Monte Carlo variance of the evaluation is high and the number of parameters is not small. For example, though in practice the algorithm of Ionides et al. \cite{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood. This necessitates a new approach.
-
+The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
+It provides an unbiased estimate of the likelihood function  \cite{delmoral2004feynman}, enabling Bayesian inference \cite{doucet2010pmcmc,chopin13} and maximum likelihood inference \citep{ionides06,ionides15}.
+An attractive feature of basic particle filter algorithms, also known as boostrap filters, is that they do not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
+This plug-and-play property is useful for scientific applications \cite{he10}.
+Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood2010sl,welch2009abc}, sacrificing statistical efficiency for computational convenience.
+However, particle filter inference methods based on the likelihood are statistically efficient, up to Monte Carlo error.
+[MAYBE ADD SOME REFERENCES HERE TO DOCUMENT SUCCESSES OF IF2, SINCE WE ARE COMPARING WITH THAT AND BUILDING ON IT]
+This Monte Carlo error can be non-negligible.
+For example, though in practice the algorithm of Ionides et al. \cite{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood.
+The issue becomes increasingly problematic as the dataset size and model complexity increase, necessitating a new approach.
 
 \subsection{Automatic Differentiation for Particle Filters}
 
@@ -199,7 +207,7 @@ This further illustrates how $\alpha$ dictates the "memory" of the gradient esti
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=\textwidth/3]{imgs/095/biasvar.png}
+    \includegraphics[width=\textwidth/3]{../imgs/095/biasvar.png}
     \caption{Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission, evaluated at the MLE.}
     \label{fig:biasvar}
 \end{figure}
@@ -263,7 +271,7 @@ where $M_n$ is the true number of cholera deaths in that month.
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth/2]{imgs/095/tikzcholera.png}
+    \includegraphics[width=\textwidth/2]{../imgs/095/tikzcholera.png}
     \vspace*{-7mm}
     \caption{Illustration of Dhaka cholera model from \cite{king08}.}
     \label{fig:tikz-cholera}
@@ -524,7 +532,7 @@ Our gradient estimate can be used for variational inference to approximate the p
 %\bibsplit[2]
 %Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
 
-\bibliographystyle{pnas-new}
+% \bibliographystyle{pnas-new}
 % Bibliography
 \bibliography{bib-ifad, bib-ref}
 
