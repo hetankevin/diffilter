@@ -393,7 +393,7 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$, are:
+    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$ and $\epsilon$ depends on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karlajainen2001} are:
     \vspace*{-1ex}
     \begin{align*}
         &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
