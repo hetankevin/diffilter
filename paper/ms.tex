@@ -54,7 +54,7 @@
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\firstpage{3}
+\firstpage[4]{4}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
 
 
@@ -69,8 +69,10 @@ An attractive feature of basic particle filter algorithms, also known as boostra
 This plug-and-play property is useful for scientific applications \cite{he10}.
 Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
 However, particle filter inference methods based on the likelihood are statistically efficient, up to Monte Carlo error.
-[MAYBE ADD SOME REFERENCES HERE TO DOCUMENT SUCCESSES OF IF2, SINCE WE ARE COMPARING WITH THAT AND BUILDING ON IT]
-This Monte Carlo error can be non-negligible.
+Plug-and-play methods are often called likelihood-free \cite{owen15}, and it may be counter-intuitive that likelihood-based inference is possible using likelihood-free methods. 
+However, iterated filtering algorithms have shown that this is practical in various scientific investigations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
+Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly non-negligible as the size of the data and the complexity of the model increases.
+
 For example, though in practice the algorithm of Ionides et al. \cite{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood.
 The issue becomes increasingly problematic as the dataset size and model complexity increase, necessitating a new approach.
 
