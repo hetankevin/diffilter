@@ -26,7 +26,7 @@
 @string{JN="Journal of Neuroscience"}
 @string{JNE="Journal of Neural Engineering"}
 @string{JRSI="Journal of the  Royal Society Interface"}
-@string{JRSSB="Journal of the Royal Statistical Society, Series B (Statistical Methodology)"}
+@string{JRSSB="Journal of the Royal Statistical Society, Series B"}
 @string{JRSSC="Journal of the Royal Statistical Society: Series C (Applied Statistics)"}
 @string{JSS="Journal of Statistical Software"}
 @string{MBE="Molecular Biology \& Evolution"}
@@ -79,7 +79,7 @@ AAAAAAAAAA
   publisher={American Meteorological Society}
 }
 
-@article{andrieu10, doi="10.1111/j.1467-9868.2009.00736.x", textref={Andrieu, C., A. Doucet and R. Holenstein (2010), Particle Markov chain Monte Carlo methods, J. Roy. Stat. Soc B 72:269-342},
+@article{andrieu10, doi="10.1111/j.1467-9868.2009.00736.x", 
 author = "Christophe Andrieu and Arnaud Doucet and Roman Holenstein",
 year = 2010, 
 title = "Particle {M}arkov chain {M}onte {C}arlo methods",
@@ -100,7 +100,8 @@ pages = "174 -- 188"
 @article{arya22,
   title={Automatic Differentiation of Programs with Discrete Randomness},
   author={Arya, Gaurav and Schauer, Moritz and Sch{\"a}fer, Frank and Rackauckas, Chris},
-  journal={arXiv preprint arXiv:2210.08572},
+  journal={arXiv},
+  volume={{\it 2210.08572}},
   year={2022}
 }
 
@@ -108,7 +109,8 @@ pages = "174 -- 188"
 Author = {Asfaw, Kidus. and  Park, Joonha and King, Aaron A. and Ionides, Edward L.},
 Year = {2023}, 
 Title = {Statistical Inference for Spatiotemporal Partially Observed {M}arkov Processes via the {R} Package spatPomp},
-Journal ={arXiv:2101.01157v3},
+Journal ={arXiv},
+volume={{\it 2101.01157v3}},
 xVolume = {69}, 
 xPages = {1--43}
 }
@@ -324,19 +326,18 @@ publisher={Columbia Univ., New York, NY (United States); Harvard Univ., Cambridg
 
 
 
-@misc{chen24,
+@article{chen24,
       title={Normalising Flow-based Differentiable Particle Filters}, 
       author={Xiongjie Chen and Yunpeng Li},
       year={2024},
-      eprint={2403.01499},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG}
+      volume={{\it 2403.01499}},
+      journal={arXiv}
 }
 
 @article{chopin13,
 author = {Chopin, N. and Jacob, P. E. and Papaspiliopoulos, O.},
-title = {SMC2: an efficient algorithm for sequential analysis of state space models},
-journal = {Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
+title = {{SMC}$^2$: An efficient algorithm for sequential analysis of state space models},
+journal = JRSSB,
 volume = {75},
 number = {3},
 pages = {397-426},
@@ -344,7 +345,6 @@ keywords = {Iterated batch importance sampling, Particle filtering, Particle Mar
 doi = {https://doi.org/10.1111/j.1467-9868.2012.01046.x},
 url = {https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2012.01046.x},
 eprint = {https://rss.onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-9868.2012.01046.x},
-abstract = {Summary. We consider the generic problem of performing sequential Bayesian inference in a state space model with observation process y, state process x and fixed parameter θ. An idealized approach would be to apply the iterated batch importance sampling algorithm of Chopin. This is a sequential Monte Carlo algorithm in the θ-dimension, that samples values of θ, reweights iteratively these values by using the likelihood increments and rejuvenates the θ-particles through a resampling step and a Markov chain Monte Carlo update step. In state space models these likelihood increments are intractable in most cases, but they may be unbiasedly estimated by a particle filter in the x-dimension, for any fixed θ. This motivates the SMC2 algorithm that is proposed in the paper: a sequential Monte Carlo algorithm, defined in the θ-dimension, which propagates and resamples many particle filters in the x-dimension. The filters in the x-dimension are an example of the random weight particle filter. In contrast, the particle Markov chain Monte Carlo framework that has been developed by Andrieu and colleagues allows us to design appropriate Markov chain Monte Carlo rejuvenation steps. Thus, the θ-particles target the correct posterior distribution at each iteration t, despite the intractability of the likelihood increments. We explore the applicability of our algorithm in both sequential and non-sequential applications and consider various degrees of freedom, as for example increasing dynamically the number of x-particles. We contrast our approach with various competing methods, both conceptually and empirically through a detailed simulation study, and based on particularly challenging examples.},
 year = {2013}
 }
 
@@ -352,7 +352,7 @@ year = {2013}
 
 @book{chopin20,
     author = {Chopin, Nicolas and Papaspiliopoulos, Omiros},
-    title = {An Introduction to Sequential Monte Carlo},
+    title = {An Introduction to Sequential {M}onte {C}arlo},
     publisher = {Springer},
     year = {2020}
 }
@@ -712,7 +712,7 @@ Pages = "719–-724"
   xurl = {https://arxiv.org/abs/2206.03837},
   author = {Ionides, Edward L. and Ning, Ning and Wheeler, Jesse},
   title = {An Iterated Block Particle Filter for Inference on Coupled Dynamic Systems with Shared and Unit-Specific Parameters},
-  journal = {Statistica Sinica,},
+  journal = {Statistica Sinica},
   pages={pre-published online},
   year = {2022},
 }
@@ -730,21 +730,20 @@ JJJJJJJJJ
 @article{jonschkowski18,
   author    = {Jonschkowski, Rico and  Rastogi, Divyam and Brock, Oliver},
   title     = {Differentiable Particle Filters: End-to-End Learning with Algorithmic Priors},
-  journal   = {CoRR},
-  volume    = {abs/1805.11122},
+  journal   = {arXiv},
+  volume    = {{\it 1805.11122}},
   year      = {2018},
   url       = {http://arxiv.org/abs/1805.11122},
 }
 
 KKKKKKKKK
 
-@misc{kakade2019provably,
+@article{kakade2019provably,
       title={Provably Correct Automatic Subdifferentiation for Qualified Programs}, 
-      author={Sham Kakade and Jason D. Lee},
+      author={Kakade, Sham AND Lee, Jason D.},
       year={2019},
-      eprint={1809.08530},
-      archivePrefix={arXiv},
-      primaryClass={math.OC}
+      volume={{\it 1809.08530}},
+      journal={arXiv}
 }
 
 @Article(kantas15,
@@ -758,13 +757,12 @@ Pages={328--351},
 Xurl={arxiv:http://arxiv.org/abs/1412.8695}
 )
 
-@misc{karjalainen2023,
+@article{karjalainen23,
       title={On the Forgetting of Particle Filters}, 
-      author={Joona Karjalainen and Anthony Lee and Sumeetpal S. Singh and Matti Vihola},
+      author={Karjalainen, Joona  AND Lee,  Anthony AND Singh,  Sumeetpal S.  AND  Vihola, Matti},
       year={2023},
-      eprint={2309.08517},
-      archivePrefix={arXiv},
-      primaryClass={math.PR}
+      volume={{\it 2309.08517}},
+      journal={arXiv}
 }
 
 @article{katzfuss19,
@@ -821,7 +819,7 @@ Pages = {1--43}
 
 @article{kim08,
 author = {Kim, Jeongeun and Stoffer, David S.},
-title = {Fitting Stochastic Volatility Models in the Presence of Irregular Sampling via Particle Methods and the EM Algorithm},
+title = {Fitting Stochastic Volatility Models in the Presence of Irregular Sampling via Particle Methods and the {EM} Algorithm},
 journal = {Journal of Time Series Analysis},
 volume = {29},
 number = {5},
@@ -830,7 +828,6 @@ keywords = {EM algorithm, financial time series, missing data, mixtures of norma
 doi = {https://doi.org/10.1111/j.1467-9892.2008.00584.x},
 url = {https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9892.2008.00584.x},
 eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-9892.2008.00584.x},
-abstract = {Abstract.  Stochastic volatility (SV) models have become increasingly popular for explaining the behaviour of financial variables such as stock prices and exchange rates, and their popularity has resulted in several different proposed approaches to estimating the parameters of the model. An important feature of financial data, which is commonly ignored, is the occurrence of irregular sampling because of holidays or unexpected events. We present a method that can handle the estimation problem of SV models when the sampling is somewhat irregular. The basic idea of our approach is to combine the expectation-maximization (EM) algorithm with particle filters and smoothers in order to estimate parameters of the model. In addition, we expand the scope of application of SV models by adopting a normal mixture, with unknown parameters, for the observational error term rather than assuming a log-chi-squared distribution. We address the problems by using state–space models and imputation. Finally, we present simulation studies and real data analyses to establish the viability of the proposed method.},
 year = {2008}
 }
 
@@ -1295,11 +1292,13 @@ SSSSSSSSSSS
 @article{scibior21,
   title={Differentiable particle filtering without modifying the forward pass},
   author={{\'S}cibior, Adam and Wood, Frank},
-  journal={arXiv:2106.10314},
+  journal={arXiv},
+  volume={{\it 2106.10314}},
+  xpages={2106.10314},
   year={2021}
 }
 
-@article{shrestha11,    xdoi = {10.1371/journal.pcbi.1002135}, text={Shrestha, S., A. A. King and P. Rohani (2011). "Statistical Inference for Multi-Pathogen Systems". PLoS Comput Biol 7:e1002135. http://dx.doi.org/10.1371/journal.pcbi.1002135},
+@article{shrestha11,    xdoi = {10.1371/journal.pcbi.1002135}, 
     author = {Shrestha, Sourya AND King, Aaron A. AND Rohani, Pejman},
     xjournal = {PLoS Comput Biol},
     journal = PLoS-CompBio,
@@ -1327,13 +1326,12 @@ yjournal = {Science Transl. Med.},
 journal=STM
 }
 
-@misc{singh22,
+@article{singh22,
       title={Particle-Based Score Estimation for State Space Model Learning in Autonomous Driving}, 
       author={Angad Singh and Omar Makhlouf and Maximilian Igl and Joao Messias and Arnaud Doucet and Shimon Whiteson},
       year={2022},
-      eprint={2212.06968},
-      archivePrefix={arXiv},
-      primaryClass={cs.RO}
+      volume={{\it 2212.06968}},
+      journal={arXiv}
 }
 
 
@@ -1406,10 +1404,12 @@ VVVVVVV
 WWWWWWWWW
 
 @Article{wheeler23,
-  year={2023},
-  journal={arXiv:2301.08979},
+  year={2024},
+  journal=PLoS-CompBio,
+  volume={20},
+  pages={e1012032},
   title={Informing Policy via Dynamic Models: Cholera in {H}aiti},
-  author={Wheeler, Jesse and Rosengart, AnnaElaine and Zhuxun, Jiang and Tan, Kevin Hao En and Treutle, Noah and Ionides, Edward L.},
+  author={Wheeler, Jesse AND Rosengart, Anna AND Zhuxun, Jiang AND Tan, Kevin Hao En AND Treutle, Noah AND Ionides, Edward L.},
 }
 
 @article{whitehouse23,

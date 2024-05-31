@@ -78,20 +78,19 @@ The issue becomes increasingly problematic as the dataset size and model complex
 
 Recent advances in automatic differentiation (AD) for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes. However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, computationally expensive \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
 
-In particular, Scibior and Wood \cite{scibior21} show that the estimators derived in Poyiadjis et al. \cite{poyiadjis11} can be attained with AD, through with a simple tweak (the "stop-gradient trick") to the particle filter that does not modify its likelihood estimates. However, their method is not fully compatible with simulation-based inference and the mathematical motivation behind the stop-gradient trick is not apparent. 
+Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic prodecure called a ``stop-gradient'' which allows selected exressions to be evaluated but not differentiated.
+Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo error.
+We use \cite{scibior21} and \cite{poyiadjis11} as our starting point, while developing a new approach which remedies the weaknesses of these papers.
 
-%We show that another simple tweak enables this compatibility and corresponds to a special case of our MOP-$\alpha$ algorithm. 
+We start by presenting a new construction of the estimator of \cite{scibior21} and \cite{poyiadjis11}.
+Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a Measurement Off-Policy (MOP) particle filter.
+We procced to generalize the MOP particle filter by adding a discounting factor, $\alpha \in [0,1]$ , which interpolates between the  biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$.
+The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
-\kevin{Can someone who's reading through the words and glazing through the math get the idea that (1) we're running AD on the PF, and (2) using an off-policy resampling trick to get our estimator. Should I hedge by writing the SI in Del Moral language? }
-
-\subsection{Our Contributions}
-We develop a new approach to statistical inference via AD for particle filters which addresses the above concerns. We construct a new theoretical framework that bypasses the paradox of differentiating through a Monte-Carlo algorithm with discontinuous resampling.
-
-Our key observation is that one can turn this into a problem of differentiating through a series of smooth measurement density ratios and (through the reparametrization trick) a differentiable simulator. To do so, we construct a suitably reweighted family of particle filters that we call \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$), for some $\alpha \in [0,1]$ that optimizes a bias-variance tradeoff. This family encompasses the biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$. It does not require access to the transition densities, and works with just a differentiable simulator.
-
-We show that these off-policy particle filters successfully target the posterior, recover desirable gradient estimates previously encountered in the literature, and possess other desirable theoretical properties. We also derive a linear convergence rate for gradient methods on the particle filter in the presence of strong convexity, providing support for numerical optimization with AD for the particle filter. 
-
-This allows us to develop improved algorithms for maximum likelihood/MAP estimation in highly nonlinear stochastic dynamical systems. We propose a hybrid algorithm called \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts iterative first or second-order gradient methods with a coarse solution obtained from a few rounds of iterated filtering. Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
+We then derive a linear convergence rate for stochastic gradient descent (SGD) using MOP($\alpha$) in the  presence of strong convexity.
+Critically, the estimator is effective within a neighborhood of the maximum but is relatively slow at reaching this neighborhood.
+That behavior is complementary to that of the iterated filtering algorithm \cite{ionides06-pnas,ionides15} which provides a relatively fast and stable way to identify this neighborhood.
+We therefore build a hybrid algorithm called \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts iterative first or second-order gradient methods with a coarse solution obtained from a few rounds of iterated filtering. Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
 
 These improvements also extend to Bayesian inference, as we show that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
 
@@ -401,7 +400,7 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$ and $\epsilon$ depends on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karlajainen2001} are:
+    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$ and $\epsilon$ depends on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} are:
     \vspace*{-1ex}
     \begin{align*}
         &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
