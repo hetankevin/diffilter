@@ -16,7 +16,7 @@
 
 \begin{document}
 
-\title{Accelerated Inference for Partially Observed Stochastic Processes with Automatic Differentiation}
+\title{Automatic Differentiation Accelerates Inference for Partially Observed Stochastic Processes}
 
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a]{Kevin Tan}
@@ -54,22 +54,22 @@
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\firstpage{3}
+\firstpage{4}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
 
 
 \dropcap{M}any scientific models involve highly nonlinear stochastic dynamic systems possessing significant random variation in both the process dynamics and the measurements.
 Commonly, the latent system is modeled as a Markov process, giving rise to a partially observed Markov process (POMP) model, also known as a hidden Markov models or a state space model.
 POMP models arise in fields as diverse as epidemiology \cite{he10, stocks17}, ecology \cite{knape12}, and finance \cite{kim08, breto14}.
-Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
+Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem. For instance, in even moderately complex models, the E-step within the widely-celebrated EM algorithm can be intractable \cite{picchini2018}, necessitating the use of Monte Carlo methods, as we outline below. 
 
 The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
 It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and maximum likelihood inference \citep{ionides06-pnas,ionides15}.
 An attractive feature of basic particle filter algorithms, also known as boostrap filters, is that they do not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
-This plug-and-play property is useful for scientific applications \cite{he10}.
-Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
+This property is especially useful for scientific applications \cite{he10}.
+Some methods satisfying this depend on the construction of low-dimensional summary statistics \cite{picchini2018,wood10,toni09}, sacrificing statistical efficiency for computational convenience.
 However, particle filter inference methods based on the likelihood are statistically efficient, up to Monte Carlo error.
-[MAYBE ADD SOME REFERENCES HERE TO DOCUMENT SUCCESSES OF IF2, SINCE WE ARE COMPARING WITH THAT AND BUILDING ON IT]
+\ed{MAYBE ADD SOME REFERENCES HERE TO DOCUMENT SUCCESSES OF IF2, SINCE WE ARE COMPARING WITH THAT AND BUILDING ON IT}
 This Monte Carlo error can be non-negligible.
 For example, though in practice the algorithm of Ionides et al. \cite{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood.
 The issue becomes increasingly problematic as the dataset size and model complexity increase, necessitating a new approach.
@@ -77,12 +77,15 @@ The issue becomes increasingly problematic as the dataset size and model complex
 \subsection{Automatic Differentiation for Particle Filters}
 
 Recent advances in automatic differentiation (AD) for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes. However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, computationally expensive \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
+\kevin{Can someone who's reading through the words and glazing through the math get the idea that (1) we're running AD on the PF, and (2) using an off-policy resampling trick to get our estimator?}
 
 In particular, Scibior and Wood \cite{scibior21} show that the estimators derived in Poyiadjis et al. \cite{poyiadjis11} can be attained with AD, through with a simple tweak (the "stop-gradient trick") to the particle filter that does not modify its likelihood estimates. However, their method is not fully compatible with simulation-based inference and the mathematical motivation behind the stop-gradient trick is not apparent. 
 
 %We show that another simple tweak enables this compatibility and corresponds to a special case of our MOP-$\alpha$ algorithm. 
 
-\kevin{Can someone who's reading through the words and glazing through the math get the idea that (1) we're running AD on the PF, and (2) using an off-policy resampling trick to get our estimator. Should I hedge by writing the SI in Del Moral language? }
+
+
+\kevin{Also, hedge by writing the SI in Del Moral language.}
 
 \subsection{Our Contributions}
 We develop a new approach to statistical inference via AD for particle filters which addresses the above concerns. We construct a new theoretical framework that bypasses the paradox of differentiating through a Monte-Carlo algorithm with discontinuous resampling.
@@ -93,7 +96,7 @@ We show that these off-policy particle filters successfully target the posterior
 
 This allows us to develop improved algorithms for maximum likelihood/MAP estimation in highly nonlinear stochastic dynamical systems. We propose a hybrid algorithm called \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts iterative first or second-order gradient methods with a coarse solution obtained from a few rounds of iterated filtering. Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
 
-These improvements also extend to Bayesian inference, as we show that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
+These improvements also extend to Bayesian inference, as we show \kevin{Include in main paper or SI?} that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
 
 \section{Problem Setup}
 
@@ -115,7 +118,7 @@ To maintain an algorithmic and practical interpretation of our theory, we identi
 
 \section{Off-Policy Particle Filters}
 
-As mentioned earlier, instead of directly differentiating through a particle filter, one can instead differentiate through the simulator and measurement densities. We construct an algorithm called \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) that targets the posterior (i.e. almost sure convergence of every measurable bounded functional of particles to its expectation under the posterior) and likelihood, and whose gradient yields a score estimate encompassing those of \cite{poyiadjis11, scibior21,naesseth18}.
+As mentioned earlier, instead of directly differentiating through a particle filter, one can instead differentiate through the simulator and measurement densities. We construct an algorithm called \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) that targets the posterior (i.e. establishes almost sure convergence of every measurable bounded functional of particles to its expectation under the posterior) and likelihood, and whose gradient yields a score estimate encompassing those of \cite{poyiadjis11, scibior21,naesseth18}.
 
 
 \begin{algorithm}[H]
@@ -171,17 +174,12 @@ This yields a suitably reweighted particle filter that targets the posterior und
 
 \subsection{Discounting Weights for a Bias-Variance Tradeoff}
 
-As mentioned earlier, the correction factors accumulate over time. If $\theta$ and $\phi$ coincide, one can discount the correction factors from previous timesteps by some $\alpha \in [0,1]$, as seen in Equation \ref{eq:weighting-scheme}, while still targeting the posterior and likelihood at $\theta$. This lets us optimize a bias-variance tradeoff for the MOP-$\alpha$ score estimate. When $\alpha=1$, MOP-$1$ maintains the memory of each particle's ancestral trajectory, recovering the consistent but high-variance gradient estimate from \cite{poyiadjis11, scibior21}. When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{naesseth18}. 
+As mentioned earlier, the correction factors accumulate over time. If $\theta$ and $\phi$ coincide, one can discount the correction factors from previous timesteps by some $\alpha \in [0,1]$, as seen in Equation \ref{eq:weighting-scheme}, while still targeting the posterior and likelihood at $\theta$. This lets us optimize a bias-variance tradeoff for the MOP-$\alpha$ score estimate, interpolating between the estimators of \cite{naesseth18} and \cite{poyiadjis11}, as seen below in Proposition \ref{thm:mop-functional-forms}.
+
+In short, when $\alpha=1$, MOP-$1$ maintains the memory of each particle's ancestral trajectory, recovering the consistent but high-variance gradient estimate from \cite{poyiadjis11} that can be obtained by applying a ``stop-gradient trick" \cite{scibior21} to the particle filter. When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{naesseth18} that \cite{scibior21} show is the gradient of a vanilla particle filter when resampling terms are dropped.
 
 
-\subsection{MOP-$\alpha$ Encompasses the Estimators of \cite{poyiadjis11, scibior21, naesseth18}}
-
-\cite{scibior21} show that the estimate of \cite{naesseth18} is the gradient of a vanilla particle filter when resampling terms are dropped, and also recover the estimate of \cite{poyiadjis11} through applying a ``stop-gradient trick" to the particle filter. It turns out that both of these, when applied on the bootstrap filter, correspond to special cases of MOP-$\alpha$.
-
-
-$\alpha$ therefore controls an exponentially-weighted moving average, determining how much "memory" the resulting gradient estimate has over ancestral trajectories. This is illustrated in Figure \ref{fig:biasvar}, in the context of the Dhaka cholera model of \cite{king08}. 
-
-\begin{thm}[MOP-$0$ and MOP-$1$ Functional Forms]
+\begin{prop}[MOP-$\alpha$ Encompasses the Estimators of \cite{poyiadjis11, scibior21, naesseth18}]
     \label{thm:mop-functional-forms}
     Write $\nabla_\theta \hat\ell^\alpha(\theta)$ for the gradient estimate yielded by MOP-$\alpha$ when $\theta=\phi$ and we use the after-resampling conditional likelihood estimate so that $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A, \theta, \alpha}$. Then, when $\alpha=0$,
     \vspace*{-2.5mm}
@@ -198,11 +196,12 @@ $\alpha$ therefore controls an exponentially-weighted moving average, determinin
     \vspace*{-2.5mm}
     \end{equation}
     yielding the estimator of \cite{poyiadjis11, scibior21} with the bootstrap filter.
-\end{thm}
+\end{prop}
 
 We defer the proof to the supplementary material. It relies on a useful decomposition of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$ that yields a telescoping product in the MOP-$1$ case. Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting that when $\theta=\phi$, that $w_{n,j}^{P,\theta}$ evaluates to $1$, yield the result. 
 
-This further illustrates how $\alpha$ dictates the "memory" of the gradient estimate. As \cite{scibior21} remark, the MOP-$0$ estimator of \cite{naesseth18} only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate of \cite{poyiadjis11} only considers the surviving particles at time $N$, fully tracking dependencies over time. 
+
+$\alpha$ therefore controls an exponentially-weighted moving average, determining how much "memory" the resulting gradient estimate has over ancestral trajectories. As \cite{scibior21} remark, the MOP-$0$ estimator of \cite{naesseth18} only considers single-step quantities, and is "memoryless" beyond a single step. This is in contrast to the case when $\alpha=1,$ as that estimate of \cite{poyiadjis11} only considers the surviving particles at time $N$, fully tracking dependencies over time. We demonstrate this bias-variance tradeoff in practice in Figure \ref{fig:biasvar}, in the context of the Dhaka cholera model of \cite{king08}. 
 
 
 \begin{figure}[ht!]
@@ -224,13 +223,32 @@ If $\theta$ is evaluated at $\phi$, the particles at $\theta$ and $\phi$ coincid
 
 \subsection{Optimization}
 
-This still leaves us with the question of designing an effective procedure for likelihood maximization with MOP-$\alpha$. We propose a simple algorithm we call Iterated Filtering with Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad} that runs a few iterations of IF2 to warm-start an iterative first or second-order method that uses the MOP-$\alpha$ gradient estimate. This leverages IF2's quick empirical convergence to a neighborhood of the MLE, overcoming the tendency of gradient methods to get stuck in saddle points and local minima. Conversely, switching to gradient ascent with MOP-$\alpha$ score estimates lets one bypass the difficulty that IF2 has with optimizing the last few units of log-likelihood. Combining these two methods in this way lets us enjoy the best of both worlds.
-\kevin{source for this}
+This still leaves us with the question of designing an effective procedure for likelihood maximization with MOP-$\alpha$. We propose a simple algorithm we call Iterated Filtering with Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad} that runs a few iterations of IF2 to warm-start an iterative (first or second-order) method that uses the MOP-$\alpha$ gradient estimate. This leverages IF2's quick empirical convergence to a neighborhood of the MLE, overcoming the tendency of gradient methods to get stuck in saddle points and local minima. Conversely, switching to gradient ascent with MOP-$\alpha$ score estimates lets one bypass the difficulty that IF2 has with optimizing the last few units of log-likelihood. Combining these two methods in this way lets us enjoy the best of both worlds.
+
+The quick empirical convergence of IF2 (and so the first stage of IFAD) to a neighborhood of the MLE happens fairly quickly in practice. In the case of the Dhaka cholera model of \cite{king08}, when an aggressive geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations. Finding the MLE itself with IF2, however, takes much longer, as one has to use a less aggressive cooling rate to do so. For example, \cite{ionides15} use 100 iterations with the Dhaka cholera model of \cite{king08}, while \cite{wheeler23} use 200 with Model 1 in \cite{lee20}. By simply requiring that the first stage of IFAD get to a neighborhood of the MLE and not the MLE itself, we are able to substantially reduce the number of IF2 iterations required. 
 
 \subsection{Linear Convergence Rates}
-\begin{thm}
+
+On the other hand, the second stage of IFAD enjoys a linear convergence rate under the usual strongly-convex and smoothness assumptions in convex optimization, as we show below in Theorem \ref{thm:mop-convergence}.
+
+\begin{thm}[Linear Convergence of IFAD]
+    
+Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $||\nabla_\theta \hat\ell^\alpha(\theta_n)|| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ and error tolerance $\epsilon$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$ for some $\beta \in (0,1)$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation, the second stage of IFAD converges linearly to the MLE with probability at least $1-\delta$:
+\vspace*{-2mm}
+$$
+\ell(\theta^*) - \ell(\theta_{n+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_n)).
+$$
     \label{thm:mop-convergence}
 \end{thm}
+\vspace*{-5mm}
+
+We defer the proof, which is similar to that of Theorem 6 in \cite{mahoney16}, to the supplementary information. For simplicity, we only prove this for MOP-$1$ and note that the general case follows as the required $1/2$-approximation can still be obtained for sufficiently large $\alpha$. 
+
+We therefore see that the second stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the first stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. This happens fairly often in practice, for example, when sufficient regularity conditions for local asymptotic normality of the MLE hold. We conjecture that this applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE, and will explore this in future work.
+
+%IF2 posesses some SGD-like qualities, including what looks like linear convergence to a ball around the MLE with width determined by the random walk standard deviation. We will explore this conjecture in future work.
+
+%While this theoretical guarantee currently only holds for IFAD-1, as it forms a particle approximation of the score as in \cite{poyiadjis11}, one can also extend this for a similar guarantee if the bias for the gradient estimate given by MOP-$\alpha$ for $\alpha < 1$ is small enough. For general $\alpha$, including MOP-0, the analysis then becomes more complicated, as one needs to handle the case of biased gradient descent. However, if future measurements $y_{n+1:N}^*$ do not provide a large amount of information on the identification of the current state $x_n$ given past and current measurements $y_{0:n}^*$, as mentioned in \cite{corenflos21}, the bias may be small enough for it to not present too much of a problem.
 
 %The warm start allows gradient methods to shine, as regularity conditions ensure that the likelihood surface is well-behaved enough in this neighborhood that the aforementioned issues with saddle points and local minima are alleviated. 
 
@@ -401,7 +419,7 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$ and $\epsilon$ depends on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karlajainen2001} are:
+    When $\alpha\in(0,1)$, $\theta=\phi$, $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$, there exists some $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen2023} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
     \begin{align*}
         &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
@@ -410,42 +428,44 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
         &\text{Var}(\nabla_\theta \hat\ell^{\alpha}(\theta)) \lesssim \min_{k\leq N} NpG'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
         \end{align*}
 \end{thm}
-\kevin{Explain exactly what $\epsilon$ is here, and interpret the rates as agreeing with our intuition. Talk about the relationship between the theory and the empirical results in the bias-variance tradeoff figure above, as well as the phase transition between $Nk^2/J$ and $N^4/J$ variance with MOP-$\alpha$ and MOP-$1$, where $k$ is really a surrogate for $\alpha$ -- with more memory, you truncate less. }
 
+We defer the proof to the supplementary material, but provide a brief outline here. The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the weights are truncated at lag $k$ with discount factor $\alpha$ to ensure strong mixing, and the covariance of the latter which can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. The latter is $\tilde{O}(NpG'(\theta)^2(k+\psi(\alpha)))$ by tedious algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen2023} and the very same $L^p$ error bound mentioned above. 
 
-We defer the proof to the supplementary material in favor of a very brief outline here. 
-
-
-\kevin{Say that our framework suggests whole new classes of algorithms, as it includes Naesseth and Poyiadjis. Interpolating between them with discounting is only one way to interpolate, we can also e.g. truncate at a fixed lag. Remark that the analysis is similar for MOP-$(1,k)$ as a fixed-lag filter, with slightly better rates but a less natural interpretation. We leave empirical studies of its performance to future work. }
+We also show in the supplementary material that the variance of MOP-$0$ is $\tilde{O}(NpG'(\theta)^2/J)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$ (ignoring factors of $p, G'$, etc.). This and Theorem \ref{thm:mop-biasvar} show that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
 
 
 
+%\kevin{Explain exactly what $\epsilon$ is here, and interpret the rates as agreeing with our intuition. Talk about the relationship between the theory and the empirical results in the bias-variance tradeoff figure above, as well as the phase transition between $Nk^2/J$ and $N^4/J$ variance with MOP-$\alpha$ and MOP-$1$, where $k$ is really a surrogate for $\alpha$ -- with more memory, you truncate less. }
 
 
 
-\section{Computational Considerations}
+
+\section{Computational Efficiency}
+
+MOP-$\alpha$ and IFAD are fast algorithms, both in theory and practice. In line with the cheap gradient principle of \cite{kakade2019provably}, getting a gradient estimate from MOP-$\alpha$ takes no more than 6 times that of the runtime of the particle filter (in practice, the multiplier is 3.75). It therefore shares the same $O(NJ)$ time complexity as the particle filter, unlike the $O(NJ^2)$ complexity of \cite{corenflos21} and Algorithm 2 in \cite{poyiadjis11, scibior21}.
+
+As IF2 amounts to one iteration of the particle filter, with $O(NJ)$ time complexity. 
 
 
-\subsection{Runtime}
 
-Each iteration of IF2 amounts to one iteration of the particle filter, with $O(NJ)$ time complexity. The initial "convergence" happens fairly quickly in practice. In the case of the Dhaka cholera model of \cite{king08}, when a geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations of IF2. In comparison, often 100 or 200 iterations of IF2 are used for an initial global search. \cite{ionides15}, for example, use 100 iterations with the Dhaka cholera model of \cite{king08}, while \cite{wheeler23} use 200 with Model 1 in \cite{lee20}.
 
-In line with the cheap gradient principle of \cite{kakade2019provably}, getting a gradient estimate from MOP-$\alpha$ takes no more than 6 times that of the runtime of the particle filter (in practice, the multiplier is 3.75). This therefore has $O(NJ)$ time complexity as well, obtaining a gradient estimate with runtime linear in the number of particles.
+In practice, re-implementing the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \cite{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. 
 
-\subsection{Python Library}
 
-Re-implementing the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \cite{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. 
-
-\kevin{Write about new open source library that brings pomp to python with AD. There are implementations in tfp under the jax substrate, but these are not plug and play -- they require you to supply the transition densities. }
+%\kevin{Write about new open source library that brings pomp to python with AD. There are implementations in tfp under the jax substrate, but these are not plug and play -- they require you to supply the transition densities. }
 
 
 
 
 \section{Discussion, Limitations, and Future Work}
 
-We note that it is possible to work without a differentiable simulator, but one would then require access to the transition densities. 
+We note that it is possible to work without a differentiable simulator, but one would then require access to the transition densities. We are working on an analogue that uses (differentiable) transition densities instead of a differentiable simulator, that may be better suited to large discrete state spaces than either MOP-$\alpha$ or the Baum-Welch algorithm.
 
-Our gradient estimate can be used for variational inference to approximate the posterior distribution over parameters. 
+Additionally, our gradient estimate can be used for variational inference to approximate the posterior distribution over latent states \cite{naesseth18} and parameters. 
+
+Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interpolate between the estimators of \cite{naesseth18} and \cite{poyiadjis11}. As the proof of Theorem \ref{thm:mop-biasvar} implies, we can also truncate the weights at a fixed lag, corresponding to the MOP-$(1,k)$ estimate mentioned. The analysis is similar, with slightly better rates but a less natural interpretation. 
+
+
 
 %% \subsection*{Author Affiliations}
 
@@ -524,7 +544,7 @@ Our gradient estimate can be used for variational inference to approximate the p
 
 \showmatmethods{} % Display the Materials and Methods section
 
-\acknow{Please include your acknowledgments here, set in a single paragraph. Please do not include any acknowledgments in the Supporting Information, or anywhere else in the manuscript.}
+\acknow{We thank Nicholas Chopin for helpful comments on the proof of a strong law of large numbers for a suitably reweighted particle filter. }
 
 \showacknow{} % Display the acknowledgments section
 
