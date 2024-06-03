@@ -27,7 +27,7 @@
 % Comments
 % \usepackage{xcolor} % already loaded
 \newcount\comments  % 0 suppresses notes to selves in text
-\comments=1  % TODO: change to 0 for final version
+\comments=0  % TODO: change to 0 for final version
 \newcommand{\genComment}[2]{\ifnum\comments=1{\textcolor{#1}{\textsf{\footnotesize #2}}}\fi}
 \newcommand{\ed}[1]{\genComment{red}{[EI:#1]}}
 \newcommand{\giles}[1]{\genComment{green}{[GH:#1]}}
