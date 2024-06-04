@@ -7,7 +7,7 @@
 
 \usepackage{tabto}
 
-
+\newcommand\ei[1]{\textcolor{red}{#1}}
 
 \templatetype{pnasresearcharticle} % Choose template
 % {pnasresearcharticle} = Template for a two-column research article
@@ -43,7 +43,7 @@
 \keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
 
 \begin{abstract}
-  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estiamated likelihood function that is discontinuous as a function of the model parameters. Furthermore, most approaches to avoid this problem require access to the system's transition probabilities, and this can be prohibitive. We propose a new representation that embeds existing AD methods in a theoretical framework that readily permits extension to a new class of algorithms, providing opportunities for optimizing a bias/variance tradeoff. Further, we develop optimization algorithms suited to the Monte Carlo properties of the derivative estimate, including a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm can beat current state-of-the-art methods on a challenging scientific benchmark problem.
+  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood function that is discontinuous as a function of the model parameters.  We show how to embed two existing AD particle filter methods in a theoretical framework that provides an extension to a new class of algorithms within which we obtain a favorable bias/variance tradeoff. Further, we develop likelihood maximization algorithms suited to the Monte Carlo properties of the derivative estimate. Our algorithms require only a differentiable simulator for the latent dynamic system; by contrast, most previous approaches to AD likelihood maximization for particle filters require access to the system's transition probabilities, and this can be prohibitive. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm can beat current state-of-the-art methods on a challenging scientific benchmark problem.
 \end{abstract}
 
 \dates{This manuscript was compiled on \today}
@@ -54,7 +54,7 @@
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
 
-\firstpage[4]{4}
+\firstpage{4}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
 
 
@@ -64,41 +64,42 @@ POMP models arise in fields as diverse as epidemiology \cite{he10, stocks17}, ec
 Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
 
 The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
-It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and maximum likelihood inference \citep{ionides06-pnas,ionides15}.
+It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and likelihood-based inference \citep{ionides06-pnas,ionides15}.
+Likelihood-based inference is statistically efficient \cite{pawitan01} and is robust to a moderate amount of Monte Carlo error \cite{ionides17,ning21}.
 An attractive feature of basic particle filter algorithms, also known as boostrap filters, is that they do not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
 This plug-and-play property is useful for scientific applications \cite{he10}.
 Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
-However, particle filter inference methods based on the likelihood are statistically efficient, up to Monte Carlo error.
 Plug-and-play methods are often called likelihood-free \cite{owen15}, and it may be counter-intuitive that likelihood-based inference is possible using likelihood-free methods. 
 However, iterated filtering algorithms have shown that this is practical in various scientific investigations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
-Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly non-negligible as the size of the data and the complexity of the model increases.
-
-For example, though in practice the algorithm of Ionides et al. \cite{ionides15} converges quickly to a neighborhood of the MLE, it often struggles to successfully optimize the last few-units of the log-likelihood.
-The issue becomes increasingly problematic as the dataset size and model complexity increase, necessitating a new approach.
+Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly problematic as the size of the data and the complexity of the model increases.
+Algorithmic advances are needed to make plug-and-play likelihood maximization for POMP models more numerically efficient.
+We investigate the use of AD for this purpose.
 
 \subsection{Automatic Differentiation for Particle Filters}
 
-Recent advances in automatic differentiation (AD) for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes. However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, computationally expensive \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
+Recent advances in automatic differentiation (AD) for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes. However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, high computational expense \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
 
 Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic prodecure called a ``stop-gradient'' which allows selected exressions to be evaluated but not differentiated.
-Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo error.
+Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability.
 We use \cite{scibior21} and \cite{poyiadjis11} as our starting point, while developing a new approach which remedies the weaknesses of these papers.
 
-We start by presenting a new construction of the estimator of \cite{scibior21} and \cite{poyiadjis11}.
+We start by presenting a new construction of the gradient estimator of \cite{scibior21} and \cite{poyiadjis11}.
 Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a Measurement Off-Policy (MOP) particle filter.
 We procced to generalize the MOP particle filter by adding a discounting factor, $\alpha \in [0,1]$ , which interpolates between the  biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$.
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
-We then derive a linear convergence rate for stochastic gradient descent (SGD) using MOP($\alpha$) in the  presence of strong convexity.
+We derive a linear convergence rate for stochastic gradient descent (SGD) using MOP($\alpha$) in the  presence of strong convexity.
 Critically, the estimator is effective within a neighborhood of the maximum but is relatively slow at reaching this neighborhood.
 That behavior is complementary to that of the iterated filtering algorithm \cite{ionides06-pnas,ionides15} which provides a relatively fast and stable way to identify this neighborhood.
-We therefore build a hybrid algorithm called \textbf{Iterated Filtering with Automatic Differentiation (IFAD)} that warm-starts iterative first or second-order gradient methods with a coarse solution obtained from a few rounds of iterated filtering. Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
+We therefore build a hybrid algorithm called {\it Iterated Filtering with Automatic Differentiation} (IFAD) that warm-starts first-order or second-order gradient methods with a preliminary solution obtained from a few rounds of iterated filtering.
+Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
 
 These improvements also extend to Bayesian inference, as we show that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
 
 \section{Problem Setup}
 
-Consider an unobserved Markov process $(X_t)_{t \geq t_0}$, with observations $Y_1,...,Y_N$ realized at values $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$. The process is parameterized by an unknown parameter $\theta \in \Theta \subseteq \R^p$, where the states $X_t$ take values in the state space $\gX \subseteq \R^d$, the observations $Y_n$ take values in $\gY,$ and we write $X_n := X_{t_n}$. 
+Consider an unobserved Markov process $\{X(t),t  \geq t_0\}$, with disctete-time observations $Y_1,...,Y_N$ realized at values $y_1^*,...,y_N^*$ at times $t_1,..., t_N$.
+The process is parameterized by an unknown parameter $\theta \in \Theta \subseteq \R^p$, where the state $X(t)$ take values in the state space $\gX \subseteq \R^d$, the observations $Y_n$ take values in $\gY,$ and we write $X_n := X(t_n)$. 
 
 % By a similar decomposition to that in \cite{doucet2009tutorial}, we find that the joint density of $X_{0:N}, Y_{1:N}$ can be factored as
 % \begin{align*}
@@ -106,26 +107,36 @@ Consider an unobserved Markov process $(X_t)_{t \geq t_0}$, with observations $Y
 %     &=f_{X_0}\left(x_0 ; \theta\right) \prod_{n=1}^N f_{X_n \mid X_{n-1}}\left(x_n \mid x_{n-1} ; \theta\right) f_{Y_n \mid X_n}\left(y_n \mid x_n ; \theta\right).
 % \end{align*}
 
-We write $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ for the process model, writing $\texttt{process}\left(x_n; \theta\right)$ for its corresponding simulator, $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ the measurement model, and $y_n^*$ for the actual values of the observations that were observed. We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$. Superscripts $x_{n,j}^A$ denote the ancestral trajectory of particle $j$ at time $n$, and $a(\cdot)$ is the ancestor function. For simplicity, we omit the dependence of the likelihood and other suitable calculations on $X_0.$ 
+We suppose that the discete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$, and we write writing $\texttt{process}\left(x_n\mid x_{n-1}; \theta\right)$ for its corresponding simulator.
+We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, and $y_n^*$ for the actual values of the observations that were observed.
+We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$.
+Superscripts $x_{n,j}^A$ denote the ancestral trajectory of particle $j$ at time $n$, and $a(\cdot)$ is the ancestor function \ei{NOT DEFINED YET. THIS WILL PUZZLE READERS UNLESS THEY ARE ALREADY HIGHLY FAMILIAR WITH THE TOPIC}.
+For simplicity, we omit the dependence of the likelihood and other suitable calculations on $X_0$. \ei{ALGORITHM 1 HAS $f_{X_0}$. IN GENERAL, THIS DETAIL IS BEST INCLUDED. INITIAL VALUES CAN BE AN IMPORTANT PART OF A DYNAMIC SYSTEM.}
 
-The above are defined on a probability space $(\Omega, \Sigma, \prob).$ 
-To maintain an algorithmic and practical interpretation of our theory, we identify the seed with an element of the sample space $\omega \in \Omega$, as a random seed determines the entire sequence of pseudo-random numbers as generated by a computer. 
+The above conditional densities are defined on a probability space $(\Omega, \Sigma, \prob).$ 
+For the algorithmic interpretation of our theory, we identify the seed with an element of the sample space $\omega \in \Omega$.
+\ei{THE SEED CORRESPONDS TO ALL THE MONTE CARLO QUANTITIES GENERATED, INCLUDING THINGS THAT HAVE NO DIRECT ROLE IN THE MODEL, SO MAYBE THIS EXPLANATION NEEDS ADDITIONAL CARE.}
+The random seed determines the entire sequence of pseudo-random numbers as generated by a computer, just as the outcome $\omega\in\Omega$ generates the entire sequence of random variables.
 
 %When two algorithms share the same seed, this corresponds to the method of common random numbers. 
 
 
 \section{Off-Policy Particle Filters}
 
-As mentioned earlier, instead of directly differentiating through a particle filter, one can instead differentiate through the simulator and measurement densities. We construct an algorithm called \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) that targets the posterior (i.e. almost sure convergence of every measurable bounded functional of particles to its expectation under the posterior) and likelihood, and whose gradient yields a score estimate encompassing those of \cite{poyiadjis11, scibior21,naesseth18}.
-
+Directly differentiating through a particle filter, for a fixed value of $\omega$, leads to a biased gradient estimator due to the discreteness of the resampling operation REFS.
+We avoid this issue by constructing a particle filtering algorithm called \textbf{Measurement Off-Policy-$\alpha$} (MOP-$\alpha$) for which the resampling is invariant to $\omega$.
+Pseudocode for MOP-$\alpha$ is presented in Algorithm~\ref{alg:mop}.
+As we explain subsequently, MOP-$\alpha$ is constructed so that direct differentiation through this algorithm obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
+Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff.
 
 \begin{algorithm}[H]
 	\caption{MOP-$\alpha$}
     \label{alg:mop}
 	     \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process(x_{n+1}|x_n, \theta)$, evaluation parameter $\theta$, behavior parameter $\phi$, seed $\omega$. \newline
-        \textbf{If $\theta \neq \phi$:}
-            Fix $\omega$, and filter at $\phi$ to obtain $X_{n,j}^{P,\phi}, X_{n,j}^{F,\phi}$. \newline
-        \textbf{Else:} Fix $\omega$, and set $X_{n,j}^{P,\phi}, X_{n,j}^{F,\phi}$ to be copies of $X_{n,j}^{P,\theta}, X_{n,j}^{P,\theta}$. \newline
+            \textbf{First pass:} Set $\theta=\phi$ and fix $\omega$. This defined $X_{n,j}^{P,\phi}$, $X_{n,j}^{F,\phi}$, $g^{\phi}_{n,j}$. \newline
+        \textbf{Second pass:}
+            Fix $\omega$, and filter at $\theta\neq phi$. \newline
+            
 		\textbf{Initialize } particles ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\cdot\giventh{\theta}\right)$, weights $w^{F,\theta}_{0,j}= 1$. \newline
 		\textbf{For} $n=1,...,N$: \newline
             \hspace*{4mm} Accumulate discounted weights, $w_{n,j}^{P,\theta} = \big(w_{n-1,j}^{F,\theta}\big)^\alpha$.\newline
@@ -137,7 +148,7 @@ As mentioned earlier, instead of directly differentiating through a particle fil
             \hspace*{4mm} Conditional likelihood under $\phi$,
             $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$.\newline
             \hspace*{4mm} Select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) \propto g^{\phi}_{n,m}$. \newline
-            \hspace*{4mm} Resample particles ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$. \newline
+            \hspace*{4mm} Resample particles ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$. \ei{$\phi$ SHOULD BE $\theta$} \newline
             \hspace*{4mm} Resample corrected weights
             $w_{n,j}^{F,\theta}= w^{P,\theta}_{n,k_j}  { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}$.\newline
             \hspace*{4mm} Compute $ L_n^{A,\theta,\alpha} = L_n^\phi\cdot {\sum_{j=1}^J w^{F,\theta}_{n,j}}/{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$.\newline
@@ -146,7 +157,10 @@ As mentioned earlier, instead of directly differentiating through a particle fil
 
 
 \subsection{Algorithm Outline} 
-We obtain two coupled sets of particles, one under $\phi \in \Theta$, and another with the process model at $\theta \in \Theta$ but the resampling indices from the run at $\phi$ (hence the "off-policy" moniker). If $\theta$ and $\phi$ coincide, one only needs one particle filter run at $\theta=\phi$, otherwise one needs two runs at the same seed $\omega \in \Omega$.
+We obtain two coupled sets of particles, one under $\phi \in \Theta$, and another with the process model at $\theta \in \Theta$ but the resampling indices constructed from the first pass, with parameter $\phi$.
+We call this ``off-policy'' measurement since a parameter value corresponds to a policy in the context of control theory.
+\ei{I REWROTE THIS TO BE MORE EXPLICIT, BUT MAYBE THIS NEEDS MORE EDITING. IT MAKES ME THINK THAT ``RESAMPLING OFF-POLICY'' WOULD BE A BETTER NAME!}
+If $\theta$ and $\phi$ coincide, one only needs one particle filter run at $\theta=\phi$, otherwise one needs two runs at the same seed $\omega \in \Omega$.
 
 We can then reweight the conditional likelihoods by a correction factor accumulated over time to account for the resampling under $\phi$. That is, writing $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for the measurement density, $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$ for the conditional likelihood estimate under $\phi$, and $k_j \sim \text{Categorical}(g^{\phi}_{n,1},...,g^{\phi}_{n,J})$ for the resampling indices under $\phi$, we can estimate the conditional likelihood under $\theta$ as
 \vspace*{-2.5mm}
