@@ -278,20 +278,15 @@ We therefore see that the second stage of IFAD converges linearly to the MLE if 
 \begin{algorithm}[H]
 	\caption{IFAD}
     \label{alg:ifad}
-	    \textbf{Input:} Number of particles $J$, timesteps $N$, IF2 cooling schedule $\eta_t$, MOP-$\alpha$ discounting parameter $\alpha$, $\theta_0$, $t=0.$\newline
-        Run IF2 until initial "convergence" under cooling schedule $\eta_t$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_t := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
+	    \textbf{Input:} Number of particles $J$, timesteps $N$, IF2 cooling schedule $\eta_m$, MOP-$\alpha$ discounting parameter $\alpha$, $\theta_0$, $m=0.$\newline
+        Run IF2 until initial "convergence" under cooling schedule $\eta_m$, or for a fixed number or iterations, to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_m := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
 		\textbf{While} procedure not converged: \newline
-		\hspace*{4mm} Run Algorithm \ref{alg:mop} to obtain $\hat\loglik(\theta_t).$ \newline
-		\hspace*{4mm} Obtain $g(\theta_t) = \nabla_{\theta_t} (-\hat\loglik(\theta_t))$, $H(\theta_t)$ s.t. $\lambda_{\min}(H) \geq c$. \newline
-		\hspace*{4mm} Update $\theta_{t+1} := \theta_t - \eta (H(\theta_t))^{-1} g(\theta_t)$, $t:=t+1.$ \newline
-		\textbf{Return} $\hat{\theta} := \theta_t.$
+		\hspace*{4mm} Run Algorithm \ref{alg:mop} to obtain $\hat\loglik(\theta_m).$ \newline
+		\hspace*{4mm} Obtain $g(\theta_m) = \nabla_{\theta_m} (-\hat\loglik(\theta_m))$, $H(\theta_m)$ s.t. $\lambda_{\min}(H) \geq c$. \newline
+		\hspace*{4mm} Update $\theta_{m+1} := \theta_m - \eta (H(\theta_m))^{-1} g(\theta_m)$, $m:=m+1.$ \newline
+		\textbf{Return} $\hat{\theta} := \theta_m.$
 \end{algorithm}
 
-\ed{IN IFAD, $t$ IS USED AS AN INDEX FOR ITERATIONS. PREVIOUSLY, WE HAVE USED $m$ FOR THIS SINCE $n$ AND $t$ ARE USED ELSEWHERE.}
-
-\ed{IFAD HERE IS A 2ND ORDER ALGORITHM. MAYBE FOCUS ON THE PRIMARY EXAMPLE, WHICH IS FIRST ORDER. ALSO, THE STOPPING RULE SHOULD DESCRIBE WHAT WAS DONE IN THE EXEMPLES}
-
-  
 
 \section{Application to a Cholera Transmission Model}
 
@@ -300,21 +295,20 @@ This model categorizes individuals in a population as susceptible, $S(t)$, infec
 In this case, the compartment $R(t)$ is further subdivided into 
 %. where the population at time $t$, $H_t$, is divided into the susceptible compartment $S_t$, infected compartment $I_t$, and
 three recovered compartments $R^1(t)$, $R^2(t)$, $R^3(t)$ denoting varying degrees of cholera immunity.
-We write $H(t)$ for the total population, and $M_t$ \ed{$M_n$ ??} for the cholera deaths in each month.
+We write $P(t)$ for the total population, and $M_n$ for the cholera deaths in each month.
 As in \cite{king08, ionides15}, the transition dynamics follow a series of stochastic differential equations:
-\ed{CHANGE TO $S(t)$ etc FOR CONSISTENCY.}
 \vspace*{-1mm}
 \begin{align*}
-    d S_t&=(k \epsilon R^k_t+\delta(S_t-H_t)-\lambda_t S_t) d t+d H_t-({\sigma S_t I_t}/{H_t}) d B_t, \\
-    d I_t&=\left(\lambda_t S_t-(m+\delta+\gamma) I_t\right) d t+({\sigma S_t I_t}/{H_t}) d B_t, \\
-    d R^1_t&=(\gamma I-(k \epsilon+\delta) R^1) d t,..., 
-    d R^k_t=(k \epsilon R^{k-1}_t\hspace{-3mm}-(k \epsilon+\delta) R^k_t) d t,
+    d S&=(k \epsilon R^k+\delta(S-H)-\lambda(t) S) d t+d H-({\sigma S I}/{H}) d B_t, \\
+    d I&=\left(\lambda(t) S-(m+\delta+\gamma) I\right) d t+({\sigma S I}/{H}) d B_t, \\
+    d R^1&=(\gamma I-(k \epsilon+\delta) R^1) d t,..., 
+    d R^k=(k \epsilon R^{k-1}\hspace{-3mm}-(k \epsilon+\delta) R^k) d t,
     \vspace*{-2mm}
 \end{align*}
 with Brownian motion $B_t$, cholera death rate $m$, recovery rate $\gamma$, mean immunity duration $1/\epsilon$, standard deviation of the force of infection $\sigma$, and population death rate $\delta=0.02$. The force of infection, $\lambda_t$, is modeled by splines $(s_j)_{j=1}^6$
 \vspace*{-2mm}
 \begin{equation*}
-    \lambda_t=\exp\hspace{-1mm}\left(\hspace{-.5mm}\beta_{\text{trend}}(t-t_0)+\hspace{-1mm}\sum_{j=1}^{6} \beta_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm}\frac{I_t}{P_t} + \exp\hspace{-1mm} \left(\sum_{j=1}^{6} \omega_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm},
+    \lambda_t=\exp\hspace{-1mm}\left(\hspace{-.5mm}\beta_{\text{trend}}(t-t_0)+\hspace{-1mm}\sum_{j=1}^{6} \beta_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm}\frac{I}{P} + \exp\hspace{-1mm} \left(\sum_{j=1}^{6} \omega_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm},
     \vspace*{-2mm}
 \end{equation*}
 where the coefficients $(\beta_j)_{j=1}^6$ model seasonality in the force of infection, $\beta_{\text{trend}}$ models the trend in the force of infection, and the $\omega_j$ represent seasonality of a non-human environmental reservoir of disease.
@@ -369,7 +363,6 @@ For each method, we performed 100 searches, initialized with 100 initial startin
 IFAD, in comparison, manages to (1) approach the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:scatter-optim}) and (2) refine the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures \ref{fig:scatter-optim} and \ref{fig:boxplot-search}. IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone. 
 
 
-\kevin{Increase size of font in legend, notch rest of font up by one point. Make figure aspect ratio to be taller than wider.}
 \begin{figure}[htbp!]
     \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/pairs.png}
     \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/qq.png}
