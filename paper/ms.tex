@@ -92,7 +92,7 @@ That behavior is complementary to that of the iterated filtering algorithm \cite
 We therefore build a hybrid algorithm called {\it Iterated Filtering with Automatic Differentiation} (IFAD) that warm-starts first-order or second-order gradient methods with a preliminary solution obtained from a few rounds of iterated filtering.
 Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
 
-These improvements also extend to Bayesian inference, as we show that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
+These improvements also extend to Bayesian inference, as we show in the supplement that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} from the $1.4 \times 10^6$ iterations in \cite{fasiolo16} to just $500$. 
 
 \section{Problem Setup}
 
@@ -127,10 +127,12 @@ Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a f
 \begin{algorithm}[H]
 	\caption{MOP-$\alpha$}
     \label{alg:mop}
-	     \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process_n(x_{n+1}|x_n; \theta)$, evaluation parameter $\theta$, behavior parameter $\phi$, seed $\omega$. \newline
-            \textbf{First pass:} Set $\theta=\phi$ and fix $\omega$. This defined $X_{n,j}^{P,\phi}$, $X_{n,j}^{F,\phi}$, $g^{\phi}_{n,j}$. \newline
+	     \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process_n(x_{n+1}|x_n; \theta)$, evaluation parameter $\theta$, behavior parameter $\phi$, seed $\omega$.
+      
+        \textbf{First pass:} Set $\theta=\phi$ and fix $\omega$, yielding $X_{n,j}^{P,\phi}$, $X_{n,j}^{F,\phi}$, $g^{\phi}_{n,j}$.
+            
         \textbf{Second pass:}
-            Fix $\omega$, and filter at $\theta\neq \phi$. \newline
+        Fix $\omega$, and filter at $\theta\neq \phi$:
             
 		\textbf{Initialize } particles ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\cdot\giventh{\theta}\right)$, weights $w^{F,\theta}_{0,j}= 1$. \newline
 		\textbf{For} $n=1,...,N$: \newline
@@ -159,18 +161,18 @@ For the categorical distribution, we use systematic resamplig \cite{arulampalam0
 If $\theta$ and $\phi$ coincide, one only needs one particle filter run at $\theta=\phi$, otherwise one needs two runs at the same seed $\omega \in \Omega$.
 
 We then reweight the conditional likelihoods by a correction factor accumulated over time to account for the resampling under $\phi$. That is, writing $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for the measurement density, $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$ for the conditional likelihood estimate under $\phi$,  we can estimate the conditional likelihood under $\theta$ as
-\vspace*{-2.5mm}
+\vspace*{-1.5mm}
 \begin{equation}
      \label{eq:mop-conditional-likelihood}
      L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}} \text{ or } L_n^{A,\theta,\alpha} = L_n^\phi\cdot \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
-     \vspace*{-2.5mm}
+     \vspace*{-1.5mm}
 \end{equation}
 recursively weighting each particle by 
-\vspace*{-2.5mm}
+\vspace*{-1.5mm}
 \begin{equation}
     \label{eq:weighting-scheme}
     w_{n,j}^{P,\theta} = (w_{n-1,j}^{F,\theta})^\alpha,  w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}, w^{F,\theta}_{0,j}= 1.
-    \vspace*{-2.5mm}
+    \vspace*{-1.5mm}
 \end{equation}
 
 The before-resampling conditional likelihood estimate $L_n^{B,\theta,\alpha}$ should be used in general, as it has slightly lower variance than the after-resampling estimate $L_n^{A,\theta,\alpha}$, but the latter is useful in deriving properties of the MOP-$\alpha$ gradient estimate such as that in Theorem \ref{thm:mop-functional-forms}.
@@ -370,7 +372,7 @@ IFAD, in comparison, manages to (1) approach the MLE quickly due to the IF2 warm
     \label{fig:scatter-optim}
 \end{figure}
 
-\kevin{Include plots of IFAD vs Poyiadjis and Naesseth only in the supplemental information}
+%\kevin{Include plots of IFAD vs Poyiadjis and Naesseth only in the supplemental information}
 
 \begin{figure}[ht]
     \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/boxplot.png}
@@ -390,8 +392,8 @@ Here, we will show that MOP-$\alpha$ targets the posterior and likelihood, yield
 \begin{enumerate}[label=(A\arabic*),itemsep=-1.2ex] 
     \item \textbf{Continuity of the Likelihood.} $\ell(\theta)$ has more than two continuous derivatives in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$. \label{assump:conti-lik}
     \item \textbf{Bounded Process Model.} There exist $\underbar{M}, \bar{M}$ such that $0 < \underbar{M} \leq f_{X_n|X_{n-1}}(x_n | x_{n-1};\theta) \leq \bar{M} < \infty$. \label{assump:bounded-process}
-    \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement} \ed{I EDITED THE $G'(\theta)$ BIT. CHECK THAT IT IS RIGHT. IT STILL SEEMS A BIT UNCLEAR TO ME. ALSO, IT HAS SOME RELATIONSHIP TO A4 WHICH IS UNCLEAR TO ME.}
-    \item \textbf{Bounded Gradient Estimates.} There are functions $G(\theta), H(\theta): \Theta \to [0,\infty)$ uniformly bounded by $G', H'$, so the MOP-$\alpha$ gradient and Hessian estimates at $\theta=\phi$ are almost surely bounded by $G(\theta)$ and $H(\theta)$ for all $\alpha$. \label{assump:local-bounded-derivative}
+    \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement}
+    \item \textbf{Bounded Gradient Estimates.} There are functions $G(\theta), H(\theta): \Theta \to [0,\infty)$ uniformly bounded by $G^*, H^*<\infty$, so the MOP-$\alpha$ gradient and Hessian estimates at $\theta=\phi$ are almost surely bounded by $G(\theta)$ and $H(\theta)$ for all $\alpha$. \label{assump:local-bounded-derivative}
     \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density $f_{Y_n|X_n}(y_n^*|x; \theta)$ and simulator have more than two continuous derivatives in $\theta$. \label{assump:diff-meas-and-sim}
 \end{enumerate}
 
@@ -402,7 +404,7 @@ The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two 
 
 We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood when $\alpha=1$ or $\theta=\phi$. While the result is presented here as specific to MOP-$\alpha$, we actually prove a more general result in the supplementary material. That is, we show a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest, to weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
 
-\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
+%\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
 \begin{thm}[MOP-$\alpha$ Targets the Posterior and Likelihood]
     \label{thm:mop-targeting}
@@ -414,7 +416,7 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
     \end{equation}
 \end{thm}
 
-\kevin{Write the supplement formally with Del Moral-lite language, going into full detail with the proofs and calculations.}
+%\kevin{Write the supplement formally with Del Moral-lite language, going into full detail with the proofs and calculations.}
 
 \begin{proof}
     We provide a proof sketch here, deferring most of the details, and discussion of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$, to the supplementary information. 
@@ -433,7 +435,7 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
 
 \subsection{MOP-$1$ Is Consistent for the Score}
 
-Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} use $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}, X_{1:N}}\left(y_{1:N}^* , x_{1:n,j}^{A, F,\theta}; \theta\right)$ in general. The bootstrap and general estimates have different functional forms, and are not the same a-priori \ed{WHAT DOES THIS MEAN? THAT IT IS NOT IMMEDIATLY CLEAR THEY ARE THE SAME?}. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
+Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} use $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}\left(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta\right)$ and not $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}| X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}; \theta\right)$. It is therefore not immediately apparent that these two converge to the same thing. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
 
 \begin{thm}[Consistency of MOP-$1$ Gradient Estimate]
     The gradient estimate of MOP-$\alpha$ when $\alpha=1$, $\theta=\phi$ is strongly consistent for the score: $\nabla_\theta \hat\ell_J^1(\theta) \stackrel{a.s.}{\to} \nabla_\theta \ell(\theta)$ as $J \to \infty$.
@@ -453,7 +455,7 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$, $\theta=\phi$, the MSE and variance of MOP-$\alpha$, where $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$ and $\epsilon$ depends on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} are:
+    When $\alpha\in(0,1)$, $\theta=\phi$, $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$, there exists some $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
     \begin{align*}
         &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
@@ -462,14 +464,11 @@ Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{
         &\text{Var}(\nabla_\theta \hat\ell^{\alpha}(\theta)) \lesssim \min_{k\leq N} NpG'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
         \end{align*}
 \end{thm}
-\kevin{Explain exactly what $\epsilon$ is here, and interpret the rates as agreeing with our intuition. Talk about the relationship between the theory and the empirical results in the bias-variance tradeoff figure above, as well as the phase transition between $Nk^2/J$ and $N^4/J$ variance with MOP-$\alpha$ and MOP-$1$, where $k$ is really a surrogate for $\alpha$ -- with more memory, you truncate less. }
 
 
-We defer the proof to the supplementary material in favor of a very brief outline here. 
+We defer the proof to the supplementary material, but provide a brief outline here. The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the weights are truncated at lag $k$ with discount factor $\alpha$ to ensure strong mixing, and the covariance of the latter which can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. The latter is $\tilde{O}(NpG'(\theta)^2(k+\psi(\alpha)))$ by tedious algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
 
-
-\kevin{Say that our framework suggests whole new classes of algorithms, as it includes Naesseth and Poyiadjis. Interpolating between them with discounting is only one way to interpolate, we can also e.g. truncate at a fixed lag. Remark that the analysis is similar for MOP-$(1,k)$ as a fixed-lag filter, with slightly better rates but a less natural interpretation. We leave empirical studies of its performance to future work. }
-
+We also show in the supplementary material that the variance of MOP-$0$ is $\tilde{O}(NpG'(\theta)^2/J)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$ (ignoring factors of $p, G'$, etc.). This and Theorem \ref{thm:mop-biasvar} show that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
 
 
 
