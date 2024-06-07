@@ -33,11 +33,11 @@
 @string{MWR="Monthly Weather Review"}
 @string{OUP="Oxford University Press"}
 @string{PLMS="Proceedings of the London Mathematical Society"}
-@string{PLoS-Bio="PLoS Biology"}
-@string{PLoS-CompBio="PLoS Computational Biology"}
-@string{PLoS-Med="PLoS Medicine"}
-@string{PLoS-NTD="PLoS Neglected Tropical Diseases"}
-@string{PLoS-Path="PLoS Pathogens"}
+@string{PLoS-Bio="PLOS Biology"}
+@string{PLoS-CompBio="PLOS Computational Biology"}
+@string{PLoS-Med="PLOS Medicine"}
+@string{PLoS-NTD="PLOS Neglected Tropical Diseases"}
+@string{PLoS-Path="PLOS Pathogens"}
 @string{PNAS="Proceedings of the National Academy of Sciences of the USA"}
 @string{PRSB="Proceedings of the Royal Society of London, Series B"}
 @string{PRSLA="Proceedings of the Royal Society of London, Series A"}
@@ -942,27 +942,21 @@ address = "New York"
 )
 
 
-@Inbook{liuwest01,
-author="Liu, Jane
-and West, Mike",
+@incollection{liuwest01, text={Liu, J and West, M. (2001). Combining Parameter and State Estimation in Simulation-Based Filtering. In "Sequential Monte Carlo Methods in Practice" (edited by Doucet, A., de Freitas, N. and Gordon, N. J.)},
+author = "Liu, J and West, M.",
+year = 2001, 
+title = "Combining Parameter and State Estimation in Simulation-Based Filtering",
+booktitle = "Sequential \mbox{M}onte \mbox{C}arlo Methods in Practice",
 editor="Doucet, Arnaud
 and de Freitas, Nando
 and Gordon, Neil",
-title="Combined Parameter and State Estimation in Simulation-Based Filtering",
-bookTitle="Sequential Monte Carlo Methods in Practice",
-year="2001",
-publisher="Springer New York",
-address="New York, NY",
-pages="197--223",
-abstract="Much of the recent and current interest in simulation-based methods of sequential Bayesian analysis of dynamic models has been focused on improved methods of filtering for time-varying state vectors. We now have quite effective algorithms for time-varying states, as represented throughout this volume. Variants of the auxiliary particle filtering algorithm (Pitt and Shephard 1999b), in particular, are of proven applied efficacy in quite elaborate models. However, the need for more general algorithms that deal simultaneously with both fixed model parameters and state variables is especially pressing. We simply do not have access to efficient and effective methods of treating this problem, especially in models with realistically large numbers of fixed model parameters. It is a very challenging problem.",
-isbn="978-1-4757-3437-9",
+pages = "197--224", 
+publisher = "Springer", 
+address = "New York"
+}
 doi="10.1007/978-1-4757-3437-9_10",
 url="https://doi.org/10.1007/978-1-4757-3437-9_10"
 }
-
-
-
-
 
 @article{liu1998smc,
 author = {Jun S. Liu and Rong Chen},

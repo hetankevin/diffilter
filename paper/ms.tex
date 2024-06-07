@@ -1,68 +1,93 @@
-\documentclass[9pt,twocolumn,twoside]{pnas-new}
+\documentclass[11pt]{article} 
+%\documentclass[9pt,twocolumn,twoside]{pnas-new}
 %\documentclass[9pt,twocolumn,pnasresearcharticle]{pnas-new}
 %\documentclass[9pt,twocolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
+
+\newcommand\arxiv[2]{#1} % 1st argument for arxiv format
+% \newcommand\arxiv[2]{#2} % 2nd argument for PNAS format
+% also, swich to \documentclass[11pt]{article} for arxiv format
 
 \input{macros}
 
 \usepackage{tabto}
 
+\arxiv{
+  \usepackage{fullpage}
+  %% some packages loaded by pnas-new.cls which we need for
+  %% the arxiv version
+  \usepackage{algorithm}
+  \usepackage[noend]{algpseudocode}
+  \usepackage{xcolor}
+  \usepackage{tikz}
+  \usepackage{enumitem}
+  \bibliographystyle{ieeetr}
+}{
 \templatetype{pnasresearcharticle} % Choose template
 % {pnasresearcharticle} = Template for a two-column research article
 % {pnasmathematics} %= Template for a one-column mathematics article
 % {pnasinvited} %= Template for a PNAS invited submission
+}
 
 \begin{document}
 
 \title{Accelerated Inference for Partially Observed Stochastic Processes with Automatic Differentiation}
 
+%\arxiv{ \author{K. Tan, G. Hooker and E. L. Ionides\\
+%  \small{Department of Statistics, University of Pennsylvania}\\
+%  \small{Department of Statistics, University of Michigan}}}{}
+
+\arxiv{ \author{K. Tan$^{1}$, G. Hooker$^{1}$ and E. L. Ionides$^{2}$
+  \vspace{2mm}\\
+  \small{$^{1}$Department of Statistics, University of Pennsylvania}\\
+  \small{$^{2}$Department of Statistics, University of Michigan}}}{}
+
+\arxiv{}{
 % Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 \author[a]{Kevin Tan}
 \author[a]{Giles Hooker}
 \author[b,1]{Edward L. Ionides}
 %\author[a]{Author Three}
-
 \affil[a]{University of Pennsylvania}
 \affil[b]{University of Michigan}
 %\affil[c]{Affiliation Three}
-
 % Please give the surname of the lead author for the running footer
 \leadauthor{Tan}
-
 % Please add a significance statement to explain the relevance of your work
 \significancestatement{Many scientific models involve highly nonlinear stochastic dynamical systems which can be observed only via noisy and incomplete measurements. Prior to this work, iterated filtering algorithms were the only class of algorithms for maximum likelihood estimation that did not require access to the system's transition probabilities, instead needing only a simulator of the system dynamics. We leverage recent advances in automatic differentiation to propose a hybrid algorithm that requires only a differentiable simulator for maximum likelihood estimation. Our new method outperforms previous approaches on a challenging problem in epidemiology.}
-
-% Please include corresponding author, author contribution and author declaration information
 \authorcontributions{K.T. and E.L.I. designed research; K.T. analyzed data; K.T., G.H. and E.L.I. performed research, K.T., G.H., and E.L.I. wrote the manuscript.}
 \authordeclaration{The authors declare no competing interests.}
 \correspondingauthor{\textsuperscript{1}To whom correspondence should be addressed. E-mail: kevtan@wharton.upenn.edu}
-
 % At least three keywords are required at submission. Please provide three to five keywords, separated by the pipe symbol.
 \keywords{Sequential Monte Carlo $|$ Automatic Differentiation $|$ Particle Filter $|$ Markov Process $|$ Maximum Likelihood}
+}
 
-\begin{abstract}
-  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood function that is discontinuous as a function of the model parameters.  We show how to embed two existing AD particle filter methods in a theoretical framework that provides an extension to a new class of algorithms within which we obtain a favorable bias/variance tradeoff. Further, we develop likelihood maximization algorithms suited to the Monte Carlo properties of the derivative estimate. Our algorithms require only a differentiable simulator for the latent dynamic system; by contrast, most previous approaches to AD likelihood maximization for particle filters require access to the system's transition probabilities, and this can be prohibitive. Promising numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm can beat current state-of-the-art methods on a challenging scientific benchmark problem.
-\end{abstract}
-
+\arxiv{\date{Draft compiled on \today}}{
 \dates{This manuscript was compiled on \today}
 \doi{\url{www.pnas.org/cgi/doi/10.1073/pnas.XXXXXXXXXX}}
-
+}
 
 \maketitle
+
+\begin{abstract}
+  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood function that is discontinuous as a function of the model parameters.  We show how to embed two existing AD particle filter methods in a theoretical framework that provides an extension to a new class of algorithms.  This new class permits a bias/variance tradeoff and hence a mean squared error substantially lower than the existing algorithms. We develop likelihood maximization algorithms suited to the Monte Carlo properties of the derivative estimate. Our algorithms require only a differentiable simulator for the latent dynamic system; by contrast, most previous approaches to AD likelihood maximization for particle filters require access to the system's transition probabilities. Numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm show substantial improvement on current state-of-the-art methods for a challenging scientific benchmark problem.
+\end{abstract}
+
+\arxiv{}{
 \thispagestyle{firststyle}
 \ifthenelse{\boolean{shortarticle}}{\ifthenelse{\boolean{singlecolumn}}{\abscontentformatted}{\abscontent}}{}
-
 \firstpage{4}
 % Use \firstpage to indicate which paragraph and line will start the second page and subsequent formatting. In this example, there are a total of 11 paragraphs on the first page, counting the first level heading as a paragraph. The value {12} represents the number of the paragraph starting the second page. If a paragraph runs over onto the second page, include a bracket with the paragraph line number starting the second page, followed by the paragraph number in curly brackets, e.g. "\firstpage[4]{11}".
+}
 
-
-\dropcap{M}any scientific models involve highly nonlinear stochastic dynamic systems possessing significant random variation in both the process dynamics and the measurements.
+\arxiv{Many}{\dropcap{M}any}
+scientific models involve highly nonlinear stochastic dynamic systems possessing significant random variation in both the process dynamics and the measurements.
 Commonly, the latent system is modeled as a Markov process, giving rise to a partially observed Markov process (POMP) model, also known as a hidden Markov models or a state space model.
-POMP models arise in fields as diverse as epidemiology \cite{he10, stocks17}, ecology \cite{knape12}, and finance \cite{kim08, breto14}.
+POMP models arise in fields as diverse as automated control \cite{singh22}, epidemiology \cite{he10, stocks17}, ecology \cite{knape12} and finance \cite{kim08, breto14}.
 Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
 
 The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
-It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and likelihood-based inference \citep{ionides06-pnas,ionides15}.
+It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and likelihood-based inference \cite{ionides06-pnas,ionides15}.
 Likelihood-based inference is statistically efficient \cite{pawitan01} and is robust to a moderate amount of Monte Carlo error \cite{ionides17,ning21}.
 An attractive feature of basic particle filter algorithms, also known as boostrap filters, is that they do not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
 This plug-and-play property is useful for scientific applications \cite{he10}.
@@ -82,7 +107,7 @@ Unfortunately, \cite{scibior21} used their estimator within an algorithm which d
 We use \cite{scibior21} and \cite{poyiadjis11} as our starting point, while developing a new approach which remedies the weaknesses of these papers.
 
 We start by presenting a new construction of the gradient estimator of \cite{scibior21} and \cite{poyiadjis11}.
-Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a Measurement Off-parameter (MOP) particle filter.
+Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a Measurement Off-Parameter (MOP) particle filter.
 We procced to generalize the MOP particle filter by adding a discounting factor, $\alpha \in [0,1]$ , which interpolates between the  biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$.
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
@@ -110,7 +135,7 @@ We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement dens
 We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$.
 Superscripts $x_{n,j}^A$ denote the ancestral trajectory of particle $j$ at time $n$, and $a(\cdot)$ is the ancestor function that maps a particle to its parent, $j \mapsto a(j)$.
 
-The above densities are defined on a probability space $(\Omega, \Sigma, \prob).$ 
+The above densities are defined on a probability space $(\Omega, \Sigma, \prob)$ which is also assumed to enable construction of independent replicates and all other random variables defined in our algorithms.
 For the algorithmic interpretation of our theory, we identify the seed with an element of the sample space $\omega \in \Omega$. The random seed determines the sequence of pseudo-random numbers as generated by a computer, just as the outcome $\omega\in\Omega$ generates the sequence of random variables.
 
 %When two algorithms share the same seed, this corresponds to the method of common random numbers. 
@@ -118,8 +143,8 @@ For the algorithmic interpretation of our theory, we identify the seed with an e
 
 \section{Off-Parameter Particle Filters}
 
-Directly differentiating through a particle filter, for a fixed value of $\omega$, leads to a biased gradient estimator due to the discreteness of the resampling operation REFS.
-We avoid this issue by constructing a particle filtering algorithm called \textbf{Measurement Off-Parameter-$\alpha$} (MOP-$\alpha$) for which the resampling is invariant to $\omega$.
+Directly differentiating through a particle filter, for a fixed value of $\omega$, leads to a biased gradient estimator due to the discreteness of the resampling operation \cite{corenflos21}.
+We avoid this issue by constructing a particle filtering algorithm called {\it Measurement Off-Parameter} with discount factor $\alpha$ (MOP-$\alpha$) for which the resampling is invariant to $\omega$.
 Pseudocode for MOP-$\alpha$ is presented in Algorithm~\ref{alg:mop}.
 As we explain subsequently, MOP-$\alpha$ is constructed so that direct differentiation through this algorithm obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
 Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff.
@@ -224,8 +249,8 @@ This further illustrates how $\alpha$ dictates the memory of the gradient estima
 
 
 \begin{figure}[ht!]
-    \centering
-    \includegraphics[width=\textwidth/3]{../imgs/095/biasvar.png}
+  \centering
+    \includegraphics[width=\arxiv{10cm}{\textwidth/3}]{../imgs/095/biasvar.png}
     \caption{Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission, evaluated at the MLE.}
     \label{fig:biasvar}
 \end{figure}
@@ -301,13 +326,13 @@ We write $P(t)$ for the total population, and $M_n$ for the cholera deaths in ea
 As in \cite{king08, ionides15}, the transition dynamics follow a series of stochastic differential equations:
 \vspace*{-1mm}
 \begin{align*}
-    d S&=(k \epsilon R^k+\delta(S-H)-\lambda(t) S) d t+d H-({\sigma S I}/{H}) d B_t, \\
-    d I&=\left(\lambda(t) S-(m+\delta+\gamma) I\right) d t+({\sigma S I}/{H}) d B_t, \\
-    d R^1&=(\gamma I-(k \epsilon+\delta) R^1) d t,..., 
-    d R^k=(k \epsilon R^{k-1}\hspace{-3mm}-(k \epsilon+\delta) R^k) d t,
+    dS&=(k \epsilon R^k+\delta(S-P)-\lambda(t) S)\, dt+d P-({\sigma S I}/{H})\, dB, \\
+    dI&=\left(\lambda(t) S-(m+\delta+\gamma) I\right)\, dt+({\sigma S I}/{H})\, dB, \\
+    dR^1&=(\gamma I-(k \epsilon+\delta) R^1)\, dt, \hspace{2mm} \dots \\
+    dR^k&=(k \epsilon R^{k-1}\hspace{-3mm}-(k \epsilon+\delta) R^k)\, dt,
     \vspace*{-2mm}
 \end{align*}
-with Brownian motion $B_t$, cholera death rate $m$, recovery rate $\gamma$, mean immunity duration $1/\epsilon$, standard deviation of the force of infection $\sigma$, and population death rate $\delta=0.02$. The force of infection, $\lambda_t$, is modeled by splines $(s_j)_{j=1}^6$
+with Brownian motion $B(t)$, cholera death rate $m$, recovery rate $\gamma$, mean immunity duration $1/\epsilon$, standard deviation of the force of infection $\sigma$, and population death rate $\delta=0.02$. The force of infection, $\lambda_t$, is modeled by splines $(s_j)_{j=1}^6$
 \vspace*{-2mm}
 \begin{equation*}
     \lambda_t=\exp\hspace{-1mm}\left(\hspace{-.5mm}\beta_{\text{trend}}(t-t_0)+\hspace{-1mm}\sum_{j=1}^{6} \beta_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm}\frac{I}{P} + \exp\hspace{-1mm} \left(\sum_{j=1}^{6} \omega_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm},
@@ -321,9 +346,9 @@ where $M_n=\gamma\int_{t_{n-1}}^{t_n}I(s)\, ds$ is the modeled number of cholera
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth/2]{../imgs/095/tikzcholera.png}
+    \includegraphics[width=\arxiv{12cm}{\textwidth/2}]{../imgs/095/tikzcholera.png}
     \vspace*{-7mm}
-    \caption{Illustration of Dhaka cholera model from \cite{king08}.}
+    \caption{Illustration of Dhaka cholera model from \cite{king08}. \ed{CHANGE H TO P? ALSO, THERE ARE ADVANTAGES TO PUTTING THE TIKZ SOURCE CODE INTO THE MS, TO ALLOW FOR FINE-TUNING EDITS.}}
     \label{fig:tikz-cholera}
 \end{figure}
 
@@ -334,7 +359,7 @@ We re-implemented IF2 in order to do so, but we compare our results with the res
 Our re-implementation ourperforms that of \cite{ionides15}, likely due to a better choice of algorithmic parameters.
 For each method, we performed 100 searches, initialized with 100 initial starting parameter vectors drawn uniformly from the same wide bounding box used in \cite{ionides15}. We summarize our findings below. 
 
-\kevin{Dynamically save to a tex file and load from there}
+% \kevin{Dynamically save to a tex file and load from there}
 
 \ed{PERHAPS THE 2ND D.P. OF SIGNIFICANCE CAN BE AVOIDED? ALSO, IF WE'RE GOING TO ADVISE MOP-ALPHA FOR $0<\alpha<1$, THAT COULD BE SHOWN HERE.?}
   
@@ -357,32 +382,37 @@ For each method, we performed 100 searches, initialized with 100 initial startin
 \label{table:mle}
 \end{table}
 
-\paragraph{IFAD Successfully Finds the MLE:} Previously, the MLE at a log-likelihood of $-3748.5$ was found by \cite{king16} with much effort, using many global and local IF2 searches, with the assistance of likelihood profiling. Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.63$, while the best log-likelihood found by \cite{king08} was only $-3793.4$. Despite being initialized for a global search, IFAD manages to find the MLE over the 100 searches, as seen in Table \ref{table:mle}. This suggests that the sequence of local searches and refinement that was previously necessary for finding the MLE with IF2 is not necessary with the IFAD algorithm. 
+\paragraph{IFAD Successfully Finds the MLE:} Previously, an MLE at a log-likelihood of $-3748.5$ was reported by \cite{king16}.
+This MLE was obtained with much computational effort, using many global and local IF2 searches, and with the assistance of likelihood profiling.
+Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$. Despite being initialized for a global search, IFAD manages to find the MLE over the 100 searches, as seen in Table \ref{table:mle}. On this problem, the sequence of local searches and refinement that was previously required for finding the MLE is not necessary with the IFAD algorithm. 
 
+\paragraph{IFAD Outperforms Both IF2 and MOP Alone:} While IF2 quickly approaches a neighborhood of the MLE within only 40 iterations (as seen in Figure \ref{fig:scatter-optim}), performing IF2 alone ultimately fails to squeeze out the last few log-likelihood units, as no IF2 search comes within 7 log-likelihood units of the MLE (as seen in Figure \ref{fig:scatter-optim}). Conversely, when we tried gradient descent with MOP alone, we encountered many, many failed searches. This is a difficult, nonconvex, and noisy problem, \ed{SAY HOW MANY PARAMETERS ARE ESTIMATED HERE} and the search gets stuck in local minima and saddle points, failing to approach the MLE. 
 
-\paragraph{IFAD Outperforms Both IF2 and MOP Alone:} While IF2 quickly approaches a neighborhood of the MLE within only 40 iterations (as seen in Figure \ref{fig:scatter-optim}), performing IF2 alone ultimately fails to squeeze out the last few log-likelihood units, as no IF2 search comes within 7 log-likelihood units of the MLE (as seen in Figure \ref{fig:scatter-optim}). Conversely, when we tried gradient descent with MOP alone, we encountered many, many failed searches. This is a difficult, nonconvex, and noisy problem, and the search gets stuck in local minima and saddle points, failing to approach the MLE. 
-
-IFAD, in comparison, manages to (1) approach the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:scatter-optim}) and (2) refine the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures \ref{fig:scatter-optim} and \ref{fig:boxplot-search}. IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone. 
-
+IFAD, in comparison, approaches the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:scatter-optim}) and also succeeds at refining the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures~\ref{fig:scatter-optim} and \ref{fig:boxplot-search}. IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone.
+Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorithm used to solve a challenging numerical problem, but the left panel of Figure~\ref{fig:boxplot-search} shows that IFAD can find higher likelihood values, more quickly and more reliably than the previous state-of-the-art.
+\ed{I ADDED THIS PARAGRAPH TO TRY TO BE EXPLICIT ABOUT WHY WE ARE EXCITED BY THIS FIGURE. AT FACE VALUE, IT MAY NOT SEEM LIKE A BIG DEAL. IT WOULD BE BETTER TO EXPLAIN MORE CLEARLY WHY THIS IS EVIDENCE THAT THE METHOD COULD HAVE A TRANSFORMATIVE EFFECT ON DATA ANALYSIS VIA POMP MODELS.}
 
 \begin{figure}[htbp!]
-    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/pairs.png}
-    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/qq.png}
+    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/pairs.png}
+    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/qq.png}
     \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. Controlling for initial starting point, tuning $\alpha$ allows IFAD-$0.97$ to strictly improve on IF2, \cite{poyiadjis11}, and \cite{naesseth18}, on almost every iteration. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD has the edge, and manages to find the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
     \label{fig:scatter-optim}
 \end{figure}
 
 %\kevin{Include plots of IFAD vs Poyiadjis and Naesseth only in the supplemental information}
 
+\ed{Labeling A and B would be more conventional than Left and Right, and also easier to refer to in the text.}
+  
 \begin{figure}[ht]
-    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/boxplot.png}
-    \includegraphics[width=\textwidth/\real{4.2}]{../imgs/095/optim.png}
+    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/boxplot.png}
+    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/optim.png}
     \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, simulating the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and the gradient steps improve on the warm-start given by running 40 IF2 iterations. 
-    \textbf{Right:} Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD -- IFAD has better tail control and successfully reaches the MLE. 
+    \textbf{Right:} Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD. We see that IFAD has better tail control and successfully reaches the MLE. 
     We use a dotted red line to display the MLE.}
     \label{fig:boxplot-search}
 \end{figure}
 
+\ed{IS THE IFAD(0.95) MEDIAN LINE IN FIG 4 (RIGHT) HIDING UNDER IFAD(1)? IF NOT, WEHRE IS IT?}
 
 \section{Theoretical Analysis of MOP-$\alpha$}
 \label{sec:thms}
@@ -394,7 +424,7 @@ Here, we will show that MOP-$\alpha$ targets the posterior and likelihood, yield
     \item \textbf{Bounded Process Model.} There exist $\underbar{M}, \bar{M}$ such that $0 < \underbar{M} \leq f_{X_n|X_{n-1}}(x_n | x_{n-1};\theta) \leq \bar{M} < \infty$. \label{assump:bounded-process}
     \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement}
     \item \textbf{Bounded Gradient Estimates.} There are functions $G(\theta), H(\theta): \Theta \to [0,\infty)$ uniformly bounded by $G^*, H^*<\infty$, so the MOP-$\alpha$ gradient and Hessian estimates at $\theta=\phi$ are almost surely bounded by $G(\theta)$ and $H(\theta)$ for all $\alpha$. \label{assump:local-bounded-derivative}
-    \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density $f_{Y_n|X_n}(y_n^*|x; \theta)$ and simulator have more than two continuous derivatives in $\theta$. \label{assump:diff-meas-and-sim}
+    \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density, \arxiv{\\}{}$f_{Y_n|X_n}(y_n^*|x_n; \theta)$, and simulator have more than two continuous derivatives in $\theta$. \label{assump:diff-meas-and-sim}
 \end{enumerate}
 
 The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two continuous derivatives in $\theta$ follows the construction of the likelihood estimate in equations \ref{eq:mop-conditional-likelihood} and \ref{eq:weighting-scheme}, as well as Assumptions \ref{assump:bounded-measurement} and \ref{assump:diff-meas-and-sim}. 
@@ -420,13 +450,10 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
 
 \begin{proof}
     We provide a proof sketch here, deferring most of the details, and discussion of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$, to the supplementary information. 
-    
     When $\theta=\phi$, regardless of the value of $\alpha$, the ratio ${g_{n,j}^\theta}/{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter.
-    
     When $\alpha=1$ and $\theta\neq\phi,$ suppose inductively that $\{(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j})\}_{j=1}^J$ targets $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
     It can then be shown that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$, that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$, and that weighting the particles by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}/ g^\phi_{n,a(j)})$ where $a(\cdot)$ is the ancestor function,
     resampling with probabilities proportional to $g^\phi_{n,j}$, also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
-
     If the likelihood is estimated with the before-resampling conditional likelihoods $\hat\lik(\theta) = \prod_{n=1}^N L_n^{B,\theta,\alpha}$, the strong consistency is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$. 
 \end{proof}
 
@@ -435,7 +462,10 @@ We show here that MOP-$\alpha$ targets the posterior and is strongly consistent 
 
 \subsection{MOP-$1$ Is Consistent for the Score}
 
-Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} use $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}\left(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta\right)$ and not $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}| X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}; \theta\right)$. It is therefore not immediately apparent that these two converge to the same thing. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
+Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} use
+$$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}\left(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta\right)$$ and not
+$$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}| X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}; \theta\right).$$
+It is therefore not immediately apparent that these two converge to the same thing. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
 
 \begin{thm}[Consistency of MOP-$1$ Gradient Estimate]
     The gradient estimate of MOP-$\alpha$ when $\alpha=1$, $\theta=\phi$ is strongly consistent for the score: $\nabla_\theta \hat\ell_J^1(\theta) \stackrel{a.s.}{\to} \nabla_\theta \ell(\theta)$ as $J \to \infty$.
@@ -476,12 +506,11 @@ We also show in the supplementary material that the variance of MOP-$0$ is $\til
 
 MOP-$\alpha$ and IFAD are fast algorithms, both in theory and practice. In line with the cheap gradient principle of \cite{kakade2019provably}, getting a gradient estimate from MOP-$\alpha$ takes no more than 6 times that of the runtime of the particle filter (in practice, the multiplier is 3.75). It therefore shares the same $O(NJ)$ time complexity as the particle filter, unlike the $O(NJ^2)$ complexity of \cite{corenflos21} and Algorithm 2 in \cite{poyiadjis11, scibior21}.
 
-As IF2 amounts to one iteration of the particle filter, with $O(NJ)$ time complexity. 
+%% As IF2 amounts to one iteration of the particle filter, with $O(NJ)$ time complexity. 
+%%In practice,
 
 
-
-
-In practice, re-implementing the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \cite{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. 
+Our implementation of the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \cite{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. 
 
 
 %\kevin{Write about new open source library that brings pomp to python with AD. There are implementations in tfp under the jax substrate, but these are not plug and play -- they require you to supply the transition densities. }
@@ -492,7 +521,6 @@ In practice, re-implementing the particle filter, simulator, and MOP-$\alpha$ in
 \section{Discussion, Limitations, and Future Work}
 
 We note that it is possible to work without a differentiable simulator, but one would then require access to the transition densities. We are working on an analogue that uses (differentiable) transition densities instead of a differentiable simulator, that may be better suited to large discrete state spaces than either MOP-$\alpha$ or the Baum-Welch algorithm.
-
 Additionally, our gradient estimate can be used for variational inference to approximate the posterior distribution over latent states \cite{naesseth18} and parameters. 
 
 Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interpolate between the estimators of \cite{naesseth18} and \cite{poyiadjis11}. As the proof of Theorem \ref{thm:mop-biasvar} implies, we can also truncate the weights at a fixed lag, corresponding to the MOP-$(1,k)$ estimate mentioned. The analysis is similar, with slightly better rates but a less natural interpretation. 
@@ -573,13 +601,11 @@ Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interp
 
 % Supply .xlsx, .csv, .txt, .rtf, or .pdf files. This file type will be published in raw format and will not be edited or composed.
 
-
+\arxiv{}{
 \showmatmethods{} % Display the Materials and Methods section
-
 \acknow{Please include your acknowledgments here, set in a single paragraph. Please do not include any acknowledgments in the Supporting Information, or anywhere else in the manuscript.}
-
 \showacknow{} % Display the acknowledgments section
-
+}
 
 %\bibsplit[2]
 %Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
