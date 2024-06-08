@@ -1,11 +1,11 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% pnas-new.cls, v1.46, 2023/05/03
+% pnas-new.cls, v1.45, 2019/04/29
 %
-% This class file enables authors to prepare research
+% This class file enables authors to prepare research 
 % articles for submission to PNAS.
-%
-% Please note that whilst this template provides a
-% preview of the typeset manuscript for submission, it
+% 
+% Please note that whilst this template provides a 
+% preview of the typeset manuscript for submission, it 
 % will not necessarily be the final publication layout.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,23 +18,19 @@
 % of LaTeX version 2005/12/01 or later.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% For use with latex+dvipdfm, pdflatex, xelatex & lualatex
-% For compiling with plain latex, please use latex+dvipdfm
+% For use with latex+dvipdfm, pdflatex, xelatex & lualatex 
+% For compiling with plain latex, please use latex+dvipdfm 
 % to produce the PDF, not dvis -> ps -> pdf nor dvipdf
-%
+% 
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{pnas-new}[2023/05/03, v1.46]
+\ProvidesClass{pnas-new}[2019/04/29, v1.45]
 \AtEndOfClass{\RequirePackage{microtype}}
 % Option for line numbers
-%\newif\if@pnaslineno
-%\DeclareOption{lineno}{\@pnaslinenotrue}
+\newif\if@pnaslineno
+\DeclareOption{lineno}{\@pnaslinenotrue}
 \DeclareOption*{\PassOptionsToClass{\CurrentOption}{extarticle}}
 \ProcessOptions*
 \LoadClass{extarticle}
-
-\widowpenalty=10000 % To avoid widow & orphan lines
-\clubpenalty=10000  % To avoid single line remain at preceding page
-\hyphenpenalty=750 % For proper hyphenation
 
 %% Fonts and language
 \RequirePackage[utf8]{inputenc}
@@ -42,7 +38,7 @@
 \RequirePackage{amsmath,amsfonts,amssymb}
 \RequirePackage{lmodern}
 \RequirePackage[scaled]{helvet}
-%\RequirePackage[T1]{fontenc}
+\RequirePackage[T1]{fontenc}
 \RequirePackage{lettrine} % For dropped capitals
 
 %% For the Significance Statement & footnote on the first page
@@ -61,7 +57,7 @@
 %% Hyperlinking
 \RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
 
-%% Set up main title page fonts
+%% Set up main title page fonts 
 \newcommand{\headerfont}{\normalfont\sffamily\fontsize{7}{9} \selectfont}
 \newcommand{\footerfont}{\normalfont\sffamily\fontsize{7}{9} \selectfont}
 \newcommand{\titlefont}{\fontfamily{lmss}\bfseries\fontsize{22pt}{24pt}\selectfont}
@@ -84,11 +80,6 @@
 
 \renewcommand\Authands{, and }
 
-\renewcommand\@author{\ifx\AB@affillist\AB@empty\AB@author\else
-      \ifnum\value{affil}>\value{Maxaffil}\def\rlap##1{##1}%
-    \AB@authlist%\\[\affilsep]\AB@affillist
-    \else  \AB@authors\fi\fi}
-
 %% Choose template type
 \newcommand*{\templatetype}[1]{%
   \RequirePackage{#1}}
@@ -101,7 +92,7 @@
 %% For numbering just one line of an equation
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
 
-%% Watermark
+%% Watermark 
 \newboolean{displaywatermark}
 \setboolean{displaywatermark}{true} % Set to false to remove the watermark
 \AtBeginDocument{%
@@ -135,9 +126,9 @@
                 left=38.5pt,%
                 right=43pt,%
                 top=43pt,% 10pt provided by headsep
-                bottom=44pt,%
+                bottom=32pt,%
                 headheight=0pt,% No Header
-                headsep=-2pt,%
+                headsep=10pt,%
                 footskip=25pt,
                 marginparwidth=38pt]{geometry}
 \RequirePackage[labelfont={bf,sf},%
@@ -145,7 +136,7 @@
                 figurename=Fig.]{caption}
 \setlength{\columnsep}{13.5pt} % Distance between the two columns of text
 \setlength{\parindent}{12pt} % Paragraph indent
-\setlength{\headheight}{12pt}
+
 %% Set document color scheme
 \definecolor{black50}{gray}{0.5} % 50% black for hrules
 \definecolor{color0}{RGB}{0,0,0} % Base
@@ -180,40 +171,10 @@
 \renewcommand\bibfont{\normalfont\sffamily\fontsize{6}{8}\selectfont} % set font to be sans serif
 %% April 29, 2019: abbreviate journal names
 \RequirePackage{jabbrv}
-
+ 
 \renewcommand\@biblabel[1]{ #1.} % Remove brackets from label
 \def\tagform@#1{\maketag@@@{\bfseries(\ignorespaces#1\unskip\@@italiccorr)}}
 \renewcommand{\eqref}[1]{\textup{{\normalfont Eq.~(\ref{#1}}\normalfont)}}
-
-\renewenvironment{thebibliography}[1]{%
-\bibsection
- \parindent\z@
- \labelsep2.8pt
- \bibpreamble
-\fontsize{6.75pt}{8pt}\selectfont
- \list{\@biblabel{\the\c@NAT@ctr}}{\@bibsetup{#1}\global\c@NAT@ctr\z@}%
- \ifNAT@openbib
-   \renewcommand\newblock{\par}%
- \else
-   \renewcommand\newblock{\hskip .11em \@plus.33em \@minus.07em}%
- \fi
- \sloppy
- \clubpenalty4000\widowpenalty4000
- \sfcode`\.\@m
- \let\NAT@bibitem@first@sw\@firstoftwo
-    \let\citeN\cite \let\shortcite\cite
-    %\let\citeasnoun\cite\xbibfont
-	\bibfont\raggedright
-}{%
- \bibitem@fin
- \bibpostamble
- \def\@noitemerr{%
-  \PackageWarning{natbib}{Empty `thebibliography' environment}%
- }%
- \endlist
- \bibcleanup
- \label{LastPage}
-}%
 
 
 %% Figure caption style
@@ -247,101 +208,12 @@
 \fancypagestyle{firststyle}{
    \fancyfoot[R]{\footerfont PNAS\hspace{7pt}|\hspace{7pt}\textbf{\today}\hspace{7pt}|\hspace{7pt}vol. XXX\hspace{7pt}|\hspace{7pt}no. XX\hspace{7pt}|\hspace{7pt}\textbf{\thepage\textendash\pageref{LastPage}}}
    \fancyfoot[L]{\footerfont\@ifundefined{@doi}{}{\@doi}}
-
-\newsavebox{\PNAS@linecount@bx}
-\newlength\PNAS@linecount@bxht
-\newcount\PNAS@linecount
-\PNAS@linecount\@ne\relax
-\def\PNAS@mk@linecount{%
-    \savebox{\PNAS@linecount@bx}[4em][t]{\parbox[t]{4em}{\raggedleft\vskip1pc\sffamily
-        \normalsize
-        \setlength{\PNAS@linecount@bxht}{0pt}%
-        \loop{\raggedleft\scriptsize\the\PNAS@linecount}\\
-        \global\advance\PNAS@linecount by \@ne
-        \addtolength{\PNAS@linecount@bxht}{\baselineskip}%
-        \ifdim\PNAS@linecount@bxht<0.98\textheight\repeat
-        {\raggedleft\scriptsize\the\PNAS@linecount}\hfill
-        \global\advance\PNAS@linecount by \@ne}}}
-
-\def\PNAS@linecountLO{%
-  \PNAS@mk@linecount
-  \begin{picture}(0,0)%
-    \put(-50,7){\usebox{\PNAS@linecount@bx}}%
-  \end{picture}%
-}
-\def\PNAS@linecountRO{%
-  \PNAS@mk@linecount
-  \begin{picture}(0,0)%
-    \put(-13,7){\usebox{\PNAS@linecount@bx}}%
-  \end{picture}%
-}
-\def\PNAS@linecountLE{%
-  \PNAS@mk@linecount
-  \begin{picture}(0,0)%
-    \put(-28,4){\usebox{\PNAS@linecount@bx}}%
-  \end{picture}%
-}
-\def\PNAS@linecountRE{%
-  \PNAS@mk@linecount
-  \begin{picture}(0,0)%
-    \put(11,4){\usebox{\PNAS@linecount@bx}}%
-  \end{picture}%
 }
 
-\fancyhead[LO]{\PNAS@linecountLO}
-\fancyhead[RO]{\PNAS@linecountRO}
-\fancyhead[LE]{\PNAS@linecountLE}
-\fancyhead[RE]{\PNAS@linecountRE}
-}
 
-\newsavebox{\PNAS@linecount@bxsecpage}
-\newlength\PNAS@linecount@bxhtsecpage
-%\newcount\PNAS@linecount
-%\PNAS@linecount\@ne\relax
-\def\PNAS@mk@linecountsecpage{%
-    \savebox{\PNAS@linecount@bxsecpage}[4em][t]{\parbox[t]{4em}{\raggedleft\vskip15pt\sffamily
-        \normalsize
-        \setlength{\PNAS@linecount@bxhtsecpage}{0pt}%
-        \loop{\raggedright\scriptsize\the\PNAS@linecount}\\
-        \global\advance\PNAS@linecount by \@ne
-        \addtolength{\PNAS@linecount@bxhtsecpage}{\baselineskip}%
-        \ifdim\PNAS@linecount@bxhtsecpage<0.98\textheight\repeat
-        {\raggedright\scriptsize\the\PNAS@linecount}\hfill
-        \global\advance\PNAS@linecount by \@ne}}}
-
-\def\PNAS@linecountsecpageLO{%
-  \PNAS@mk@linecountsecpage
-  \begin{picture}(0,0)%
-    \put(-50,7){\usebox{\PNAS@linecount@bxsecpage}}%
-  \end{picture}%
-}
-\def\PNAS@linecountsecpageRO{%
-  \PNAS@mk@linecountsecpage
-  \begin{picture}(0,0)%
-    \put(-13,7){\usebox{\PNAS@linecount@bxsecpage}}%
-  \end{picture}%
-}
-
-\def\PNAS@linecountsecpageLE{%
-  \PNAS@mk@linecountsecpage
-  \begin{picture}(0,0)%
-    \put(-50,7){\usebox{\PNAS@linecount@bxsecpage}}%
-  \end{picture}%
-}
-\def\PNAS@linecountsecpageRE{%
-  \PNAS@mk@linecountsecpage
-  \begin{picture}(0,0)%
-    \put(-13,7){\usebox{\PNAS@linecount@bxsecpage}}%
-  \end{picture}%
-}
-
-\fancyhead[LO]{\PNAS@linecountsecpageLO}
-\fancyhead[RO]{\PNAS@linecountsecpageRO}
-\fancyhead[LE]{\PNAS@linecountsecpageLE}
-\fancyhead[RE]{\PNAS@linecountsecpageRE}
 % Headers
-%\fancyhead[LE,RO]{}
-%\fancyhead[LO,RE]{}
+\fancyhead[LE,RO]{}
+\fancyhead[LO,RE]{}
 % Footers
 \lfoot{}%
 \cfoot{}%
@@ -370,7 +242,7 @@
   {}
   {0em}
   {#1}
-  []
+  []  
 \titleformat{\subsection}[runin]
   {\sffamily\bfseries}
   {\thesubsection.}
@@ -382,12 +254,12 @@
   {\thesubsubsection.}
   {0.5em}
   {#1. }
-  []
+  []    
 \titleformat{\paragraph}[runin]
   {\sffamily\small\bfseries}
   {}
   {0em}
-  {#1}
+  {#1} 
 \titlespacing*{\section}{0pc}{3ex \@plus4pt \@minus3pt}{5pt}
 \titlespacing*{\subsection}{0pc}{2.5ex \@plus3pt \@minus2pt}{2pt}
 \titlespacing*{\subsubsection}{0pc}{2ex \@plus2.5pt \@minus1.5pt}{2pt}
@@ -413,7 +285,7 @@
 
 %% Abstract formatting
 \def\xabstract{abstract}
-\long\def\abstract#1\end#2{\def\two{#2}\ifx\two\xabstract
+\long\def\abstract#1\end#2{\def\two{#2}\ifx\two\xabstract 
 \long\gdef\theabstract{\ignorespaces#1}
 \def\go{\end{abstract}}\else
 \typeout{^^J^^J PLEASE DO NOT USE ANY \string\begin\space \string\end^^J
@@ -426,138 +298,18 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 % Define an environment with abstract content and styling
 \newcommand{\abscontent}{
 \noindent
-\parbox{\dimexpr1.35\linewidth}{%
+\parbox{\dimexpr\linewidth}{%
     \vskip3pt%
 	\absfont \theabstract
 }%
 \vskip10pt%
 \noindent
-\parbox{\dimexpr1.35\linewidth}{%
+\parbox{\dimexpr\linewidth}{%
 {
  \keywordsfont \@ifundefined{@keywords}{}{\@keywords}}%
 }
 \vskip12pt%
 }
-
-\newcommand{\secondpage}{\@ifstar{\pnaspar}{\parabreak}}
-
-\newcommand{\pnaspar}{\parfillskip=0pt\eject\clearpage\setlength{\columnwidth}{\linewidth}\setlength{\columnwidth}{242pt}\setlength{\linewidth}{242pt}\setlength{\hsize}{242pt}\parfillskip=0pt plus 1fil\noindent}
-\newcommand{\parabreak}{\vfill\eject\clearpage\setlength{\columnwidth}{\linewidth}\setlength{\columnwidth}{242pt}\setlength{\linewidth}{242pt}\setlength{\hsize}{242pt}\parfillskip=0pt plus 1fil}
-\newcommand{\normalcolwidth}{\setlength{\columnwidth}{\linewidth}\setlength{\columnwidth}{242pt}\setlength{\linewidth}{242pt}\setlength{\hsize}{242pt}}
-\newcounter{parcount}
-
-\newcommand*\replicate[1]{%
-  \expandafter\replicate@aux\romannumeral\number\numexpr #1\relax000Q{}
-}
-\newcommand*\replicate@aux[1]{\csname replicate@aux@#1\endcsname}
-\newcommand\replicate@aux@m{}
-\long\def\replicate@aux@m#1Q#2#3{\replicate@aux#1Q{#2#3}{#3}}
-\newcommand\replicate@aux@Q[2]{#1}
-\DeclareRobustCommand*\adjlinewidth[3]{%
-    \parshape = #1
-      \replicate{#1-1}{#2\textwidth #3\textwidth}%
-      0pt\columnwidth
-}
-
-
-\newcommand{\Firstpage}{%
-\setlength{\columnwidth}{0.7\textwidth}
-\setlength{\linewidth}{0.655\textwidth}
-\setlength{\hsize}{0.655\textwidth}
-\setlength{\parskip}{0pt}}
-
-\newcommand{\firstpage}[2][1]{%
-\let\FPeverypar\everypar
-\newtoks\everypar
-\newtoks\listeverypar
-\setlength{\columnwidth}{0.7\textwidth}
-\setlength{\linewidth}{0.655\textwidth}
-\setlength{\hsize}{0.655\textwidth}
-\setlength{\parskip}{0pt}\FPeverypar{\the\everypar\the\listeverypar\stepcounter{parcount}\ifnum\theparcount=0\relax\else\ifnum\theparcount>0\ifnum\theparcount=#2\normalcolwidth\adjlinewidth{#1}{0}{0.655}\fi\fi\fi}}
-
-
-\newcounter{BalanceAtReference}
-\setcounter{BalanceAtReference}{\z@}
-\newcounter{ReferenceIndexForBalancing}
-
-\def\@balancereference{%
-  \ifnum\value{ReferenceIndexForBalancing}=\value{BalanceAtReference}
-\ifnum\value{BalanceAtReference}=\z@
-\relax
-\else
-    \vfill\eject
-  \fi\fi
-  \stepcounter{ReferenceIndexForBalancing}
-}
-\pretocmd{\bibitem}{\@balancereference}
-  {} % on success
-  {\@latex@error{Patching \bibitem failed}{\@ehd}}
-
-
-
-\RequirePackage{cuted}
-
-\def\@outputdblcol{%
-  \if@firstcolumn
-    \global \@firstcolumnfalse
-    \global \setbox\@leftcolumn \box\@outputbox
-    \splitmaxdepth\maxdimen
-        \vbadness\maxdimen
-        \setbox\@outputbox\vbox{\unvbox\@outputbox\unskip}%
-        \setbox\@outputbox\vsplit\@outputbox to\maxdimen
-  \else
-\ifnum\value{page}=1
-%\linewidth=0.655\textwidth
-%\hsize=0.655\textwidth
-\global \@firstcolumntrue
-\setbox\@outputbox \vbox {%
-                         \hb@xt@\textwidth {%
-                           \hb@xt@0.7\textwidth {%
-                             \box\@leftcolumn \hss}%
-                           \hfil
-                           \vrule \@width\columnseprule
-                           \hfil
-                           \hb@xt@\columnwidth {%
-                             \box\@outputbox \hss}%
-                                             }%
-                              }%
-\else
-\global \@firstcolumntrue
-    \setbox\@outputbox \vbox {%
-                         \hb@xt@\textwidth {%
-                           \hb@xt@\columnwidth {%
-                             \box\@leftcolumn \hss}%
-                           \hfil
-                           \vrule \@width\columnseprule
-                           \hfil
-                           \hb@xt@\columnwidth {%
-                             \box\@outputbox \hss}%
-                                             }%
-                              }%
-                              \fi
-    \ifvoid\hold@viper
-    \else
-      \setbox\@outputbox \vbox{\box\hold@viper\box\@outputbox}%
-    \fi
-    \@combinedblfloats
-    \@outputpage
-    \begingroup
-      \@dblfloatplacement
-      \@startdblcolumn
-      \@whilesw\if@fcolmade \fi
-        {\@outputpage
-         \@startdblcolumn}%
-      \ifvoid\@viper
-      \else
-        \global\setbox\@viper\vbox{%
-                \vskip-\stripsep\unvbox\@viper}\@viperoutput
-      \fi
-    \endgroup
-  \fi
-}
-
-\newcommand\bibsplit[1][]{\begin{strip}\vspace*{-12pt}\end{strip}\setcounter{BalanceAtReference}{#1}}
-
 
 % Option to format abstract differently for certain layouts (not used)
 \newcommand{\abscontentformatted}{
@@ -568,7 +320,7 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 \newlength\pnas@vertadjust
 \newcommand\verticaladjustment[1]{\setlength{\pnas@vertadjust}{#1}}
 
-%% Custom title page
+%% Custom title page 
 \renewcommand{\@maketitle}{%
 {%
 \ifthenelse{\boolean{shortarticle}}
@@ -576,7 +328,7 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
     {\raggedright\baselineskip= 24pt\titlefont \@title\par}%
     \vskip10pt% 21pts between base of title and base of author line
     {\raggedright \@author\par}
-    \vskip8pt% 16pts between base of affiliations and base of dates line
+    \vskip8pt% 16pts between base of affiliations and base of dates line 
     {\raggedright \datesfont \@ifundefined{@dates}{}{\@dates}\par}
     \vskip12pt%
     }}
@@ -586,7 +338,7 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
     {\raggedright\baselineskip= 24pt\titlefont \@title\par}%
     \vskip10pt% 21pts between base of title and base of author line
     {\raggedright \@author\par}
-    \vskip8pt% 16pts between base of affiliations and base of dates line
+    \vskip8pt% 16pts between base of affiliations and base of dates line 
     {\raggedright \datesfont \@ifundefined{@dates}{}{\@dates}\par}
     \vskip12pt
     {%
@@ -601,25 +353,25 @@ THE ABSTRACT\vskip12pt}\let\go\relax\fi
 }
 
 %%%% Adding line numbers
-%\if@twocolumn
-%  \RequirePackage[switch,mathlines]{lineno}
-%\else
-%  \RequirePackage[mathlines]{lineno}
-%\fi
-%
-%\if@pnaslineno
-%  \linenumbers
-%
-%  \patchcmd{\abscontent}{\noindent}{\noindent\nolinenumbers}{}{}
-%  \patchcmd{\abscontent}{\theabstract}{\internallinenumbers\theabstract}{}{}
-%  \appto{\abscontent}{\linenumbers*}
-%
-%  \if@twocolumn
-%  \else
-%    \preto{\@maketitle}{\nolinenumbers}
-%  \fi
-%\fi
-%
+\if@twocolumn
+  \RequirePackage[switch,mathlines]{lineno}
+\else
+  \RequirePackage[mathlines]{lineno}
+\fi
+
+\if@pnaslineno
+  \linenumbers
+
+  \patchcmd{\abscontent}{\noindent}{\noindent\nolinenumbers}{}{}
+  \patchcmd{\abscontent}{\theabstract}{\internallinenumbers\theabstract}{}{}
+  \appto{\abscontent}{\linenumbers*}
+    
+  \if@twocolumn
+  \else
+    \preto{\@maketitle}{\nolinenumbers}
+  \fi
+\fi
+
 
 %% Footnotes set up
 \RequirePackage[flushmargin,ragged,symbol*]{footmisc}
