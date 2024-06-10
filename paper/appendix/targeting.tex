@@ -1,0 +1,274 @@
+
+
+\begin{defn}[Targeting]
+    A random vector $(X, w)$ drawn from a distribution $g$ \textbf{targets} the distribution $\pi$ if for any measurable and bounded functional $h$,
+\begin{equation}
+    E_g\{h(X) \cdot w\}=E_\pi\{h(X)\}
+\end{equation}  
+    A set of particles $(X^J_j, w^J_j), j=1,2, \ldots,J$, \textbf{targets} $\pi$ if for any measurable and bounded functional $h$,
+\begin{equation}
+    \frac{\sum_{j=1}^J h(X^J_j) w^J_j}{\sum_{j=1}^J w^J_j} \stackrel{a.s.}{\to} E_\pi(h(X))
+\end{equation}
+as $J \to \infty$.
+\end{defn}
+\cite{chopin04} asserted without proof that common particle filter algorithms target the filtering distribution, $f_{X_{1:N}|Y_{1:N}}$, in this sense.
+In order to prove the consistency of our variation on the particle filter, we now present three helper lemmas.
+The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
+We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resampling, which is convenient for the proof though other resampling strategies may be preferable in practice.
+
+\begin{lem}[Change of Weight Measure]
+    \label{lem:change-measure-proper-weights}
+    Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,V_j^J),j=1,\dots,J\}$ be a multinomial sample drawn from $\{(\tilde X_j^J,U_j^J)\}$ where $(\tilde X_j^J,U_j^J)$ is represented, on average, proportional to $\pi^J_j J$ times. Write
+    \[
+    (Y_j^J,V_j^J) = \big(\tilde X^J_{a(j)},U^J_{a(j)}/\pi^J_{a(j)}\big),
+    \]
+    where $a$ is called the ancestor function. If the importance sampling weights $U_j/\pi_j$ are bounded, then $\{(Y^J_j,V^J_j),j=1,\dots,J\}$ targets $f_X$.
+\end{lem}
+
+\begin{proof}
+
+
+    Note that as the $Y_j^J$ are a subsample from $X_j^J$, $h$ can be a function of $Y$ as well as it is one for $X$. We then expand
+    $$\frac{\sum_j h(Y_j^J) V_j^J}{\sum_j V_j^J} = \frac{\sum_j h(\tilde X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}}.$$
+    By hypothesis,
+    $$\frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[f(X)].$$
+
+    We want to show
+    \begin{equation}\label{eq:lemma1:h}
+    \frac{\sum_j h(X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} 0.
+    \end{equation}
+    For this, it is sufficient to show that
+   $$ \sum_j h(\tilde X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(\tilde X_j^J)\frac{U_j^J}{\pi_j^J}\pi_j^J \stackrel{a.s.}{\to} 0 $$
+    since an application of this result with $h(x)=1$ provides almost sure convergence of the denominator in (\ref{eq:lemma1:h}).
+    Write $g(\tilde X_j^J) = h(\tilde X_j^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
+    $$\sum_j Z_j^J := \sum_j \left(g(\tilde X_{k_j}^J) -  g(\tilde X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
+
+    Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where 
+    {THE Zs ARE ONLY CONDITIONALLY INDEPENDENT, SO WE COULD PUT IN THE CONDITIONING EVENT (I.E., THE Xs AND Us) HERE TO BE MORE ACCURATE}
+    $$\E\left[\left(\sum_j Z_j^J\right)^4\right] 
+    = J\E[(Z_1^J)^4] + 3J(J-1)\left(\E[(Z_j^J)^2]\right) \leq CJ^2,$$ for some $C>0$. By Markov, 
+    $$\mathbb{P}\left(\left|\frac{1}{J} \sum_{j=1}^J Z_j^J\right|>\epsilon\right) 
+    \leq \frac{1}{\epsilon^4J^4 } 
+    \mathbb{E}\left[\left(\sum_{j=1}^J Z_j^J\right)^4\right] \leq \frac{C}{\epsilon^4J^2},$$
+    and as these terms are summable we can apply Borel-Cantelli to conclude that these deviations happen only finitely often for every $\epsilon>0,$ giving us the almost-sure convergence for
+    
+    $$ \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J \stackrel{a.s.}{\to} 0.$$ 
+
+    Similarly, we also have that
+    $$ \sum_j \frac{u_j^J}{\pi_j^J}\pi_j^J
+    - \sum_j \frac{u_{k_j}^J}{\pi_{k_j}^J} \stackrel{a.s.}{\to} 0,$$
+
+    and the result is proved. 
+
+
+    \kevin{MAY HAVE TO DEAL WITH CONDITIONING ON THE FILTRATION AT THE LAST TIMESTEP, AND THEN USING THE TOWER PROPERTY. EXPECTATION WILL BE THE SAME REGARDLESS FOR THE FOURTH MOMENT.}
+
+    
+    
+   % Let $h$ be an integrable function. 
+    %\begin{align*}
+    %    \E\left[\sum_{j=1}^J h(Y_j) v_j\right] 
+    %    &= \sum_{j=1}^J \E\left[h(X_{a(j)}) \frac{u_{a(j)}}{\pi_{a(j)}}\right] \\
+    %    &= \sum_{j=1}^J \E\left[h(X_{j}) u_{j}\right],
+    %\end{align*}
+    %and similarly for the denominator. Now, the numerator and denominator of the reweighted quantity have the same expectation as the numerator and denominator of the original quantity, so they must converge to $ E_\pi(h(X))$ almost surely as well. 
+\end{proof}
+
+
+\textbf{Remark:} Note that Lemma \ref{lem:change-measure-proper-weights} permits $\pi_{1:J}$ to depend on $\{(X_j,u_j)\}$ as long as the resampling is carried out independently of $\{(X_j,u_j)\}$, conditional on $\pi_{1:J}$.
+
+\begin{lem}[Particle Marginals]
+    \label{lem:marginal-proper-weights}
+    Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $\tilde Z_j^J \sim f_{Z|X}(\cdot | \tilde X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Then, if the $U_j^J$ are bounded, $\{(\tilde Z_j^J,U_j^J)\}$ targets $f_Z$.
+\end{lem}
+\begin{proof}
+    We want to show that, for any measurable bounded $h$, 
+     $$\frac{\sum_j h(\tilde Z_j^J) \, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)] = \E_{f_X}\big[\E_{f_{Z|X}}[h(Z) | X]\big].$$
+    By assumption, for any measurable and bounded functional $g$ with domain $\gX$,
+    \begin{equation}\label{eq:lemma2:g}
+    \frac{\sum_j g(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].
+    \end{equation}
+    Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(\tilde Z_j^J) \, U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \, \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.$$
+    The denominator converges to $1$ almost surely. The numerator, on the other hand, is
+    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J,$$
+    by the same fourth moment argument to the above lemma converges almost surely to the limit of its expectation
+    \begin{eqnarray*}        
+    \lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J\right] 
+    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  
+      \E\left[ h(\tilde Z_j^J)\, \bar{U}_j^J\big|\tilde X_j^J, \bar U_j^J\right]
+    \right]
+    \\
+    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  \E\big[h(Z) \big| X=\tilde X_j^J \big] \, \bar U_j^J\right].
+    \end{eqnarray*}
+    Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand size converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
+    It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   
+    $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\,\bar{U}_j^J \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)].$$ 
+    
+\end{proof}
+
+\begin{lem}[Particle Posteriors]
+    \label{lem:posterior-proper-weights}
+    Suppose that $\{(X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^{\prime J}_j,U^{\prime J}_j) = \big(X_j^J,U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$. Then, if $U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$ and $U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big) / f_Z(z^*)$ are bounded, $\{(X^{\prime J}_j,U^{\prime J}_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
+\end{lem}
+
+\begin{proof}
+
+    Again, we want to show that
+     $$\frac{\sum_j h(X_j^J) \cdot U_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j U_j^J \cdot f_{Z|X}(z^*|X_j^J)} \stackrel{a.s.}{\to} \E_{f_{X|Z}}[h(X)|z^*].$$
+
+    We already have that for any measurable bounded $g$,
+    \begin{equation}
+        \frac{\sum_j g(X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].
+        \label{eq:lemma-posterior-hypothesis}
+    \end{equation}
+    
+    Consider the following:
+    \begin{equation}
+    \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}
+    \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \right)^{-1}.
+    \end{equation}
+
+    We will apply Equation \ref{eq:lemma-posterior-hypothesis} to the numerator and the denominator in the ratio above individually. The numerator converges to 
+    $$\frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \stackrel{a.s.}{\to} \E_{f_X}[h(X)f_{Z|X}(z^*|X)],$$
+    while the reciprocal of the denominator converges to 
+    $$ \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}  \stackrel{a.s.}{\to} \E_{f_X}[f_{Z|X}(z^*|X)] = f_Z(z^*).$$
+
+    
+    But it holds that
+    $$\frac{\E_{f_X}[h(X)f_{Z|X}(z^*|X)]}{f_Z(z^*)} = \E_{f_X}\left[\frac{h(X)f_{Z|X}(z^*|X)}{f_Z(z^*)}\right] = \E_{f_X}\left[h(X)\frac{f_{X|Z}(X|z^*)}{f_X(X)}\right] =  \E_{f_{X|Z}}[h(X)|z^*],$$
+    and we have the desired result.
+    
+    
+    % Write $\bar{U}_j^{J} = \frac{J U_j^J}{\sum_j U_j^J}$. Define the weights $U^{' J}_j := U_j^J \cdot f_{Z|X}(z^*|X_j^J),$ and the corresponding self-normalized weights $\bar{U}_j^{' J} := \frac{J U^{' J}_j}{\sum_j U^{' J}_j}.$ The denominator of the below quantity 
+    % $$ \frac{J^{-1} \sum_j h(X_j^J) \bar{U}_j^{' J}}{J^{-1} \sum_j \bar{U}_j^{' J}}$$
+    % converges to $1$, while the numerator, by the same fourth moment argument as the first lemma, converges almost surely to the limit of its expectation, which is
+    % \begin{align*}
+    %     \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \bar{u}_j^{' J} \right]
+    %     &= \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \frac{J u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j u_j^J \cdot f_{Z|X}(z^*|X_j^J)}\right] \\
+    %     &= \lim_{J\to\infty} \E\left[J^{-1} \sum_j h(X_j^J) \frac{J \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}{\sum_j \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}\right]\\
+    %     &= \lim_{J\to\infty} \E\left[ \sum_j h(X_j^J) \frac{\frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}{\sum_j \frac{u_j^J \cdot f_{Z|X}(z^*|X_j^J)}{f_Z(z^*)}}\right]\\
+    %     &= \E_{X|Z}[h(X)|z^*],
+    % \end{align*}
+
+    % where we can swap the limit and expectations with the bounded convergence theorem.
+\end{proof}
+
+
+\begin{lem}[Change of Particle Marginal Measure]
+    \label{lem:change-marginal-proper-weights}
+    Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $\tilde Z_j^J \sim f_{Z|X}(\cdot | \tilde X_j^J)$ where $f_{Z|X}$ is a conditional probability density function corresponding to a joint density $f_{X,Z}$ with marginal densities $f_X$ and $f_Z$. Further, let $f_{Y|X}$ be a conditional probability density function corresponding to a joint density $f_{X,Y}$ with marginal densities $f_X$ and $f_Y$. Then, if the $U_j^J$ and $V_j^J := U_j^Jf_{Y|X}(\tilde{Z}_j^J|\tilde{X}_{j}^J)/f_{Z|X}(\tilde{Z}_j^J|\tilde{X}_{j}^J)$ are bounded, $\{(\tilde Z_j^J,U_j^J)\}$ targets $f_Z$, and $\{(\tilde Z_j^J,V_j^J)\}$ targets $f_Y$.
+\end{lem}
+\begin{proof}
+    From Lemma \ref{lem:marginal-proper-weights}, for any measurable bounded $g$, 
+     $$\frac{\sum_j g(\tilde Z_j^J) \, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_Z}[g(Z)] = \E_{f_X}\big[\E_{f_{Z|X}}[g(Z) | X]\big],$$
+     and by assumption, for any measurable bounded $g$, 
+    $$\frac{\sum_j g(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].$$
+
+    We in fact want to show that 
+    $$\frac{\sum_j h(\tilde Z_j^J) \, V_j^J}{\sum_j V_j^J} \stackrel{a.s.}{\to} \E_{f_Y}[h(Y)] = \E_{f_X}\left[\E_{f_{Z|X}}\left[h(Z)\frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)} \Bigg| X\right]\right].$$
+
+    Consider the following:
+    \begin{equation}
+    \frac{J^{-1} \sum_j h(Z_j^J) \frac{f_{Y|X}(\tilde Z_j^J|\tilde X_j^J)}{f_{Z|X}(\tilde Z_j^J|\tilde X_j^J)} {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}
+    \times \left( \frac{J^{-1} \sum_j \frac{f_{Y|X}(\tilde Z_j^J|\tilde X_j^J)}{f_{Z|X}(\tilde Z_j^J|\tilde X_j^J)} {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \right)^{-1}.
+    \end{equation}
+
+    We will apply Lemma 2 to the numerator and the denominator in the ratio above individually. The numerator converges to 
+    $$\frac{J^{-1} \sum_j h(Z_j^J)  \frac{f_{Y|X}(\tilde Z_j^J|\tilde X_j^J)}{f_{Z|X}(\tilde Z_j^J|\tilde X_j^J)} {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \stackrel{a.s.}{\to} \E_{f_Z}\left[h(Z) \frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)}\right] = \E_{f_X}\left[\E_{f_{Z|X}}\left[h(Z)\frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)}\Bigg|X\right]\right],$$
+    while the reciprocal of the denominator converges to 
+    $$ \frac{J^{-1} \sum_j \frac{f_{Y|X}(\tilde Z_j^J|\tilde X_j^J)}{f_{Z|X}(\tilde Z_j^J|\tilde X_j^J)}{U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}  \stackrel{a.s.}{\to} \E_{f_Z}\left[ \frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)}\right] = \E_{f_X}\left[\E_{f_{Z|X}}\left[\frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)}\Bigg|X\right]\right] .$$
+
+    The numerator is exactly what we desire, so it remains to show that the reciprocal of the denominator converges to $1$. Applying Fubini, we have that
+    \begin{align*}
+        \E_{f_X}\left[\E_{f_{Z|X}}\left[\frac{f_{Y|X}(Z|X)}{f_{Z|X}(Z|X)}\Bigg|X\right]\right] &= \int_x\left(\int_z \frac{f_{Y|X}(z|x)}{f_{Z|X}(z|x)}f_{Z|X}(z|x)dz \right)f_X(x) dx \\
+        &= \int_x\int_z f_{Y|X}(z|x) f_X(x) dzdx \\
+        &= \int_z\int_x f_{Y|X}(z|x) f_X(x) dxdz \\
+        &= \int_z f_{Y}(z) dz \\
+        &= 1,
+    \end{align*}
+    and we are done. 
+
+    
+\end{proof}
+
+
+\begin{prop}[MOP-1 Targets the Posterior]
+    When $\alpha=1$ or $\phi=\theta$, MOP-$\alpha$ targets the posterior. 
+\end{prop}
+\begin{proof}
+    When $\theta=\phi$, regardless of the value of $\alpha$, the ratio $\frac{g_{n,j}^\theta}{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter estimate.
+
+    When $\alpha=1$, and $\theta\neq\phi,$ the proof is as follows. Recursively applying Lemmas \ref{lem:change-measure-proper-weights}, \ref{lem:marginal-proper-weights}, and \ref{lem:posterior-proper-weights}, we obtain that 
+    %to step~\ref{mop:step1}, Lemma~2 step~ {mop:weight:update} and Lemma~3 to step~\ref{mop:step2} we obtain that
+    the MOP-1 filter targets the posterior.
+    Specifically, suppose inductively that $\big\{\big(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
+    Then, Lemma \ref{lem:marginal-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big)\big\}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+    Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} \big)\big\}$ therefore targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+    Lemma \ref{lem:change-measure-proper-weights} guarantees that the resampling rule, given by 
+    \[
+    \big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \big(X^{P,\theta}_{n,a(j)}, w^{P,\theta}_{n,a(j)} g^\theta_{n,a(j)}\big/ g^\phi_{n,a(j)}\big),
+    \]
+    with resampling weights proportional to $g^\phi_{n,j}$, therefore also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+\end{proof}
+
+\begin{prop}[DOP-1 Targets the Posterior]
+    When $\alpha=1$ or $\phi=\theta$, DOP-$\alpha$ targets the posterior. 
+\end{prop}
+\begin{proof}
+    When $\theta=\phi$, regardless of the value of $\alpha$, the ratio $\frac{g_{n,j}^\theta h_{n,j}^\theta}{g_{n,j}^\phi h_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter estimate.
+
+    When $\alpha=1$, and $\theta\neq\phi,$ the proof is as follows. Recursively applying Lemmas \ref{lem:change-measure-proper-weights}, \ref{lem:posterior-proper-weights}, and \ref{lem:change-marginal-proper-weights}, we obtain that 
+    %to step~\ref{mop:step1}, Lemma~2 step~ {mop:weight:update} and Lemma~3 to step~\ref{mop:step2} we obtain that
+    the DOP-1 filter targets the posterior.
+    Specifically, suppose inductively that $\big\{\big(X^{F,\phi}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
+    Then, Lemma \ref{lem:change-marginal-proper-weights} tells us that $\big\{\big(X^{P,\phi}_{n,j},w^{P,\theta}_{n,j} h_{n,j}^\theta /h_{n,j}^\phi\big)\big\}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+    Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P,\phi}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j}h_{n,j}^\theta /h_{n,j}^\phi \big)\big\}$ therefore targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+    Lemma \ref{lem:change-measure-proper-weights} guarantees that the resampling rule, given by 
+    \[
+    \big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \left(X^{P,\phi}_{n,a(j)}, w^{P,\theta}_{n,a(j)} \frac{g^\theta_{n,a(j)}h_{n,a(j)}^\theta}{g^\phi_{n,a(j)}h_{n,a(j)}^\phi}\right),
+    \]
+    with resampling weights proportional to $g^\phi_{n,j}$, therefore also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+\end{proof}
+
+
+This has addressed filtering, but not quite yet the likelihood evaluation. For this we use the following lemma.
+
+\begin{lem}[Likelihood Proper Weighting]
+    \label{lem:lik-proper-weight}
+  $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is consistently estimated by either the before-resampling estimate,
+\begin{equation}\label{L1}
+L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
+\end{equation}
+or by the after-resampling estimate,
+\begin{equation}\label{L2}
+L_n^{A,\theta} = L^\phi_n \frac{\sum_{j=1}^Jw^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}.
+\end{equation}
+where $L^\phi_n$ is as defined in the various algorithms.
+\end{lem}
+
+Here, (\ref{L1}) is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ in the case of MOP and $\{ \big(X^{P,\phi}_{n,j},w^{P,\theta}_{n,j}\big) \}$ in the case of DOP (with a slight abuse of notation here, as the weight expressions are in fact different for both algorithms) targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
+To see  (\ref{L2}),
+we write the numerator of (\ref{lem:change-measure-proper-weights}) as
+\[
+L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
+= L^\phi_n \sum_{j=1}^J w_{n,j}^{FC,\theta} \frac{g^\phi_{n,j}}{L_n^\phi}
+\]
+Using Lemma \ref{lem:change-measure-proper-weights}, we resample according to probabilities $\frac{g^\phi_{n,j}}{L_n^\phi}$ to see this is properly estimated by
+\[
+L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j},
+\]
+from which we obtain (\ref{L2}).
+
+Using Lemma \ref{lem:lik-proper-weight}, we obtain a likelihood estimate,
+\[
+L^{A,\theta} = \prod_{n=1}^N \left( L^\phi_n \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}\right).
+\]
+Since $w^{F,\theta}_{n,j}=w^{P,\theta}_{n+1,j}$, this is a telescoping product. The remaining terms are
+$\sum_{j=1}^J w^{P,\theta}_{0,j} = J$ on the denominator and $\sum_{j=1}^J w^{F,\theta}_{N,j}$ on the numerator.
+This derives the MOP/DOP estimate.
+
+\kevin{IS THIS UNBIASED?}
+
+$L^{B,\theta}$ should generally be preferred in practice, since there is no reason to include the extra variability from resampling when calculating the conditional log likelihood, but it lacks the nice telescoping product that lets us derive exact expressions for the gradient later.

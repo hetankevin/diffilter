@@ -487,7 +487,7 @@ It is therefore not immediately apparent that these two converge to the same thi
     \label{thm:mop-grad-consistency}
 \end{thm}
 \begin{proof}
-    Fix $\omega \in \Omega$, and set $\phi = \theta$, where $\theta$ is the point at which we wish to evaluate the gradient. The sequence $(\nabla_\theta \hat\lik_J^1(\theta)(\omega))_{J \in \mathbb{N}}$ is uniformly bounded over all $J$ by Assumption \ref{assump:local-bounded-derivative}. Again by Assumption \ref{assump:local-bounded-derivative}, the second derivative of $\hat\lik_J^1(\theta)(\omega)|_{\theta=\theta'}$ is also bounded by $H'$ for almost every $\omega\in \Omega$ and every $\theta'\in \Theta$. So $(\nabla_\theta \hat\lik_J^1(\theta)( \omega))_{J \in \mathbb{N}}$ is uniformly Lipschitz, and therefore uniformly equicontinuous for almost every $\omega \in \Omega$.
+    Fix $\omega \in \Omega$, and set $\phi = \theta$, where $\theta$ is the point at which we wish to evaluate the gradient. The sequence $(\nabla_\theta \hat\lik_J^1(\theta)(\omega))_{J \in \mathbb{N}}$ is uniformly bounded over all $J$ by Assumption \ref{assump:local-bounded-derivative}. Again by Assumption \ref{assump:local-bounded-derivative}, the second derivative of $\hat\lik_J^1(\theta)(\omega)|_{\theta=\theta'}$ is also bounded by $H^*$ for almost every $\omega\in \Omega$ and every $\theta'\in \Theta$. So $(\nabla_\theta \hat\lik_J^1(\theta)( \omega))_{J \in \mathbb{N}}$ is uniformly Lipschitz, and therefore uniformly equicontinuous for almost every $\omega \in \Omega$.
 
     By Arzela-Ascoli, there is a uniformly convergent subsequence. But there is only one subsequential limit, as we can treat the gradient estimate at $\theta$ as a bounded functional of the particles by Assumption \ref{assump:local-bounded-derivative}, allowing us to apply Theorem \ref{thm:mop-targeting} to see that the sequence $(\nabla_\theta \hat\lik_J^1(\theta, \omega))_{J \in \mathbb{N}}$ converges pointwise for $\theta=\phi$ and almost every $\omega \in \Omega$. So the whole sequence must converge uniformly to $\lim_{J \to \infty} \nabla_\theta \hat\lik_J^1(\theta)(\omega).$ 
     
@@ -639,6 +639,8 @@ Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interp
 \section{Optimization Convergence Analysis}
 \input{appendix/convergence}
 
+\section{Feynman-Kac Models and Monte Carlo Approximations}
+\input{appendix/feynman}
 
 \section{Weighted Particle Filters that Target the Posterior}
 \input{appendix/targeting}
