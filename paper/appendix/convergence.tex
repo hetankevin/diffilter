@@ -1,0 +1,244 @@
+
+
+
+The analysis in this section roughly follows the analysis in \cite{mahoney16}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from \cite{delMoral11} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
+
+
+The convergence analysis in Theorem \ref{thm:mop-convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
+
+\subsection{Bounding the Gradient}
+%\kevin{Add a few words to explain that the gradient of the log-likelihood w.r.t. parameters is a functional of the particle measure under boundedness assumptions and fixed parameters, appeal to authority and say doucet did it too. }
+
+%\kevin{Gradient linear map, bound conditional likelihoods at time n. Alternatively, convert del moral and doucet expectation bound to high-probability bound. https://arxiv.org/pdf/1905.11546.pdf for trick. Alternatively, concatenate previous states. }
+
+\begin{lem}[Concentration of Measure for Gradient Estimate]
+    \label{lemma:grad_bound}
+    Consider the gradient estimate obtained by MOP-1, which we know by Theorem \ref{thm:mop-grad-consistency} is consistent for the score, where $\theta = \phi$. For $||\nabla_\theta \hat{\loglik}^1(\theta) - \nabla_\theta \loglik(\theta)||_2$ to be bounded by $\epsilon$ with probability $1-\delta$, we require
+    \begin{align}
+    J > \max\left\{2G(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8G(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\},
+    \end{align}
+    where $NG'(\theta) \leq G(\theta)$ are defined in Assumptions \ref{assump:bounded-measurement} and \ref{assump:local-bounded-derivative}, $h(t) = \frac{1}{2}(t - \log(1+t))$, and $\beta_N$ and $r_N$ are two additional finite model-specific constants that do not depend on $J$, but do depend on $N$ and $p$, as defined in \cite{delMoral11}. 
+
+    Equivalently, with probability at least $1-\delta$, it holds that
+    \begin{align}
+        ||\nabla_\theta \hat\ell^1(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G(\theta)\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right).
+    \end{align}
+\end{lem}
+
+\paragraph{Remark:} According to \cite{delMoral11}, under some regularity conditions, $r_N$ and $\beta_N$ are linear in the trajectory length $N$. This corresponds to the finding by \cite{poyiadjis11} that the variance of the estimate is at least quadratic in the trajectory length, and their remark that the result of \cite{delMoral03} establishes that the $L_p$ error is bounded by $O(N^2J^{-1/2})$ (equivalently, the variance is bounded by $O(N^4J^{-1})$) after accounting for the sum over timesteps. The MOP-$1$ variance upper bound is therefore in fact $O(N^4)$, in contrast to the MOP-$\alpha$, where $\alpha<1$, upper bound of $O(N)$. 
+
+
+
+\begin{proof}
+
+
+We will seek to use the concentration inequality of \cite{delMoral11} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. Fix $\theta = \phi$.
+
+
+From the decomposition in the proof of Lemma \ref{lem:mop-1-formula}, as $w_{N, j}^{F, \theta}=1$ when $\theta=\phi$, we have that
+$$
+\nabla_\theta \hat{\ell}(\theta):=\frac{1}{J} \sum_{j=1}^J \nabla_\theta w_{N, j}^{F, \theta}=\frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N  w_{N, k_j}^{P, \theta} \nabla_\theta \log g_{n,k_j}^{A,\theta} = \frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N \nabla_\theta \log g_{n,k_j}^{A,\theta}.
+$$
+
+Define $\varphi_n^i(x_{n,j}^{F,\theta}) := \frac{\partial}{\partial\theta_i} \log g_{n,k_j}^{A,\theta}$, which is a functional of the filtering particles $x_{n,j}^{F,\theta} = x_{n,k_j}^{P,\theta}$. These are bounded measurable functionals bounded by $G'(\theta)$ by Assumption \ref{assump:bounded-measurement}. Therefore, these have bounded oscillation, satisfying the requirement that $\text{osc} \left(\frac{\partial}{\partial\theta_i} \varphi_i(x_{n,j}^{P,\theta}) \right) \leq G'(\theta)$. Note that \cite{delMoral11} in fact assume $\text{osc}(f) \leq 1$, so we simply scale their bound accordingly.
+
+
+Apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delMoral11} and a union bound over each $\varphi_n^i(x_{n,j}^{F,\theta})$, totaling $N$ timesteps and $p$ parameters, to find that
+
+\begin{align}
+    \max_{n=1,...,N} \left\lVert\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell_n(\theta) \right\rVert_{\infty} \leq G'(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
+\end{align}
+
+with probability at least $1-2Np\exp(-t)$. Although the above concentration inequality only considers the error from the expectation under the filtering distribution, we invoke the consistency of MOP-$1$ shown in Theorem \ref{thm:mop-grad-consistency} to establish that the expectation under the filtering distribution is in fact the score. It therefore holds that with the same probability, that when summing over $N$, as $NG'(\theta) \leq G(\theta)$, 
+
+\begin{align}
+    \left\lVert\frac{1}{J}\sum_{j=1}^J\sum_{n=1}^N\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell(\theta) \right\rVert_{\infty} 
+    &\leq G'(\theta)N\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)\\
+    &\leq G(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
+\end{align}
+
+
+We split the $\delta$ failure probability among these $2Np$ terms, to find $\delta\leq2Np\exp(-t) => t\leq\log(2Np/\delta)$, where $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+
+The analogous bound for the 2-norm follows from scaling the right-hand side by $\sqrt{p}$, to require 
+
+\begin{align}
+    ||\nabla_\theta \hat\ell(\theta) - \nabla_\theta \ell(\theta)||_2 \leq G(\theta)\left(\frac{r_N\sqrt{p}}{J}(1+h^{-1}(\log(2p/\delta))) + \sqrt{\frac{2p\log(2p/\delta)}{J}}\beta_N\right)
+\end{align}
+
+and we therefore need 
+\begin{align}
+    J > \max\left\{2G(\theta)\frac{r_N\sqrt{p}}{\epsilon}\left(1+h^{-1}\left(\log\left(\frac{2p}{\delta}\right)\right)\right), 8G(\theta)^2\beta_N^2\frac{p\log(2p/\delta)}{\epsilon^2}\right\}.
+\end{align}
+
+\end{proof}
+
+
+\subsection{Bounding Hessian Estimates}
+
+Should one choose to use a second-order method involving a particle Hessian estimate, we provide a guarantee for its positive-definiteness below.
+
+\begin{lem}[Minimum Eigenvalue Bound for Hessian Estimate]
+    \label{lemma:hess_bound}
+    Assume that the Hessian of the negative log-likelihood $H=\sum_{j=1}^J \E H_j$ has a minimum eigenvalue $0<\gamma<1$, and that $\E \lambda_{\min} (H_j) = \gamma' > 0$. 
+    
+    We then require 
+    \begin{equation}
+        J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'
+    \end{equation}
+    
+    for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$, with probability at least $1-\exp(-t)$.
+\end{lem}
+\begin{proof}
+Write $\hat{H}(\theta) = \hat{H} = \sum_{j=1}^J H_j$ for the estimate of the negative of the Hessian, where $H_j$ is an element of the outer sum over the $J$ particles.
+
+As the negative log-likelihood is convex, we want to bound the minimum eigenvalue of $\hat{H}(\theta)$ from below with high probability, so that all the eigenvalues of $\hat{H}(\theta)$ are positive with high probability. This ensures that the estimated Hessian is invertible and positive-definite.
+
+It is known that the minimum eigenvalue of a symmetric matrix is concave. Therefore, it suffices to show that the first inequality in the below expression
+
+\begin{equation}
+    0 < \sum_{j=1}^J \lambda_{\min} (H_j) \leq  \lambda_{\min}\left(\sum_{j=1}^J H_j\right) = \lambda_{\min} (\hat{H})
+\end{equation}
+
+holds with high probability.
+
+Apply the particle Hoeffding concentration inequality from \cite{delMoral11} to find that  
+
+
+\begin{align}
+    \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \E_{\tilde{\pi}_t}\lambda_{\min}(H_j) &= \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \gamma' \geq -\frac{r_t}{J}(1+h^{-1}(t)) - \sqrt{\frac{2t}{J}}\beta_t \\
+    \sum_{j=1}^J \lambda_{\min}(H_j) &\geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma'
+\end{align}
+
+
+with probability at least $1-\exp(-t)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
+
+We additionally require, for $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$,
+\begin{align}
+    \sum_{j=1}^J \lambda_{\min}(H_j) \geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma' \geq c, \\
+    J\gamma' \geq c + r_t(1+h^{-1}(t)) + \sqrt{2tJ}\beta_t.
+\end{align}
+
+We therefore require $$J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'$$
+
+for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c$ with probability at least $1-\exp(-t)$.
+
+\end{proof}
+
+
+\subsection{Convergence Analysis of Theorem \ref{thm:mop-convergence}}
+
+\begin{proof}
+
+In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney16}.
+
+Define $\theta_\eta = \theta_m + \eta p_m$, where $p_m=-(H(\theta_m))^{-1}g(\theta_m)$. As in Roosta-Khorasani and Mahoney \cite{mahoney16}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
+\begin{equation}
+    f(\theta_m+\eta p_m) \leq f(\theta_m) + \eta\beta p_m^Tg(\theta_m),
+\end{equation}
+holds for any $0< \eta < \tilde{\eta}$ and some $\beta \in (0,1)$.
+
+By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney16}, we have that choosing $J$ such that $||\nabla_\theta\hat{\ell}(\theta_m) - \nabla_\theta \ell(\theta_m)|| \leq \epsilon$ and $\lambda_{\min}(H(\theta_m)) \geq c>0$ for each $m$, yields
+
+\begin{align}
+    f(\theta_\eta)-f(\theta_m) \leq \eta p_m^Tg(\theta_m) + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
+\end{align}
+with probability $1-\delta/2$. From now on, we assume that we are on the success event of this high-probability statement. 
+
+Now, it then holds that
+\begin{equation}
+    p_m^Tg(\theta_m) = -p_m^TH(\theta_m)p_m \geq -c||p_m||^2,
+\end{equation}
+and we can obtain a decrease in the objective. 
+
+Substituting this into the previous expression,
+\begin{align}
+    f(\theta_\eta)-f(\theta_m) \leq -\eta p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
+\end{align}
+
+and the Armijo condition then becomes
+\begin{align}
+    -\eta p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2 &\leq \eta \beta p_m^Tg(\theta_m) = - \eta \beta p_m^TH(\theta_m)p_m \\
+    \epsilon||p_m|| + \eta \Gamma ||p_m||^2 / 2 &\leq (1- \beta) p_m^TH(\theta_m)p_m \\
+    \epsilon + \eta \Gamma ||p_m|| / 2 &\leq c(1- \beta) ||p_m||,
+\end{align}
+
+which holds and guarantees an iteration-independent lower bound if 
+\begin{equation}
+    \eta \leq \frac{c(1-\beta)}{\Gamma}, \;\; \epsilon \leq \frac{c(1-\beta)}{2\Gamma}||g(\theta_m)|| \leq \frac{c(1-\beta)}{2}||p_m||,
+\end{equation}
+which is given by our choice of $\eta$.
+
+Now, first note that
+\begin{equation}
+||g(\theta_m)|| - ||\nabla_\theta f(\theta_m)|| \leq ||g(\theta_m) - \nabla_\theta f(\theta_m)|| \leq \epsilon => ||\nabla_\theta f(\theta_m)|| \geq ||g(\theta_m)|| - \epsilon
+\end{equation} and
+\begin{equation}
+||\nabla_\theta f(\theta_m)||-||g(\theta_m)|| \leq ||\nabla_\theta f(\theta_m)-g(\theta_m)|| \leq \epsilon => ||g(\theta_m)|| \geq ||\nabla_\theta f(\theta_m)|| - \epsilon.
+\end{equation}
+
+There are now two cases. If the algorithm terminates and $||g(\theta_m)|| \leq \sigma \epsilon$, we can derive 
+
+\begin{equation}
+    ||\nabla_\theta f(\theta_m)|| \leq ||g(\theta_m)|| + \epsilon = \sigma\epsilon+\epsilon = (\sigma+1)\epsilon.
+\end{equation}
+
+
+If the algorithm does not terminate, then $||g(\theta_m)|| > \sigma \epsilon$. Notice that 
+
+\begin{align}
+    \epsilon \geq ||g(\theta_m) - \nabla_\theta f(\theta_m)|| &\geq ||g(\theta_m)|| - ||\nabla_\theta f(\theta_m)|| \\
+    ||\nabla_\theta f(\theta_m)|| + \epsilon &\geq ||g(\theta_m)|| \geq \sigma \epsilon \\
+    ||\nabla_\theta f(\theta_m)|| &\geq \sigma \epsilon - \epsilon = (\sigma - 1)\epsilon \\
+    \frac{||\nabla_\theta f(\theta_m)||}{\sigma-1} &\geq \epsilon,
+\end{align}
+
+and now 
+\begin{align}
+    ||\nabla_\theta f(\theta_m)|| - \epsilon
+    &\geq  ||\nabla_\theta f(\theta_m)|| - \frac{||\nabla_\theta f(\theta_m)||}{\sigma-1} = \left(1-\frac{1}{\sigma-1}\right)||\nabla_\theta f(\theta_m|| = \frac{\sigma-2}{\sigma-1}||\nabla_\theta f(\theta_m)|| \geq \frac{2}{3}||\nabla_\theta f(\theta_m)||.
+\end{align}
+
+From $||A^{-1}|| = 1/\sigma_{\min}(A)$,
+\begin{align}
+    p_m^TH(\theta_m)p_m &= (-(H(\theta_m))^{-1}g(\theta_m))^TH(\theta_m)(-(H(\theta_m))^{-1}g(\theta_m)) \\
+    &= g(\theta_m)^T(H(\theta_m))^{-1}g(\theta_m) \\
+    &\geq \frac{1}{c}||g(\theta_m)||^2 \\
+    &\geq \frac{1}{c}(||\nabla_\theta f(\theta_m)|| - \epsilon)^2 \\
+    &\geq \frac{4}{9c}||\nabla_\theta f(\theta_m)||^2.
+\end{align}
+
+From the assumption that $f$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 -\ell \preceq \Gamma I$, by an implication of $\gamma$-strong convexity we have
+\begin{align}
+    f(\theta_m) - f(\theta^*) \leq \frac{1}{2\gamma}||\nabla_\theta f(\theta_m)||^2,
+\end{align}
+and we put together:
+\begin{equation}
+    f(\theta_m) - f(\theta^*) \leq \frac{1}{2\gamma}||\nabla_\theta f(\theta_m)||^2 \leq \frac{9c}{4}\frac{1}{2\gamma}p_m^TH(\theta_m)p_m,
+\end{equation}
+\begin{equation}
+    \frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \leq \frac{4}{9c}||\nabla_\theta f(\theta_m)||^2 \leq p_m^TH(\theta_m)p_m,
+\end{equation}
+\begin{equation}
+    f(\theta_m) - f(\theta^*) \leq \frac{9c}{8\gamma}p_m^TH(\theta_m)p_m,
+\end{equation}
+\begin{equation}
+    -\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \geq -\frac{4}{9c}||\nabla_\theta f(\theta_m)||^2 \geq -p_m^TH(\theta_m)p_m.
+\end{equation}
+
+But from earlier, as the Armijo condition is fulfilled with our choice of $\eta$ and $\epsilon$,
+\begin{align}
+    f(\theta_{m+1})-f(\theta_m) &\leq -\eta p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2 \\
+    &\leq -\eta\beta p_m^TH(\theta_m)p_m \\
+    &\leq -\eta\beta\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)).
+\end{align}
+
+and therefore
+\begin{align}
+    f(\theta_{m+1}) - f(\theta^*) 
+    &= f(\theta_{m+1})-f(\theta_m)+f(\theta_m)- f(\theta^*) \\
+    &\leq f(\theta_m)- f(\theta^*) -\eta\beta\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \\
+    &= (1-\eta\beta\frac{8\gamma}{9c})(f(\theta_m) - f(\theta^*)).
+\end{align}
+
+\end{proof}
