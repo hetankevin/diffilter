@@ -4,6 +4,7 @@
 %\documentclass[9pt,twocolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 
+
 \newcommand\arxiv[2]{#1} % 1st argument for arxiv format
 % \newcommand\arxiv[2]{#2} % 2nd argument for PNAS format
 % also, swich to \documentclass[11pt]{article} for arxiv format
@@ -293,10 +294,10 @@ On the other hand, the second stage of IFAD enjoys a linear convergence rate und
 
 \begin{thm}[Linear Convergence of IFAD]
     
-Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $||\nabla_\theta \hat\ell^\alpha(\theta_n)|| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ and error tolerance $\epsilon$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$ for some $\beta \in (0,1)$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation, the second stage of IFAD converges linearly to the MLE with probability at least $1-\delta$:
+Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $||\nabla_\theta \hat\ell^\alpha(\theta_m)|| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$, for some $\beta \in (0,1)$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation and the minimum eigenvalue of $H$ is greater than some $c > 0$ for all $m$ with probability at least $1-\delta$, the second stage of IFAD converges linearly to the MLE:
 \vspace*{-2mm}
 $$
-\ell(\theta^*) - \ell(\theta_{n+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_n)).
+\ell(\theta^*) - \ell(\theta_{m+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_m)).
 $$
     \label{thm:mop-convergence}
 \end{thm}
@@ -319,7 +320,7 @@ We therefore see that the second stage of IFAD converges linearly to the MLE if 
         Run IF2 until initial "convergence" under cooling schedule $\eta_m$, or for a fixed number or iterations, to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_m := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
 		\textbf{While} procedure not converged: \newline
 		\hspace*{4mm} Run Algorithm \ref{alg:mop} to obtain $\hat\loglik(\theta_m).$ \newline
-		\hspace*{4mm} Obtain $g(\theta_m) = \nabla_{\theta_m} (-\hat\loglik(\theta_m))$, $H(\theta_m)$ s.t. $\lambda_{\min}(H) \geq c$. \newline
+		\hspace*{4mm} Obtain $g(\theta_m) = \nabla_{\theta_m} (-\hat\loglik(\theta_m))$, $H(\theta_m)$ s.t. $\lambda_{\min}(H(\theta_m)) \geq c$. \newline
 		\hspace*{4mm} Update $\theta_{m+1} := \theta_m - \eta (H(\theta_m))^{-1} g(\theta_m)$, $m:=m+1.$ \newline
 		\textbf{Return} $\hat{\theta} := \theta_m.$
 \end{algorithm}
@@ -627,5 +628,28 @@ Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interp
 % \bibliographystyle{pnas-new}
 % Bibliography
 \bibliography{bib-ifad}
+
+\arxiv{
+\appendix
+
+\section{MOP Functional Forms}
+\input{appendix/functional}
+
+
+\section{Optimization Convergence Analysis}
+\input{appendix/convergence}
+
+
+\section{Weighted Particle Filters that Target the Posterior}
+\input{appendix/targeting}
+
+
+\section{Consistency of MOP-$1$}
+\input{appendix/consistency}
+
+\section{Bias-Variance Analysis}
+\input{appendix/biasvar}
+}{
+}
 
 \end{document}
