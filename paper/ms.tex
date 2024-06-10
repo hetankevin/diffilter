@@ -70,7 +70,7 @@
 \maketitle
 
 \begin{abstract}
-  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood function that is discontinuous as a function of the model parameters.  We show how to embed two existing AD particle filter methods in a theoretical framework that provides an extension to a new class of algorithms.  This new class permits a bias/variance tradeoff and hence a mean squared error substantially lower than the existing algorithms. We develop likelihood maximization algorithms suited to the Monte Carlo properties of the derivative estimate. Our algorithms require only a differentiable simulator for the latent dynamic system; by contrast, most previous approaches to AD likelihood maximization for particle filters require access to the system's transition probabilities. Numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm show substantial improvement on current state-of-the-art methods for a challenging scientific benchmark problem.
+  Automatic differentiation (AD) has driven recent advances in machine learning, including deep neural networks and Hamiltonian Markov Chain Monte Carlo methods. Partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood function that is discontinuous as a function of the model parameters.  We show how to embed two existing AD particle filter methods in a theoretical framework that provides an extension to a new class of algorithms.  This new class permits a bias/variance tradeoff and hence a mean squared error substantially lower than the existing algorithms. We develop likelihood maximization algorithms suited to the Monte Carlo properties of the AD gradient estimate. Our algorithms require only a differentiable simulator for the latent dynamic system; by contrast, most previous approaches to AD likelihood maximization for particle filters require access to the system's transition probabilities. Numerical results indicate that a hybrid algorithm that uses AD to refine a coarse solution from an iterated filtering algorithm show substantial improvement on current state-of-the-art methods for a challenging scientific benchmark problem.
 \end{abstract}
 
 \arxiv{}{
@@ -85,6 +85,7 @@ scientific models involve highly nonlinear stochastic dynamic systems possessing
 Commonly, the latent system is modeled as a Markov process, giving rise to a partially observed Markov process (POMP) model, also known as a hidden Markov models or a state space model.
 POMP models arise in fields as diverse as automated control \cite{singh22}, epidemiology \cite{he10, stocks17}, ecology \cite{knape12} and finance \cite{kim08, breto14}.
 Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
+This article concerns the use automatic differentiation (AD) to construct improved algorithms for inference on complex POMP models.
 
 The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
 It provides an unbiased estimate of the likelihood function  \cite{delMoral04}, enabling Bayesian inference \cite{andrieu10,chopin13} and likelihood-based inference \cite{ionides06-pnas,ionides15}.
@@ -96,11 +97,12 @@ Plug-and-play methods are often called likelihood-free \cite{owen15}, and it may
 However, iterated filtering algorithms have shown that this is practical in various scientific investigations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
 Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly problematic as the size of the data and the complexity of the model increases.
 Algorithmic advances are needed to make plug-and-play likelihood maximization for POMP models more numerically efficient.
-We investigate the use of AD for this purpose.
+We investigate the use of automatic differentiation (AD) for this purpose.
 
-\subsection{Automatic Differentiation for Particle Filters}
+%\subsection{Automatic Differentiation for Particle Filters}
 
-Recent advances in automatic differentiation (AD) for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes. However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, high computational expense \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
+Recent advances in AD for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes.
+However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, high computational expense \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
 
 Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic prodecure called a ``stop-gradient'' which allows selected exressions to be evaluated but not differentiated.
 Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability.
@@ -111,7 +113,11 @@ Specifically, we show how this estimator can be derived as the direct derivative
 We proceed to generalize the MOP particle filter by adding a discounting factor, $\alpha \in [0,1]$, which interpolates between the  biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$.
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
-We derive a linear convergence rate for stochastic gradient descent (SGD) using MOP($\alpha$) in the  presence of strong convexity.
+MOP-$\alpha$ avoids the discontinuity that is problematic for the standard particle filter.
+This makes MOP-$\alpha$ convenient for the application of AD.
+Yet, MOP-$\alpha$  can nevertheless provide a consistent log-likelihood estimate.
+
+We derive a linear convergence rate for stochastic gradient descent (SGD) using MOP-$\alpha$ in the  presence of strong convexity.
 Critically, the estimator is effective within a neighborhood of the maximum but is relatively slow at reaching this neighborhood.
 That behavior is complementary to that of the iterated filtering algorithm \cite{ionides06-pnas,ionides15} which provides a relatively fast and stable way to identify this neighborhood.
 We therefore build a hybrid algorithm called {\it Iterated Filtering with Automatic Differentiation} (IFAD) that warm-starts first-order or second-order gradient methods with a preliminary solution obtained from a few rounds of iterated filtering.
@@ -144,9 +150,13 @@ For the algorithmic interpretation of our theory, we identify the random number 
 \section{Off-Parameter Particle Filters}
 
 Directly differentiating through a particle filter, for a fixed value of $\omega$, leads to a biased gradient estimator due to the discreteness of the resampling operation \cite{corenflos21}.
-We avoid this issue by constructing a particle filtering algorithm called {\it Measurement Off-Parameter} with discount factor $\alpha$ (MOP-$\alpha$) for which the resampling is invariant to $\omega$ but dependent on $\theta$.
-Pseudocode for MOP-$\alpha$ is presented in Algorithm~\ref{alg:mop}.
-As we explain subsequently, MOP-$\alpha$ is constructed so that direct differentiation through this algorithm obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
+We avoid this issue by constructing a particle filtering algorithm called {\it Measurement Off-Parameter} with discount factor $\alpha$ (MOP-$\alpha$), defined by the pseudocode in Algorithm~\ref{alg:mop}.
+For MOP-$\alpha$, the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed.
+We assume that the measurement model is differentiable in $\theta$.
+Further, we assume that the simulator is a differentiable function of $\theta$ for every fixed $\omega$, a condition that requires the latent process to be a continuous random variable.
+\ed{WE COULD CALL THIS THE REPARAMETERIZATION TRICK, BUT HERE FOR AD IT ARISES THROUGH THE STRUCTURE OF THE CODE SO WE DO NOT HAVE TO EXPLICITLY THINK OF THE EXISTENCE OF A REPARAMETERIZATION.}
+Under these assumptions, direct differentiation of MOP-$\alpha$ is available via AD.
+As we explain subsequently, MOP-$\alpha$ is constructed so this direct derivative obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
 Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff.
 
 \begin{algorithm}[H]
@@ -432,7 +442,11 @@ The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two 
 \subsection{MOP-$\alpha$ Targets the Posterior}
 
 
-We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood when $\alpha=1$ or $\theta=\phi$. While the result is presented here as specific to MOP-$\alpha$, we actually prove a more general result in the supplementary material. That is, we show a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest and employ weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
+We show here that MOP-$\alpha$ targets the posterior and is strongly consistent for the likelihood when $\alpha=1$ or $\theta=\phi$.
+Employing $\alpha<1$ lead to inconsistency when $\theta$ deviates from $\phi$, but this bias disappears as $\theta$ approaches $\phi$.
+
+While the result is presented here as specific to MOP-$\alpha$, we actually prove a more general result in the supplementary material.
+That is, we show a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest and employ weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
 
 %\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
