@@ -1,3 +1,17 @@
 
 
-In this section, we introduce the Feynman-Kac convention of \cite{delMoral04} that has since become commonplace \cite{karjalainen23} for the analysis of the particle filter. The mathematical formalization and notation introduced here will be adopted 
+In this section, we introduce the Feynman-Kac convention of \cite{delMoral04} that has since become commonplace \cite{karjalainen23} for the analysis of the particle filter. The mathematical formalization and notation introduced here will be adopted in the remainder of the analysis, in order to prove Theorems \ref{thm:mop-targeting}, \ref{thm:mop-grad-consistency}, and \ref{thm:mop-biasvar}. Let $\pi_n$ be a sequence of probability measures on the state space $\gX$. This is the sequence of posterior distributions $f_{X_{1:n}|Y_{1:n}}$ that we seek to approximate with the particle filter. For any measurable bounded functional $h$, we adopt the following functional-analytic notation, borrowed from \cite{delMoral04, chopin20, karjalainen23}. 
+
+\begin{itemize}
+\item For any measure $\eta$, any Markov kernel $M$ on $\gX$, any point $x \in \gX$ and any subset $A \subseteq \gX$, let 
+\begin{align*}
+    \eta(h) &= \int h d\eta = \int h(x) \eta(dx), \\(\eta M)(A) &= \int \eta(dx)M(x,A), \\
+    (Mh)(x) &= \int M(x, dy) h(y).
+\end{align*}
+\item The composition of a Markov kernel $M_1$ with another Markov kernel $M_2$ is another Markov kernel, given by 
+$$(M_1M_2)(x, A) = \int M_1(x, dy) M_2(y, A).$$
+\item The total variation distance between two measures $\mu$ and $\nu$ on $\gX$ is
+$$\|\mu-\nu\|_{\mathrm{TV}}=\sup _{\|h\|_{\infty} \leq 1 / 2}|\mu(\phi)-\nu(\phi)|=\sup _{\operatorname{osc}(h) \leq 1}|\mu(h)-\nu(h)|.$$
+\item The Dobrushin contraction coefficient $\beta_{\text{TV}}$ of a Markov kernel $M$ is given by
+$$\beta_{\mathrm{TV}}(M)=\sup _{x, y \in \gX}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}.$$
+\end{itemize}

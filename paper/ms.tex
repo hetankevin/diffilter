@@ -4,6 +4,7 @@
 %\documentclass[9pt,twocolumn,twoside]{pnas-new}
 % Use the lineno option to display guide line numbers if required.
 
+\usepackage{booktabs}
 
 \newcommand\arxiv[2]{#1} % 1st argument for arxiv format
 % \newcommand\arxiv[2]{#2} % 2nd argument for PNAS format
@@ -376,38 +377,26 @@ For each method, we performed 100 searches, initialized with 100 initial startin
   
 \begin{table}[h!]
 \centering
-\begin{tabular}{||c c c||} 
- \hline
- Method & Best Log-Likelihood & Rank \\ [0.5ex] 
- \hline\hline
-     IFAD-0 & -3747.87 & 1\\
-     IFAD-1 & -3748.53 & 2\\
-     IF2 (Ours) & -3755.91 & 3\\
-     IF2 (Warm Start) & -3759.60 & 4 \\
-     IF2 2015 & -3768.63 & 5\\ 
-     MOP-0 Alone & -3795.74 & 6\\
-     MOP-1 Alone & -3797.38 & 7\\
- \hline
-\end{tabular}
+\input{imgs/095/table}
 \caption{Maximum log-likelihood found by IF2, IFAD, and MOP alone. IFAD performs the best among all methods. Our implementation of IF2 outperforms that of \cite{ionides15}, but still ultimately underperforms IFAD. IFAD manages to find the MLE, matching the highest log-likelihood previously found in the \texttt{dacca()} model implemented within the \texttt{pomp} package of \cite{king16}.}
 \label{table:mle}
 \end{table}
 
 \paragraph{IFAD Successfully Finds the MLE:} Previously, an MLE at a log-likelihood of $-3748.5$ was reported by \cite{king16}.
 This MLE was obtained with much computational effort, using many global and local IF2 searches, and with the assistance of likelihood profiling.
-Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$. Despite being initialized for a global search, IFAD manages to find the MLE over the 100 searches, as seen in Table \ref{table:mle}. On this problem, the sequence of local searches and refinement that was previously required for finding the MLE is not necessary with the IFAD algorithm. 
+Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$. Despite being initialized for a global search, IFAD manages to get much closer to the MLE over the 100 searches than \cite{ionides15} and finds it up to Monte Carlo error, as seen in Table \ref{table:mle}. On this problem, the sequence of local searches and refinement that was previously required for finding the MLE is not necessary with the IFAD algorithm. 
 
-\paragraph{IFAD Outperforms Both IF2 and MOP Alone:} While IF2 quickly approaches a neighborhood of the MLE within only 40 iterations, performing IF2 alone ultimately fails to achieve the last few log-likelihood units, as no IF2 search comes within 7 log-likelihood units of the MLE (as seen in Figure \ref{fig:scatter-optim}). Conversely, when we tried gradient descent with MOP alone, we encountered many failed searches. This is a difficult, nonconvex, and noisy problem, \ed{SAY HOW MANY PARAMETERS ARE ESTIMATED HERE} and the search gets stuck in local minima and saddle points, failing to approach the MLE. 
+\paragraph{IFAD Outperforms Both IF2 and MOP Alone:} While IF2 quickly approaches a neighborhood of the MLE within only 40 iterations, performing IF2 alone ultimately fails to achieve the last few log-likelihood units, as no IF2 search comes within 7 log-likelihood units of the MLE (as seen in Figure \ref{fig:scatter}). Conversely, when we tried gradient descent with MOP alone, we encountered many failed searches. This is a difficult, nonconvex, and noisy problem, \ed{SAY HOW MANY PARAMETERS ARE ESTIMATED HERE} and the search gets stuck in local minima and saddle points, failing to approach the MLE. 
 
-IFAD, in comparison, approaches the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:scatter-optim}) and also succeeds at refining the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures~\ref{fig:scatter-optim} and \ref{fig:boxplot-search}. IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone.
-Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorithm used to solve a challenging numerical problem, but the left panel of Figure~\ref{fig:boxplot-search} shows that IFAD can find higher likelihood values, more quickly and more reliably than the previous state-of-the-art.
+IFAD, in comparison, approaches the MLE quickly due to the IF2 warm-start (as seen in Figure \ref{fig:optim}) and also succeeds at refining the coarse solution found by the warm-start with MOP gradient steps to find the MLE (as seen in Figures~\ref{fig:scatter} and \ref{fig:boxplot}). IFAD therefore successfully combines the best qualities of IFAD and MOP, outperforming either of them alone.
+Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorithm used to solve a challenging numerical problem, but Figure~\ref{fig:boxplot} shows that IFAD can find higher likelihood values, more quickly and more reliably than the previous state-of-the-art.
 \ed{I ADDED THIS PARAGRAPH TO TRY TO BE EXPLICIT ABOUT WHY WE ARE EXCITED BY THIS FIGURE. AT FACE VALUE, IT MAY NOT SEEM LIKE A BIG DEAL. IT WOULD BE BETTER TO EXPLAIN MORE CLEARLY WHY THIS IS EVIDENCE THAT THE METHOD COULD HAVE A TRANSFORMATIVE EFFECT ON DATA ANALYSIS VIA POMP MODELS.}
 
 \begin{figure}[htbp!]
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/pairs.png}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/qq.png}
     \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. Controlling for initial starting point, tuning $\alpha$ allows IFAD-$0.97$ to strictly improve on IF2, \cite{poyiadjis11}, and \cite{naesseth18}, on almost every iteration. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. It is clear that on average, IFAD performs best, and manages to find the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. We use a dotted red line to display the MLE in both. }
-    \label{fig:scatter-optim}
+    \label{fig:scatter}
 \end{figure}
 
 %\kevin{Include plots of IFAD vs Poyiadjis and Naesseth only in the supplemental information}
@@ -416,11 +405,18 @@ Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorith
   
 \begin{figure}[ht]
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/boxplot.png}
-    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/optim.png}
-    \caption{\textbf{Left:} Boxplot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, simulating the result of the common procedure of running a few searches and choosing the best one. IFAD outperforms all other methods, and the gradient steps improve on the warm-start given by running 40 IF2 iterations. 
-    \textbf{Right:} Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD. We see that IFAD has better tail control and successfully reaches the MLE. 
+    \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/boxplot_all.png}
+    \caption{\textbf{Left:} Raincloud plot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, simulating the result of the common procedure of running a few searches and choosing the best one. \textbf{Right:} Raincloud plot of all searches. IFAD outperforms all other methods, and the gradient steps improve on the warm-start given by running 40 IF2 iterations.
     We use a dotted red line to display the MLE.}
-    \label{fig:boxplot-search}
+    \label{fig:boxplot}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\arxiv{10cm}{\textwidth/3}]{imgs/095/optim.png}
+    \caption{Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD. We see that IFAD has better tail control and successfully reaches the MLE. 
+    We use a dotted red line to display the MLE.}
+    \label{fig:optim}
 \end{figure}
 
 \ed{IS THE IFAD(0.95) MEDIAN LINE IN FIG 4 (RIGHT) HIDING UNDER IFAD(1)? IF NOT, WEHRE IS IT?}
