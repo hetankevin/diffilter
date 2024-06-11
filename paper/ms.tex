@@ -33,7 +33,7 @@
 
 \begin{document}
 
-\title{Accelerated Inference for Partially Observed Stochastic Processes with Automatic Differentiation}
+\title{Accelerated Inference for Partially Observed Stochastic Processes using Automatic Differentiation}
 
 %\arxiv{ \author{K. Tan, G. Hooker and E. L. Ionides\\
 %  \small{Department of Statistics, University of Pennsylvania}\\
@@ -106,7 +106,7 @@ We investigate the use of automatic differentiation (AD) for this purpose.
 Recent advances in AD for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes.
 However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, high computational expense \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
 
-Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic prodecure called a ``stop-gradient'' which allows selected exressions to be evaluated but not differentiated.
+Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic procedure called a ``stop-gradient'' which allows selected exressions to be evaluated but not differentiated.
 Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability.
 We use \cite{scibior21} and \cite{poyiadjis11} as our starting point, while developing a new approach which remedies the weaknesses of these papers.
 
@@ -377,7 +377,7 @@ For each method, we performed 100 searches, initialized with 100 initial startin
   
 \begin{table}[h!]
 \centering
-\input{imgs/095/table}
+\input{../imgs/095/table}
 \caption{Maximum log-likelihood found by IF2, IFAD, and MOP alone. IFAD performs the best among all methods. Our implementation of IF2 outperforms that of \cite{ionides15}, but still ultimately underperforms IFAD. IFAD manages to find the MLE, matching the highest log-likelihood previously found in the \texttt{dacca()} model implemented within the \texttt{pomp} package of \cite{king16}.}
 \label{table:mle}
 \end{table}
@@ -413,7 +413,7 @@ Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorith
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=\arxiv{10cm}{\textwidth/3}]{imgs/095/optim.png}
+    \includegraphics[width=\arxiv{10cm}{\textwidth/3}]{../imgs/095/optim.png}
     \caption{Optimization progress of IFAD and IF2. The dashed orange line depicts the median warm-start given by running 40 IF2 iterations. While running 60 more iterations of IF2 improves upon the median warm-start, doing so ultimately underperforms IFAD. We see that IFAD has better tail control and successfully reaches the MLE. 
     We use a dotted red line to display the MLE.}
     \label{fig:optim}

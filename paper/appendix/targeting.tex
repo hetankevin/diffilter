@@ -11,7 +11,11 @@
 \end{equation}
 as $J \to \infty$.
 \end{defn}
-\cite{chopin04} asserted without proof that common particle filter algorithms target the filtering distribution, $f_{X_{1:N}|Y_{1:N}}$, in this sense.
+\cite{chopin04} \ed{and \cite{liu01}????} asserted without proof that common particle filter algorithms target the filtering distribution, $f_{X_{1:N}|Y_{1:N}}$, in this sense.
+\ed{\cite{chopin20} proved a related result assuming bounded densities.
+  We follow a similar approach to \cite{chopin20}, based on a strong laws of large numbers for triangular arrays.
+  Triangular array strong laws do not hold without an additional regularity condition such as boundedness.}
+\ed{I PROPOSE ADDING SOMETHING LIKE THIS, PARTLY TO MOTIVATE THE RESULTS, PARTLY TO BE KINDER TO CHOPIN.}  
 In order to prove the consistency of our variation on the particle filter, we now present three helper lemmas.
 The first follows from standard importance sampling arguments, the second from integrating out the marginal, and the third from Bayes' theorem. 
 We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resampling, which is convenient for the proof though other resampling strategies may be preferable in practice.
@@ -102,7 +106,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \\
     &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  \E\big[h(Z) \big| X=\tilde X_j^J \big] \, \bar U_j^J\right].
     \end{eqnarray*}
-    Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand size converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
+    Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand side converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
     It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   
     $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\,\bar{U}_j^J \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)].$$ 
     
