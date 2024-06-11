@@ -392,6 +392,8 @@ IFAD, in comparison, approaches the MLE quickly due to the IF2 warm-start (as se
 Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorithm used to solve a challenging numerical problem, but Figure~\ref{fig:boxplot} shows that IFAD can find higher likelihood values, more quickly and more reliably than the previous state-of-the-art.
 \ed{I ADDED THIS PARAGRAPH TO TRY TO BE EXPLICIT ABOUT WHY WE ARE EXCITED BY THIS FIGURE. AT FACE VALUE, IT MAY NOT SEEM LIKE A BIG DEAL. IT WOULD BE BETTER TO EXPLAIN MORE CLEARLY WHY THIS IS EVIDENCE THAT THE METHOD COULD HAVE A TRANSFORMATIVE EFFECT ON DATA ANALYSIS VIA POMP MODELS.}
 
+We emphasize that we chose to not include the use of many common heuristics used in the machine learning and optimization literature in the gradient descent stage. We used constant learning rates of $0.01, 0.05$, and $0.2$ for IFAD-$1,0,$ and $0.97$ respectively, and a constant cooling rate of $0.95$ for our IF2 implementation. While techniques such as annealing learning rates, gradient normalization, and momentum made the outperformance of IFAD even more apparent in other simulations we performed, we chose to report the results of the simplest implementation in part to serve as a baseline for the method's performance, and in part because the results of the simplest implementation were already very promising. 
+
 \begin{figure}[htbp!]
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/pairs.png}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{4.2}}]{../imgs/095/qq.png}
@@ -434,7 +436,7 @@ Here, we will show that MOP-$\alpha$ targets the posterior and likelihood and yi
     \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density, \arxiv{\\}{}$f_{Y_n|X_n}(y_n^*|x_n; \theta)$, and simulator have more than two continuous derivatives in $\theta$. \label{assump:diff-meas-and-sim}
 \end{enumerate}
 
-The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two continuous derivatives in $\theta$ follows the construction of the likelihood estimate in equations \ref{eq:mop-conditional-likelihood} and \ref{eq:weighting-scheme}, as well as Assumptions \ref{assump:bounded-measurement} and \ref{assump:diff-meas-and-sim}. 
+The fact that the likelihood estimate yielded by MOP-$\alpha$ has more than two continuous derivatives in $\theta$ follows from the construction of the likelihood estimate in equations \ref{eq:mop-conditional-likelihood} and \ref{eq:weighting-scheme}, as well as Assumptions \ref{assump:bounded-measurement} and \ref{assump:diff-meas-and-sim}. 
 
 \subsection{MOP-$\alpha$ Targets the Posterior}
 

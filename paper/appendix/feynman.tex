@@ -3,15 +3,18 @@
 In this section, we introduce the Feynman-Kac convention of \cite{delMoral04} that has since become commonplace \cite{karjalainen23} for the analysis of the particle filter. The mathematical formalization and notation introduced here will be adopted in the remainder of the analysis, in order to prove Theorems \ref{thm:mop-targeting}, \ref{thm:mop-grad-consistency}, and \ref{thm:mop-biasvar}. Let $\pi_n$ be a sequence of probability measures on the state space $\gX$. This is the sequence of posterior distributions $f_{X_{1:n}|Y_{1:n}}$ that we seek to approximate with the particle filter. For any measurable bounded functional $h$, we adopt the following functional-analytic notation, borrowed from \cite{delMoral04, chopin20, karjalainen23}. 
 
 \begin{itemize}
-\item For any measure $\eta$, any Markov kernel $M$ on $\gX$, any point $x \in \gX$ and any subset $A \subseteq \gX$, let 
+\item \textbf{Markov kernels and the process model:} A Markov kernel $M$ with source $\gX_1$ and target $\gX_2$ is a map $M: \gX_1 \times \mathcal{B}(\gX_2) \to [0,1]$ such that for every set $A \in \mathcal{B}(\gX_2)$ and every point $x \in \gX_1$, the map $x \mapsto M(x, A)$ is a measurable function of $x$, and the map $A \mapsto M(x,A)$ is a probability measure on $\gX_2$. The quantity $M(x,A)$ can be thought of as the probability of transitioning to the set $A$ given that we are at the point $x$. If this yields a density, this then corresponds to the process density $f_{X_{2}|X_1}$ conditional on $x$ and integrated over $A$.  
+\item \textbf{Markov kernels and measures:} For any measure $\eta$, any Markov kernel $M$ on $\gX$, any point $x \in \gX$ and any measurable subset $A \subseteq \gX$, let 
 \begin{align*}
     \eta(h) &= \int h d\eta = \int h(x) \eta(dx), \\(\eta M)(A) &= \int \eta(dx)M(x,A), \\
     (Mh)(x) &= \int M(x, dy) h(y).
 \end{align*}
-\item The composition of a Markov kernel $M_1$ with another Markov kernel $M_2$ is another Markov kernel, given by 
+\item \textbf{Compositions of Markov kernels:} The composition of a Markov kernel $M_1$ with another Markov kernel $M_2$ is another Markov kernel, given by 
 $$(M_1M_2)(x, A) = \int M_1(x, dy) M_2(y, A).$$
-\item The total variation distance between two measures $\mu$ and $\nu$ on $\gX$ is
+\item \textbf{Total variation distance:} The total variation distance between two measures $\mu$ and $\nu$ on $\gX$ is
 $$\|\mu-\nu\|_{\mathrm{TV}}=\sup _{\|h\|_{\infty} \leq 1 / 2}|\mu(\phi)-\nu(\phi)|=\sup _{\operatorname{osc}(h) \leq 1}|\mu(h)-\nu(h)|.$$
-\item The Dobrushin contraction coefficient $\beta_{\text{TV}}$ of a Markov kernel $M$ is given by
+\item \textbf{Dobrushin contraction:} The Dobrushin contraction coefficient $\beta_{\text{TV}}$ of a Markov kernel $M$ is given by
 $$\beta_{\mathrm{TV}}(M)=\sup _{x, y \in \gX}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}.$$
+\item \textbf{Potential functions and the measurement model:} A potential function $G : \gX \to [0,\infty)$ is a non-negative function of an element of the state space $x \in \gX$. In our case, this corresponds to the measurement model, and in our previous notation is written as $g_{n,j}^\theta = f_{Y_n|X_n}(y_n^*|x_{n,j}^F; \theta) = G_n(x_{n,j}^F)$. Note that $G_n(\cdot) = f_{Y_n|X_n}(y_n^*|\;\cdot\; ; \theta)$ is the conditional density of the observed measurement at time $n$, where we condition on the filtering particle $x_{n,j}^F$ as an element of the state space. 
+\item \textbf{Feynman-Kac models and the particle filter:} A Feynman-Kac model on $\gX$ is a tuple $(\pi_0, (M_n)_{n=1}^N, (G_n)_{n=1}^N)$ 
 \end{itemize}
