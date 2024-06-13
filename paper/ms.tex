@@ -33,7 +33,7 @@
 
 \begin{document}
 
-\title{Accelerated Inference for Partially Observed Stochastic Processes using Automatic Differentiation}
+\title{Accelerated Inference for Partially Observed Markov Processes using Automatic Differentiation}
 
 %\arxiv{ \author{K. Tan, G. Hooker and E. L. Ionides\\
 %  \small{Department of Statistics, University of Pennsylvania}\\
@@ -96,22 +96,20 @@ An attractive feature of basic particle filter algorithms, also known as boostra
 This plug-and-play property is useful for scientific applications \cite{he10}.
 Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
 Plug-and-play methods are often called likelihood-free \cite{owen15}, and it may be counter-intuitive that likelihood-based inference is possible using likelihood-free methods. 
-However, iterated filtering algorithms have shown that this is practical in various scientific investigations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
+However, iterated filtering algorithms have shown that this is practical in various scientific investigations, for example \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
 Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly problematic as the size of the data and the complexity of the model increases.
 Algorithmic advances are needed to make plug-and-play likelihood maximization for POMP models more numerically efficient.
-We investigate the use of automatic differentiation (AD) for this purpose.
+We develop plug-and-play AD methods which provide a large computational advantage over the methods used in these previous applications.
 
-%\subsection{Automatic Differentiation for Particle Filters}
-
-Recent advances in AD for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in partially observed stochastic processes.
+Recent advances in AD for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in POMP models.
 However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, high computational expense \cite{corenflos21, chen24}, or need access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}.
 
-Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software, using an algorithmic procedure called a ``stop-gradient'' which allows selected expressions to be evaluated but not differentiated.
-Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability, while the ``stop-gradient'' procedure is introduced without mathematical motivation.
+Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software using an algorithmic procedure, called a {\it stop-gradient}, which allows selected expressions to be evaluated but not differentiated.
+Unfortunately, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability, while the stop-gradient procedure is introduced without mathematical motivation.
 We use \cite{scibior21} and \cite{poyiadjis11} as our starting point, while developing a new approach which remedies the weaknesses of these papers.
 
 We start by presenting a new construction of the gradient estimator of \cite{scibior21} and \cite{poyiadjis11}.
-Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a Measurement Off-Parameter (MOP) particle filter.
+Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a {\it Measurement Off-Parameter} (MOP) particle filter.
 We proceed to generalize the MOP particle filter by adding a discounting factor, $\alpha \in [0,1]$, which interpolates between the  biased gradient estimator of \cite{naesseth18} when $\alpha=0$, and the high-variance gradient estimate from \cite{poyiadjis11, scibior21} when $\alpha=1$.
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
@@ -152,14 +150,19 @@ For the algorithmic interpretation of our theory, we identify the random number 
 \section{Off-Parameter Particle Filters}
 
 Directly differentiating through a particle filter, for a fixed value of $\omega$, leads to a biased gradient estimator due to the discreteness of the resampling operation \cite{corenflos21}.
-We avoid this issue by constructing a particle filtering algorithm called {\it Measurement Off-Parameter} with discount factor $\alpha$ (MOP-$\alpha$), defined by the pseudocode in Algorithm~\ref{alg:mop}. In short, instead of differentiating through a Monte Carlo algorithm directly, we instead use AD to differentiate through a series of measurement density ratios and a differentiable simulator.
+We avoid this issue by constructing a particle filtering algorithm called {\it Measurement Off-Parameter with discount factor} $\alpha$ (MOP-$\alpha$), defined by the pseudocode in Algorithm~\ref{alg:mop}.
+In short, instead of differentiating through a Monte Carlo algorithm directly, we instead use AD to differentiate through a series of measurement density ratios and a differentiable simulator.
+Note that the plug-and-play property forbids access to transition densities but permits access to the density of the measurements conditional on the value of the latent process.
+The simulator can be differentiated using AD as long as the underlying computer code for the simulator is differentiable, and so MOP-$\alpha$ is applicable to a broad class of POMP models.
 
-This algorithm is an example of a new class of algorithms we call ``off-parameter'' particle filters that resample the particles according to an arbitrary resampling rule that is not necessarily in proportion to the target distribution of interest, while maintaining weights that encode the cumulative discrepancy between the resampling distribution and the target distribution. 
-We later show in Theorem \ref{thm:mop-targeting} that off-parameter particle filters successfully target the filtering distribution when the correction is sufficient.
+The MOP-$\alpha$ algorithm resamples the particles according to an arbitrary resampling rule that depends on both the target parameter value and a baseline parameter value, and this explains the name {\it measurement off-parameter}.
+Similar quantities are called {\it off-policy} in reinforcement learning, and a parameter in a POMP model is analogous to a policy in a corresponding control model \ed{Kevin, would it be good to add your favorite RL reference here? Also, you may want to edit this sentence. I think something like this will help the reader to ``get'' our terminology.}.
+Specifically, MOP-$\alpha$ evaluates the likelihood at some $\theta \in \Theta$, but instead resamples the particles according to the indices generated by a vanilla particle filter run at some $\phi \in \Theta$.
+This ensures that the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed, bypassing the issue of Monte Carlo resampling.
+We show in Theorem~\ref{thm:mop-targeting} that MOP-$\alpha$ exactly targets the filtering distribution when $\theta=\phi$ or $\alpha=1$.
 
-In the case of MOP-$\alpha$, we wish to evaluate the likelihood at some $\theta \in \Theta$, but instead resample the particles according to the indices generated by a vanilla particle filter run at some $\phi \in \Theta$. This ensures that the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed, bypassing the issue of Monte Carlo resampling. 
 When the measurement model is differentiable in $\theta$ and the simulator is a differentiable function of $\theta$ for every fixed $\omega$ (a condition that requires the latent process to be a continuous random variable, also known as the reparameterization trick \cite{corenflos21}), direct differentiation of MOP-$\alpha$ is available via AD.
-As we explain subsequently, MOP-$\alpha$ is constructed so this direct derivative obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
+Theorem~\ref{thm:mop-functional-forms} shows that MOP-$\alpha$ is constructed so this direct derivative obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
 Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff as illustrated in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}).
 
 \begin{algorithm}[H]
@@ -346,10 +349,10 @@ We write $P(t)$ for the total population, and $M_n$ for the cholera deaths in ea
 As in \cite{king08, ionides15}, the transition dynamics follow a series of stochastic differential equations:
 \vspace*{-1mm}
 \begin{align*}
-    dS&=(k \epsilon R^k+\delta(S-P)-\lambda(t) S)\, dt+d P-({\sigma S I}/{H})\, dB, \\
+    dS&=\big(k \epsilon R^k+\delta(S-P)-\lambda(t) S\big)\, dt+d P-({\sigma S I}/{H})\, dB, \\
     dI&=\left(\lambda(t) S-(m+\delta+\gamma) I\right)\, dt+({\sigma S I}/{H})\, dB, \\
-    dR^1&=(\gamma I-(k \epsilon+\delta) R^1)\, dt, \hspace{2mm} \dots \\
-    dR^k&=(k \epsilon R^{k-1}\hspace{-3mm}-(k \epsilon+\delta) R^k)\, dt,
+    dR^1&=\big(\gamma I-(k \epsilon+\delta) R^1\big)\, dt, \hspace{2mm} \dots \\
+    dR^k&=\big(k \epsilon R^{k-1} -(k \epsilon+\delta) R^k\big)\, dt,
     \vspace*{-2mm}
 \end{align*}
 with Brownian motion $B(t)$, cholera death rate $m$, recovery rate $\gamma$, mean immunity duration $1/\epsilon$, standard deviation of the force of infection $\sigma$, and population death rate $\delta=0.02$. The force of infection, $\lambda_t$, is modeled by splines $(s_j)_{j=1}^6$
@@ -366,9 +369,9 @@ where $M_n=\gamma\int_{t_{n-1}}^{t_n}I(s)\, ds$ is the modeled number of cholera
 
 \begin{figure}
     \centering
-    \includegraphics[width=\arxiv{12cm}{\textwidth/2}]{../imgs/095/tikzcholera.png}
+    \includegraphics[width=\arxiv{14cm}{\textwidth/2}]{../imgs/095/tikzcholera.png}
     \vspace*{-7mm}
-    \caption{Illustration of Dhaka cholera model from \cite{king08}.}
+    \caption{A compartment flow diagram for the Dhaka cholera model from \cite{king08}.}
     \label{fig:tikz-cholera}
 \end{figure}
 
@@ -390,7 +393,11 @@ For each method, we performed 100 searches, initialized with 100 initial startin
 
 \paragraph{IFAD Successfully Finds the MLE:} Previously, an MLE at a log-likelihood of $-3748.5$ was reported by \cite{king16}.
 This MLE was obtained with much computational effort, using many global and local IF2 searches, and with the assistance of likelihood profiling.
-Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$. Despite being initialized for a global search, IFAD manages to get much closer to the MLE over the 100 searches than \cite{ionides15} and finds it up to Monte Carlo error, as seen in Table \ref{table:mle}. On this problem, the sequence of local searches and refinement that was previously required for finding the MLE is not necessary with the IFAD algorithm. 
+Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$.
+Despite being initialized for a global search, IFAD manages to get much closer to the MLE over the 100 searches than \cite{ionides15} and finds it up to Monte Carlo error, as seen in Table~\ref{table:mle}.
+On this problem, the sequence of local searches and refinement that was previously required for finding the MLE is not necessary with the IFAD algorithm. 
+In other words, the improvement in numerical efficiency of IFAD over IF2 is so large that routine application of IFAD (consisting of a collection of Monte Carlo replications from random starting points) generates results outside the reach of a routine application of IF2. 
+When interpreting Table~\ref{table:mle}, bear in mind that a difference of order 1 log unit has statistical relevance and therefore scientific value.
 
 \paragraph{IFAD Outperforms Both IF2 and MOP Alone:} While IF2 quickly approaches a neighborhood of the MLE within only 40 iterations, performing IF2 alone ultimately fails to achieve the last few log-likelihood units, as no IF2 search comes within 7 log-likelihood units of the MLE (as seen in Figure \ref{fig:scatter}). Conversely, when we tried gradient descent with MOP alone, we encountered many failed searches. This is a difficult, nonconvex, and noisy problem, \ed{SAY HOW MANY PARAMETERS ARE ESTIMATED HERE} and the search gets stuck in local minima and saddle points, failing to approach the MLE. 
 
@@ -398,7 +405,9 @@ IFAD, in comparison, approaches the MLE quickly due to the IF2 warm-start (as se
 Monte~Carlo replication is appropriate for IFAD, as for any Monte Carlo algorithm used to solve a challenging numerical problem, but Figure~\ref{fig:boxplot} shows that IFAD can find higher likelihood values, more quickly and more reliably than the previous state-of-the-art. 
 In particular, Figure~\ref{fig:boxplot} shows that IFAD with $\alpha=0.97$ can maximize the challenging likelihood of \cite{king08} using a modest number of iterations and Monte Carlo replications, whereas previously it was necessary to carry out an extensive customized search or to live with an incompletely maximized likelihood.
 
-We emphasize that we chose to not include the use of many common heuristics used in the machine learning and optimization literature in the gradient descent stage. We used constant learning rates of $0.01, 0.05$, and $0.2$ for IFAD-$1,0,$ and $0.97$ respectively, and a constant cooling rate of $0.95$ for our IF2 implementation. While techniques such as annealing learning rates, gradient normalization, and momentum could further improve the performance of IFAD in other simulations we performed, we chose to report the results of the simplest implementation to serve as a baseline for the method's performance.
+For the results presented here, we did not include the many common heuristics used in the machine learning and optimization literature in the gradient descent stage.
+We used constant learning rates of $0.01, 0.05$, and $0.2$ for IFAD-$1,0,$ and $0.97$ respectively, and a constant cooling rate of $0.95$ for our IF2 implementation.
+While techniques such as annealing learning rates, gradient normalization, and momentum could further improve the performance of IFAD in other simulations we performed, we chose to report the results of the simplest implementation to serve as a baseline for the method's performance.
 The results for this basic implementation are already sufficient to show the high potential of the approach.
 
 \begin{figure}[htbp!]
@@ -431,22 +440,29 @@ The results for this basic implementation are already sufficient to show the hig
 \section{Application to Bayesian Inference}
 \label{sec:bayes}
 
-Particle MCMC, as introduced by \cite{andrieu10}, is arguably the most popular method for full-information Bayesian inference within partially observed Markov processes that does not require access to the system's transition densities. This feature enables its use in simulation-based Bayesian inference for complex scientific models where computing transition densities is not feasible, such as in disease modeling. However, the particle Metropolis-Hastings algorithm often experiences slow mixing and requires long burn-in periods. For instance, \cite{fasiolo16} reported needing $700,000$ burn-in iterations for effective sampling in a cholera model -- even after adjusting the length of each Euler timestep to be a month instead of a day to reduce computational costs. 
+Particle MCMC, as introduced by \cite{andrieu10}, is arguably the most popular method for full-information plug-and-play Bayesian inference for POMP models.
+The plug-and-play property enables its use in simulation-based Bayesian inference for complex scientific models where computing transition densities is not feasible, such as in disease modeling.
+However, the particle Metropolis-Hastings algorithm often experiences slow mixing and requires long burn-in periods.
+For instance, \cite{fasiolo16} reported needing $700,000$ burn-in iterations for effective sampling in a cholera model.
+This computational burden necessitated simplifying the scientific model to reduce computational costs, by adjusting the length of each Euler timestep to be a month instead of a day. 
 
-We employ a NUTS sampler powered by a MOP-$\alpha$, with a nonparametric empirical prior initialized by the IF2 warm start from the previous section. To construct the prior, we perform a kernel density estimate (KDE) on the parameter swarm from the warm start, and use the output of that as an empirical prior (the KDE is performed to ensure some degree of mutual contiguity between the densities). This yields a prior that is roughly equivalent to a parameter cloud centered at some point in the neighborhood of the MLE, with a standard deviation of $\sqrt{(0.02\cdot0.95^{40})^2 \cdot 600}\approx 6.3\%$ of the MLE. Using a NUTS sampler powered by MOP-$\alpha$ with this prior significantly lowers the mixing time of the Markov chain to as little as $500$ iterations, as seen in Figure \ref{fig:nuts-eb}. 
+We employ a NUTS sampler powered by a MOP-$\alpha$, with a nonparametric empirical prior initialized by the IF2 warm start from the previous section.
+To construct the prior, we perform a kernel density estimate (KDE) on the parameter swarm from the warm start, and use the output of that as an empirical prior.
+The KDE is performed to ensure some degree of mutual contiguity between the densities.
+This yields a prior that is roughly equivalent to a parameter cloud centered at some point in the neighborhood of the MLE, with a standard deviation of $\sqrt{(0.02\cdot0.95^{40})^2 \cdot 600}\approx 6.3\%$ of the MLE.
+Using a NUTS sampler powered by MOP-$\alpha$ with this prior significantly lowers the mixing time of the Markov chain to as little as $500$ iterations, as seen in Figure \ref{fig:nuts-eb}. 
 
 \begin{figure}[t!]
     \centering
-    \includegraphics[width=\textwidth/\real{1.25}]{imgs/pmcmc/nuts_eb.png}
-    \caption{Convergence diagnostics for a No U-Turn Sampler with the informative nonparametric empirical Bayes prior from IF2 and a KDE. We display the results for the trend parameter in the Dhaka cholera model of \cite{king08}. The NUTS sampler mixes quickly, and the posterior estimates from each chain share roughly the same posterior mode.}
+    \includegraphics[width=\textwidth/\real{1.25}]{../imgs/pmcmc/nuts_eb.png}
+    \caption{Convergence diagnostics for NUTS with the informative nonparametric empirical Bayes prior from applying KDE to preliminary searches using IF2. We display the results for the trend parameter in the Dhaka cholera model of \cite{king08}. The NUTS sampler mixes quickly, and the posterior estimates from each chain share roughly the same posterior mode.}
     \label{fig:nuts-eb}
 \end{figure}
 
-
-For completeness, we note that without the empirical Bayes-style prior from IF2, NUTS with the MOP-$\alpha$ estimate alone tends to diverge. In contrast, particle Metropolis-Hastings (with or without the empirical Bayes prior from IF2) fails to effectively explore the parameter space. We display the results of the above in Figures \ref{fig:mh} and \ref{fig:nuts} \arxiv{in Appendix~\ref{appendix:bayes}}{within the supplementary information}. 
-
+For completeness, we note that without the empirical Bayes-style prior from IF2, NUTS with the MOP-$\alpha$ estimate alone tended to diverge.
+In contrast, particle Metropolis-Hastings (with or without the empirical Bayes prior from IF2) fails to effectively explore the parameter space.
+We display the results of the above in Figures \ref{fig:mh} and \ref{fig:nuts} \arxiv{in Appendix~\ref{appendix:bayes}}{within the supplementary information}. 
 The result obtained in this section, of a speedup in the mixing time of particle MCMC by over three orders of magnitude, provides hope that particle Bayesian inference might finally be practical for the complex scientific models commonly encountered in areas like epidemiology.
-
 
 \section{Theoretical Analysis of MOP-$\alpha$}
 \label{sec:thms}
@@ -470,7 +486,7 @@ We show here that MOP-$\alpha$ targets the filtering distribution under $\theta$
 Employing $\alpha<1$ lead to inconsistency when $\theta$ deviates from $\phi$, but this bias disappears as $\theta$ approaches $\phi$.
 
 While the result is presented here as specific to MOP-$\alpha$, we actually prove a more general result in \arxiv{Appendix~\ref{appendix:targeting}}{the supplementary material}.
-That is, we show a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest and employ weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
+That is, we show a strong law of large numbers for triangular arrays of particles with off-parameter resampling, where we resample the particles according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest and employ weights that encode the cumulative discrepancy between the resampling and the target distribution instead of equal weights.
 
 %\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
