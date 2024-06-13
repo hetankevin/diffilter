@@ -1,7 +1,8 @@
 
 
-Here, we prove a more general result, from which it will be clear that MOP-$\alpha$ targets the filtering distribution. We will prove a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule that is not necessarily in proportion to the target distribution of interest. Using weights that encode the cumulative discrepancy between the resampling distribution and the target distribution (instead of resampling to equal weights as is common) turns out to be a sufficient correction that ensures almost sure convergence.
-
+Here, we prove a more general result, from which it will be clear that MOP-$\alpha$ targets the filtering distribution. 
+We will prove a strong law of large numbers for triangular arrays of particles with ``off-parameter'' resampling, where we resample the particles according to an arbitrary resampling rule that is not necessarily in proportion to the target distribution of interest. 
+Using weights that encode the cumulative discrepancy between the resampling distribution and the target distribution (instead of resampling to equal weights as is common) turns out to be a sufficient correction that ensures almost sure convergence.
 We now introduce the precise definition of an off-parameter resampled particle filter. 
 
 \begin{defn}[Off-Parameter Resampled Particle Filters]
@@ -64,8 +65,14 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     $$\sum_j Z_j^J := \sum_j \left(g(\tilde X_{k_j}^J) -  g(\tilde X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.$$
 
     Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where noting that the $Z_j^J$ are conditionally independent given the $\tilde{X}_j^J$ and $U_j^J$,
-    $$\E\left[\left(\sum_j Z_j^J\right)^4 \Bigg| (\tilde X_j^J,U_j^J)_{j=1}^J \right] 
-    = J\E[(Z_1^J)^4|(\tilde X_j^J,U_j^J)_{j=1}^J] + 3J(J-1)\left(\E[(Z_j^J)^2|(\tilde X_j^J,U_j^J)_{j=1}^J]\right) \leq CJ^2,$$ for some $C>0$. Taking expectations on both sides yields
+    \begin{eqnarray*} 
+    \E\left[\left(\sum_j Z_j^J\right)^4 \Bigg| (\tilde X_j^J,U_j^J)_{j=1}^J \right] 
+    &=& J\E\left[(Z_1^J)^4|(\tilde X_j^J,U_j^J)_{j=1}^J\right] + 3J(J-1)\left(\E\big[(Z_j^J)^2|(\tilde X_j^J,U_j^J)_{j=1}^J\big]\right) 
+    \\ 
+    &\leq& CJ^2,
+    \end{eqnarray*}
+    for some $C>0$. 
+    Taking expectations on both sides yields
     $$\E\left[\left(\sum_j Z_j^J\right)^4 \right]  \leq CJ^2$$
     by the tower property. Now by Markov's inequality, 
     $$\mathbb{P}\left(\left|\frac{1}{J} \sum_{j=1}^J Z_j^J\right|>\epsilon \right) 
@@ -107,7 +114,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity $$\frac{J^{-1}\sum_j h(\tilde Z_j^J) \, U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \, \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.$$
     The denominator converges to $1$ almost surely. The numerator, on the other hand, is
     $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J,$$
-    and by the same fourth moment argument to the above lemma, it converges almost surely to the limit of its expectation
+    and by the same fourth moment argument to the above lemma, it converges almost surely to the limit of its expectation,
     \begin{eqnarray*}        
     \lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J\right] 
     &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  
@@ -119,8 +126,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand side converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
     It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   
     $$\frac{1}{J}\sum_j h(\tilde Z_j^J)\,\bar{U}_j^J \stackrel{a.s.}{\to} \E_{f_Z}[h(Z)].$$ 
-    
-\end{proof}
+    \end{proof}
 
 \begin{lem}[Particle Posteriors]
     \label{lem:posterior-proper-weights}
@@ -140,7 +146,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}
     \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \right)^{-1}.
     \end{equation}
-    We will apply Equation \ref{eq:lemma-posterior-hypothesis} to the numerator and the denominator in the ratio above individually. The numerator converges to 
+    We will apply Equation (\ref{eq:lemma-posterior-hypothesis}) to the numerator and the denominator in the ratio above individually. The numerator converges to 
     $$\frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \stackrel{a.s.}{\to} \E_{f_X}[h(X)f_{Z|X}(z^*|X)],$$
     while the reciprocal of the denominator converges to 
     $$ \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}  \stackrel{a.s.}{\to} \E_{f_X}[f_{Z|X}(z^*|X)] = f_Z(z^*).$$
