@@ -96,7 +96,7 @@ An attractive feature of basic particle filter algorithms, also known as boostra
 This plug-and-play property is useful for scientific applications \cite{he10}.
 Some plug-and-play methods depend on the construction of low-dimensional summary statistics \cite{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
 Plug-and-play methods are often called likelihood-free \cite{owen15}, and it may be counter-intuitive that likelihood-based inference is possible using likelihood-free methods. 
-However, iterated filtering algorithms have shown that this is practical in various scientific investigations, for example \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
+However, iterated filtering algorithms have shown that this is practical in various scientific investigations, such as \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
 Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly problematic as the size of the data and the complexity of the model increases.
 Algorithmic advances are needed to make plug-and-play likelihood maximization for POMP models more numerically efficient.
 We develop plug-and-play AD methods which provide a large computational advantage over the methods used in these previous applications.
@@ -114,14 +114,14 @@ We proceed to generalize the MOP particle filter by adding a discounting factor,
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory and in practice, the use of $\alpha$ values strictly between 0 and 1.
 
 MOP-$\alpha$ avoids the discontinuity that is problematic for the standard particle filter in a novel way.
-This particle filter is smooth by construction, allowing us to bypass the seemingly incompatible paradox of differentiating through a Monte Carlo algorithm -- by instead using AD to differentiate through a series of measurement density ratios and a differentiable simulator.
+This particle filter is smooth by construction, allowing us to bypass the seemingly incompatible paradox of differentiating through discrete Monte Carlo sampling by instead using AD to differentiate through a series of measurement density ratios and a differentiable simulator.
 Yet, MOP-$\alpha$ can nevertheless provide a consistent log-likelihood estimate.
 
 We derive a linear convergence rate for stochastic gradient descent (SGD) using MOP-$\alpha$ in the  presence of strong convexity.
 Critically, the estimator is effective within a neighborhood of the maximum but is relatively slow at reaching this neighborhood.
-That behavior is complementary to that of the iterated filtering algorithm \cite{ionides06-pnas,ionides15} which provides a relatively fast and stable way to identify this neighborhood.
+That behavior is complementary to that of iterated filtering algorithms \cite{ionides06-pnas,ionides15} which provides a relatively fast and stable way to identify this neighborhood.
 We therefore build a simple but effective hybrid algorithm called {\it Iterated Filtering with Automatic Differentiation} (IFAD) that warm-starts first-order or second-order gradient methods with a preliminary solution obtained from a few rounds of iterated filtering.
-Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
+Promising numerical results indicate that IFAD beats IF2 (and by the numerical results of \cite{ionides15}, also IF1 \cite{ionides06-pnas,ionides11} and the Liu-West filter \cite{liuwest01}) on a challenging problem in epidemiology, the Dhaka cholera model of \cite{king08}.
 
 These improvements also extend to Bayesian inference, as we show in Section \ref{sec:bayes} that we can use the MOP-$\alpha$ gradient estimates within a No-U-Turn Sampler (NUTS) \cite{homan14} in conjunction with a nonparametric empirical Bayes-style prior estimated with IF2 to reduce the burn-in period of particle MCMC \cite{andrieu10} on the Dhaka cholera model of \cite{king08} from the $700,000$ iterations in \cite{fasiolo16} to just $500$. To the best of our knowledge, attaining rapid mixing on this challenging problem has not previously been achievable. 
 
@@ -136,8 +136,10 @@ The process is parameterized by an unknown parameter $\theta \in \Theta \subsete
 %     &=f_{X_0}\left(x_0 ; \theta\right) \prod_{n=1}^N f_{X_n \mid X_{n-1}}\left(x_n \mid x_{n-1} ; \theta\right) f_{Y_n \mid X_n}\left(y_n \mid x_n ; \theta\right).
 % \end{align*}
 
-We suppose that the discete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$ and we write $\process_n\left(x_n\mid x_{n-1}; \theta\right)$ for its corresponding simulator.
-We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, and $y_n^*$ for the actual values of the observations that were observed.
+We suppose that the discete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$.
+The existence of this density is necessary to define the likelihood function, but plug-and-play algorithms do not have access to evaluation of this density.
+Instead, they have access to a corresponding simulator, which we write as $\process_n\left(x_n\mid x_{n-1}; \theta\right)$.
+We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, which we suppose can be evaluated. We write $y_n^*$ for the actual values of the observations that were observed.
 We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$.
 Superscripts $x_{n,j}^A$ denote the ancestral trajectory of particle $j$ at time $n$, and $a(\cdot)$ is the ancestor function that maps a particle to its parent, $j \mapsto a(j)$.
 
@@ -157,11 +159,13 @@ The simulator can be differentiated using AD as long as the underlying computer 
 
 The MOP-$\alpha$ algorithm resamples the particles according to an arbitrary resampling rule that depends on both the target parameter value and a baseline parameter value, and this explains the name {\it measurement off-parameter}.
 Similar quantities are called {\it off-policy} in reinforcement learning, and a parameter in a POMP model is analogous to a policy in a corresponding control model \ed{Kevin, would it be good to add your favorite RL reference here? Also, you may want to edit this sentence. I think something like this will help the reader to ``get'' our terminology.}.
-Specifically, MOP-$\alpha$ evaluates the likelihood at some $\theta \in \Theta$, but instead resamples the particles according to the indices generated by a vanilla particle filter run at some $\phi \in \Theta$.
+Specifically, MOP-$\alpha$ evaluates the likelihood at some $\theta \in \Theta$, but instead resamples the particles according to the indices generated by a vanilla particle filter run at a {\it baseline parameter}, $\phi \in \Theta$.
 This ensures that the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed, bypassing the issue of Monte Carlo resampling.
 We show in Theorem~\ref{thm:mop-targeting} that MOP-$\alpha$ exactly targets the filtering distribution when $\theta=\phi$ or $\alpha=1$.
 
-When the measurement model is differentiable in $\theta$ and the simulator is a differentiable function of $\theta$ for every fixed $\omega$ (a condition that requires the latent process to be a continuous random variable, also known as the reparameterization trick \cite{corenflos21}), direct differentiation of MOP-$\alpha$ is available via AD.
+We suppose that the simulator is a differentiable function of $\theta$ for every fixed $\omega$, a condition that requires the latent process to be a continuous random variable. 
+This condition is also known as the {\it reparameterization trick} \cite{corenflos21}.
+Supposing also that the measurement model is differentiable in $\theta$, direct differentiation of MOP-$\alpha$ is available via AD.
 Theorem~\ref{thm:mop-functional-forms} shows that MOP-$\alpha$ is constructed so this direct derivative obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
 Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff as illustrated in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}).
 
@@ -182,80 +186,88 @@ Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a f
             ${X}_{n,j}^{P,\theta}\sim \process_n\big(\cdot|{X}_{n-1,j}^{F, \theta};{\theta}\big)$. \newline
             \hspace*{4mm} Measurement density,
             $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$. \newline
-            \hspace*{4mm} Compute $L_n^{B,\theta,\alpha} ={\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}/{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$. \newline
+            \hspace*{4mm} Compute $L_n^{B,\theta,\alpha} ={\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}\, \big/\, {\sum_{j=1}^J  w^{P,\theta}_{n,j}}$. \newline
             \hspace*{4mm} Conditional likelihood under $\phi$,
             $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$.\newline
             \hspace*{4mm} Select resampling indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) \propto g^{\phi}_{n,m}$. \newline
             \hspace*{4mm} Obtain resampled particles ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$. \newline
             \hspace*{4mm} Calculate resampled corrected weights
-            $w_{n,j}^{F,\theta}= w^{P,\theta}_{n,k_j}  { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}$.\newline
-            \hspace*{4mm} Compute $ L_n^{A,\theta,\alpha} = L_n^\phi\cdot {\sum_{j=1}^J w^{F,\theta}_{n,j}}/{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$.\newline
+            $w_{n,j}^{F,\theta}= w^{P,\theta}_{n,k_j}  { g^{\theta}_{n,k_j}} \, \big/ \, { g^{\phi}_{n,k_j}}$.\newline
+            \hspace*{4mm} Compute $ L_n^{A,\theta,\alpha} = L_n^\phi\cdot {\sum_{j=1}^J w^{F,\theta}_{n,j}} \, \big/ \, {\sum_{j=1}^J  w^{P,\theta}_{n,j}}$.\newline
 		\textbf{Return:} likelihood estimate $\hat{\lik}(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\hat{\lik}(\theta) = \prod_{n=1}^N L_n^{B,\theta,\alpha}$, filtering distributions $\{(X_{n,j}^{F, \theta}, w^{F,\theta}_{n,j})\}_{n,j=1}^{N,J}.$
 \end{algorithm}
 
 
-\subsection{Algorithm Outline} 
-We obtain two coupled sets of particles, one under $\phi \in \Theta$, and another with the process model at $\theta \in \Theta$ but with the resampling indices constructed from the first pass, with a ``baseline parameter'' $\phi$.
-As the process model follows $\theta$ but the measurement model follows the baseline parameter $\phi$, we therefore call this a ``measurement off-parameter'' particle filter.
+%%\subsection{Algorithm Outline} 
+
+Algorithm~\ref{alg:mop} constructs two coupled sets of particles, one under $\phi \in \Theta$, and another with the process model at $\theta \in \Theta$ but with the resampling indices constructed from the first pass, with the baseline parameter, $\phi$.
+%% As the process model follows $\theta$ but the measurement model follows the baseline parameter $\phi$, we therefore call this a ``measurement off-parameter'' particle filter. %% DISCUSSED IN THE PREVIOUS SECTION
 The resampling indices, which we write as $k_j \sim \text{Categorical}(g^{\phi}_{n,1},...,g^{\phi}_{n,J})$, are a function of $\phi$ for any value of $\theta$.
 For the categorical distribution, we use systematic resampling \cite{arulampalam02,king16} which usually has superior performance to multinomial resampling.
 If $\theta$ and $\phi$ coincide, one only needs one particle filter run at $\theta=\phi$, otherwise one needs two runs at the same seed $\omega \in \Omega$.
 
-We then reweight the conditional likelihoods by a correction factor accumulated over time to account for the resampling under $\phi$. That is, writing $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for the measurement density and $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$ for the conditional likelihood estimate under $\phi$,  we can estimate the conditional likelihood under $\theta$ by
-\vspace*{-1.5mm}
+Algorithm~\ref{alg:mop} reweights the conditional likelihoods by a correction factor accumulated over time to account for the resampling under $\phi$. 
+Writing $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for the measurement density and $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$ for the conditional likelihood estimate under $\phi$, we obtain two suitably weighted estimates of the conditional likelihood under $\theta$,
+\arxiv{}{\vspace*{-1.5mm}}
 \begin{equation}
      \label{eq:mop-conditional-likelihood}
-     L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}} \text{ or } L_n^{A,\theta,\alpha} = L_n^\phi\cdot \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
-     \vspace*{-1.5mm}
+     L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}, \hspace{15mm} 
+     L_n^{A,\theta,\alpha} = L_n^\phi\cdot \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
+     \arxiv{}{\vspace*{-1.5mm}}
 \end{equation}
-where the weights for each particle are updated by
-\vspace*{-1.5mm}
+where the weights for each particle are updated recursively by
+\arxiv{}{\vspace*{-1.5mm}}
 \begin{equation}
     \label{eq:weighting-scheme}
-    w_{n,j}^{P,\theta} = (w_{n-1,j}^{F,\theta})^\alpha,  w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}, w^{F,\theta}_{0,j}= 1.
-    \vspace*{-1.5mm}
+    w_{n,j}^{P,\theta} = (w_{n-1,j}^{F,\theta})^\alpha, 
+    \hspace{5mm}
+    w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}, 
+    \hspace{5mm}
+    w^{F,\theta}_{0,j}= 1.
+    \arxiv{}{\vspace*{-1.5mm}}
 \end{equation}
+The before-resampling conditional likelihood estimate $L_n^{B,\theta,\alpha}$ is preferable in practice, as it has slightly lower variance than the after-resampling estimate $L_n^{A,\theta,\alpha}$, but the latter is useful in deriving properties of the MOP-$\alpha$ gradient estimate such as that in Theorem \ref{thm:mop-functional-forms}.
 
-The before-resampling conditional likelihood estimate $L_n^{B,\theta,\alpha}$ should be used in general, as it has slightly lower variance than the after-resampling estimate $L_n^{A,\theta,\alpha}$, but the latter is useful in deriving properties of the MOP-$\alpha$ gradient estimate such as that in Theorem \ref{thm:mop-functional-forms}.
-
-This yields a suitably reweighted particle filter that targets the filtering distribution under $\theta$ and produces a strongly consistent likelihood estimate for the likelihood at $\theta$. As the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed, we successfully bypass the issue of Monte Carlo resampling when the simulator and and measurement model are differentiable. Taking the gradient with respect to $\theta$ of the log-likelihood estimate for $\theta$ then yields an estimate for the score at $\theta$. 
-
+%%\ed{This yields a suitably reweighted particle filter that targets the filtering distribution under $\theta$ and produces a strongly consistent likelihood estimate for the likelihood at $\theta$. As the resampling indices are invariant to $\theta$ when $\omega$ and $\phi$ are fixed, we successfully bypass the issue of Monte Carlo resampling when the simulator and and measurement model are differentiable. Taking the gradient with respect to $\theta$ of the log-likelihood estimate for $\theta$ then yields an estimate for the score at $\theta$. I THINK THIS MATERIAL IS COVERED ELSEWHERE, E.G. EARLIER IN THIS SECTION}
 
 
-\subsection{Discounting Weights for a Bias-Variance Tradeoff}
 
-The correction factors, $w^{P,\theta}_{n,j}$ and $w^{F,\theta}_{n,j}$, accumulate as $n$ increases, leading to numerical instability.
-One can discount the correction factors from previous timesteps by some $\alpha \in [0,1]$ as in Equation \ref{eq:weighting-scheme} while still targeting the filtering distribution and likelihood if $\theta=\phi$.
+%\subsection{Discounting Weights for a Bias-Variance Tradeoff}
+
+If $\alpha=1$ in Algorithm~\ref{alg:mop}, the weights, $w^{P,\theta}_{n,j}$ and $w^{F,\theta}_{n,j}$, accumulate as $n$ increases.
+This leads to numerical instability unless $N$ is small.
+For $\alpha<1$, the weights fom previous timesteps are discounted, as in Equation~(\ref{eq:weighting-scheme}).
+Heuristically, $\alpha$ controls a rate of exponential decay of the memory that the filter at time $t_n$, and its resulting gradient estimate, has over the ancestral trajectories prior to $t_n$.
+With $\alpha<1$, Algorithm~\ref{alg:mop} continues to target the filtering distribution and likelihood if $\theta=\phi$.
+However, we expect bias for $\theta\neq\phi$ that shrinks as $\theta$ approaches $\phi$.
 This lets us optimize a bias-variance tradeoff for the MOP-$\alpha$ score estimate.
-When $\alpha=1$, MOP-$1$ maintains the memory of each particle's ancestral trajectory, and Theorem~\ref{thm:mop-functional-forms} shows that it recovers the consistent but high-variance gradient estimate from \cite{poyiadjis11, scibior21}.
-When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{naesseth18}. 
-This discount factor is novel and effective both in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}). 
 
+When $\alpha=1$, MOP-$1$ maintains complete memory of each particle's ancestral trajectory, and Theorem~\ref{thm:mop-functional-forms} shows that it recovers the consistent but high-variance gradient estimate from \cite{poyiadjis11, scibior21}.
+At the other extreme, when $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recovering the low-variance but asymptotically biased gradient estimator of \cite{naesseth18}. 
+The novel possibility of $0<\alpha<1$ is effective both in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}). 
 
 \subsection{MOP-$\alpha$ Encompasses the Estimators of \cite{poyiadjis11, scibior21, naesseth18}}
 
 \cite{scibior21} show that the estimate of \cite{naesseth18} is the gradient of a vanilla particle filter when resampling terms are dropped, and also recover the estimate of \cite{poyiadjis11} through the use of a stop-gradient operation in the AD procedure. It turns out that both of these, when applied on the bootstrap filter, correspond to special cases of MOP-$\alpha$.
 
-$\alpha$ therefore controls an exponentially-weighted moving average, determining how much memory the resulting gradient estimate has over ancestral trajectories.
-This is illustrated in Figure \ref{fig:biasvar}, in the context of the Dhaka cholera model of \cite{king08}. 
 
 \begin{thm}[MOP-$0$ and MOP-$1$ Functional Forms]
     \label{thm:mop-functional-forms}
     Writing $\nabla_\theta \hat\ell^\alpha(\theta)$ for the gradient estimate yielded by MOP-$\alpha$ when $\theta=\phi$ and using the after-resampling conditional likelihood estimate so that $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A, \theta, \alpha}$, when $\alpha=0$,
     \vspace*{-2.5mm}
-    \begin{equation}
+    \begin{equation} \nonumber
         \nabla_\theta \hat\ell^0(\theta) 
         = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
         \vspace*{-2.5mm}
     \end{equation}
-    yielding \cite{naesseth18} on the bootstrap filter. When $\alpha=1$,
+    yielding the estimate of \cite{naesseth18} for the bootstrap filter. When $\alpha=1$,
     \vspace*{-2.5mm}
-    \begin{equation}
+    \begin{equation} \nonumber
         \nabla_\theta \hat{\ell}^1(\theta) 
         = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
     \vspace*{-2.5mm}
     \end{equation}
-    yielding the estimator of \cite{poyiadjis11, scibior21} with the bootstrap filter.
+    yielding the estimator of \cite{poyiadjis11, scibior21} for the bootstrap filter.
 \end{thm}
 
 We defer the proof to \arxiv{Appendix~\ref{appendix:functional}}{the supplementary material}. 
@@ -307,14 +319,13 @@ On the other hand, the second stage of IFAD enjoys a linear convergence rate und
 \begin{thm}[Linear Convergence of IFAD]
     
 Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $||\nabla_\theta \hat\ell^\alpha(\theta_m)|| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$, for some $\beta \in (0,1)$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation and the minimum eigenvalue of $H$ is greater than some $c > 0$ for all $m$ with probability at least $1-\delta$, the second stage of IFAD converges linearly to the MLE:
-\vspace*{-2mm}
+\arxiv{}{\vspace*{-2mm}}
 $$
 \ell(\theta^*) - \ell(\theta_{m+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_m)).
 $$
     \label{thm:mop-convergence}
 \end{thm}
-\vspace*{-5mm}
-
+\arxiv{}{\vspace*{-5mm}}
 We defer the proof, which is similar to that of Theorem 6 in \cite{mahoney16}, to \arxiv{Appendix~\ref{appendix:convergence}}{the supplementary information}. For simplicity, we only prove this for MOP-$1$ and note that the general case follows as the required $1/2$-approximation can still be obtained for sufficiently large $\alpha$. 
 
 We therefore see that the second stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the first stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. This happens fairly often in practice, for example, when sufficient regularity conditions for local asymptotic normality of the MLE hold. We conjecture that this applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE, and will explore this in future work.
@@ -492,11 +503,11 @@ That is, we show a strong law of large numbers for triangular arrays of particle
 
 \begin{thm}[MOP-$\alpha$ Targets the Filtering Distribution and Likelihood]
     \label{thm:mop-targeting}
-    When $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the filtering distribution under $\theta$ and is strongly consistent for the likelihood under $\theta$. That is, for $\pi_n(\theta)=f_{X_{n}|Y_{1:n} ; \theta}$ and any measurable and bounded functional $h$ and for $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\prod_{n=1}^N L_n^{B,\theta,\alpha}$, it holds that
-    \vspace*{-2.5mm}
-    \begin{equation}
-        \frac{\sum_{j=1}^J h(x_{n,j}^{F, \theta}) w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} h, \;\; \hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).
-    \vspace*{-2.5mm}
+    When $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the filtering distribution under $\theta$ and is strongly consistent for the likelihood under $\theta$. That is, for $\pi_n(\theta)=f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^* ; \theta)$ and any measurable and bounded functional $h$ and for $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\prod_{n=1}^N L_n^{B,\theta,\alpha}$, it holds that
+    \arxiv{}{\vspace*{-2.5mm}}
+    \begin{equation} \nonumber
+        \frac{\sum_{j=1}^J h(x_{n,j}^{F, \theta}) \, w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} [h(X_n)], \hspace{5mm} \hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).
+    \arxiv{}{\vspace*{-2.5mm}}
     \end{equation}
 \end{thm}
 
@@ -516,7 +527,7 @@ That is, we show a strong law of large numbers for triangular arrays of particle
 
 \subsection{MOP-$1$ Is Consistent for the Score}
 
-Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} use
+Despite showing that the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} estimate the Fisher score by 
 $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}\left(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta\right)$$ and not
 $$\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}| X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}; \theta\right).$$
 It is therefore not immediately apparent that these two converge to the same thing. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
@@ -540,7 +551,8 @@ We present an abbreviated proof here, postponing the full argument to \arxiv{App
 \subsection{MOP-$\alpha$ Bias and Variance}
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$, $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$, there exists some $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
+    When $\alpha\in(0,1)$ and $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$. 
+    There exists an $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
     \begin{align*}
         &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
@@ -549,21 +561,23 @@ We present an abbreviated proof here, postponing the full argument to \arxiv{App
         &\Var(\nabla_\theta \hat\ell^{\alpha}(\theta)) \lesssim \min_{k\leq N} NpG'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
         \end{align*}
 \end{thm}
-
-
 We defer the proof to \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material}, but provide a brief outline here. 
-The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the weights are truncated at lag $k$ with discount factor $\alpha$ to ensure strong mixing, and the covariance of the latter which can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. 
+The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the discounted weights are truncated at lag $k$. 
+The discount factor, $\alpha$, ensures strong mixing.
+The covariance of the derivative of MOP-$(\alpha,k)$ can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. 
 The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. 
 The latter is $\tilde{O}(NpG'(\theta)^2(k+\psi(\alpha)))$, by routine algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
 
-We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}(NpG'(\theta)^2/J)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$ (ignoring factors of $p, G'$, etc.). 
-This and Theorem \ref{thm:mop-biasvar} show that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
+We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( NpG'(\theta)^2\big/J \big)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p, G'$, etc. \ed{complete the etc to be more precise}. 
+Combining that result with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
 
 
 
 \section{Computational Efficiency}
 
-MOP-$\alpha$ and IFAD are fast algorithms, both in theory and practice. In line with the cheap gradient principle of \cite{kakade2019provably}, getting a gradient estimate from MOP-$\alpha$ takes no more than 6 times that of the runtime of the particle filter (in practice, the multiplier is 3.75). It therefore shares the same $O(NJ)$ time complexity as the particle filter, unlike the $O(NJ^2)$ complexity of \cite{corenflos21} and Algorithm 2 in \cite{poyiadjis11, scibior21}.
+MOP-$\alpha$ and IFAD are fast algorithms, both in theory and practice. 
+In line with the cheap gradient principle of \cite{kakade2019provably}, getting a gradient estimate from MOP-$\alpha$ takes no more than 6 times that of the runtime of the particle filter (in practice, the multiplier is 3.75). 
+MOP-$\alpha$ and IFAD therefore share the same $O(NJ)$ time complexity as the particle filter, unlike the $O(NJ^2)$ complexity of \cite{corenflos21} and Algorithm 2 in \cite{poyiadjis11, scibior21}.
 
 %% As IF2 amounts to one iteration of the particle filter, with $O(NJ)$ time complexity. 
 %%In practice,
@@ -579,10 +593,18 @@ Our implementation of the particle filter, simulator, and MOP-$\alpha$ in \textt
 
 \section{Discussion}
 
-We note that it is possible to work without a differentiable simulator, but one would then require access to the transition densities. We are working on an analogue that uses (differentiable) transition densities instead of a differentiable simulator, that may be better suited to large discrete state spaces than either MOP-$\alpha$ or the Baum-Welch algorithm.
+If the simulator is discontinuous in $\theta$, MOP-$\alpha$ no longer applies.
+We are working on a variation of MOP-$\alpha$ applicable to this case.
+Specifically, differentiable transition density ratios can be used instead of a differentiable simulator.
+The off-parameter treatment of the measurement model is extended to an off-parameter simulation for the dynamic process.
+In that case, one requires access to the transition densities, or at least their ratios. 
+The discounting parameter, $\alpha$, can be incorporated as for MOP-$\alpha$.
+This algorithm may be better suited to large discrete state spaces than either MOP-$\alpha$ or the Baum-Welch algorithm.
 Additionally, our gradient estimate can be used for variational inference to approximate the posterior distribution over latent states \cite{naesseth18} and parameters. 
 
-Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interpolate between the estimators of \cite{naesseth18} and \cite{poyiadjis11}. As the proof of Theorem \ref{thm:mop-biasvar} implies, we can also truncate the weights at a fixed lag, corresponding to the MOP-$(1,k)$ estimate mentioned. The analysis is similar, with slightly better rates but a less natural interpretation. 
+Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interpolate between the estimators of \cite{naesseth18} and \cite{poyiadjis11}. 
+As the proof of Theorem \ref{thm:mop-biasvar} implies, we can also truncate the weights at a fixed lag, corresponding to the MOP-$(1,k)$ estimate mentioned. 
+The analysis is similar, with slightly better rates but less convenient implementation. 
 
 Practical likelihood-based data analysis involves many likelihood optimizations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
 In particular, profile likelihood confidence intervals require a sequence of optimizations.
@@ -598,7 +620,7 @@ We anticipate that this will promote scientific advances in all domains where co
 \arxiv{
 \section*{Acknowledgments}
 This research was supported by National Science Foundation grant DMS-1761603. 
-We acknowledge communications with Nicholas Chopin. 
+We acknowledge communications with Nicolas Chopin. 
 }{
 \showmatmethods{} % Display the Materials and Methods section
 \acknow{Please include your acknowledgments here, set in a single paragraph. Please do not include any acknowledgments in the Supporting Information, or anywhere else in the manuscript.}
@@ -628,7 +650,7 @@ We acknowledge communications with Nicholas Chopin.
 \label{appendix:feynman}
 \input{appendix/feynman}
 
-\section{A Strong Law of Large Numbers for Triangular Arrays of Particles With ``Off-Parameter’’ Resampling}
+\section{A Strong Law of Large Numbers for Triangular Arrays of Particles With Off-Parameter Resampling}
 \label{appendix:targeting}
 \input{appendix/targeting}
 

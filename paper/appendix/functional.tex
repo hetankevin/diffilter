@@ -14,9 +14,9 @@ Theorem \ref{thm:mop-functional-forms} follows immediately as a consequence of t
 
 \begin{proof}
     Consider the case of MOP-$\alpha$ when $\alpha=1$ and $\theta=\phi$. We then have a nice telescoping product property for the after-resampling likelihood estimate:
-\begin{equation*}
+\begin{equation}
     \hat{\lik}^1(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}}= \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n-1,j}^{F,\theta}} = \left(\frac{1}{J}\sum_{j=1}^J w_{N,j}^{F,\theta}\right) \prod_{n=1}^N L_n^\phi,
-\end{equation*}
+\end{equation}
 where the third equality follows from the choice of $\alpha=1$, and the fourth equality is the resulting telescoping property. 
 The log-derivative identity lets us decompose the score estimate as
 \begin{equation}\label{eq:log-derivative-identity}
@@ -28,37 +28,47 @@ From (\ref{eq:log-derivative-identity}), we see that the derivative of the log-l
 \end{equation}
 We proceed to decompose (\ref{eq:eq:log-derivative2}).
 First, observe that as $\alpha=1$,
-$$w_{n,j}^{P,\theta} = w_{n-1,j}^{F,\theta}\frac{g_{n,j}^\theta}{g_{n,j}^\phi} = \prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}},$$
+\begin{equation}
+w_{n,j}^{P,\theta} = w_{n-1,j}^{F,\theta}\frac{g_{n,j}^\theta}{g_{n,j}^\phi} = \prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}},
+\end{equation}
 where we use the $(\cdot)^A$ superscript to denote the ancestral trajectory of the $j$-th prediction or filtering particle at timestep $n$. 
 Note that this quantity is the cumulative product of measurement density ratios over the ancestral trajectory of the $j$-th prediction particle at timestep $n$.
 We then use the log-derivative identity again, yielding the following expression for the gradient of the log-weights as the sum of the log measurement densities over the ancestral trajectory:
-$$\frac{\nabla_\theta w_{n,j}^{P,\theta}}{w_{n,j}^{P,\theta}} = \nabla_\theta \log w_{n,j}^{P,\theta} = \nabla_\theta \log \left(\prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}}\right) = \nabla_\theta \sum_{i=1}^n \left(\log g_{i,j}^{A,P,\theta} - \log g_{i,j}^{A,P,\phi}\right) = \sum_{i=1}^n \nabla_\theta \log g_{i,j}^{A,P,\theta}.$$
+\begin{eqnarray}
+ \frac{\nabla_\theta w_{n,j}^{P,\theta}}{w_{n,j}^{P,\theta}} = \nabla_\theta \log w_{n,j}^{P,\theta} &=& \nabla_\theta \log \left(\prod_{i=1}^n \frac{g_{i,j}^{A,P,\theta}}{g_{i,j}^{A,P,\phi}}\right) 
+ \\
+ &=& \nabla_\theta \sum_{i=1}^n \left(\log g_{i,j}^{A,P,\theta} - \log g_{i,j}^{A,P,\phi}\right)
+ \\
+ &=& \sum_{i=1}^n \nabla_\theta \log g_{i,j}^{A,P,\theta}.
+\end{eqnarray}
 This is equal to the gradient of the logarithm of the conditional density of the observed measurements given the ancestral trajectory of the $j$-th prediction particle up to timestep $n$:
-\begin{eqnarray*}  
+\begin{eqnarray}  
 \nabla_\theta \sum_{n=1}^N \log g_{n,j}^{A,\theta} &=& \nabla_\theta \log\left(\prod_{n=1}^N g_{n,j}^{A,P,\theta}\right) 
 \\
 &=&  \nabla_\theta \log\left(\prod_{n=1}^N f_{Y_n|X_n}\left(y_n^* | x_{n,j}^{A, P,\theta}\right)\right)
 \\
 &=& \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).
-\end{eqnarray*}
+\end{eqnarray}
 Multiplying both sides of the expression by $w_{N,j}^{P,\theta} $ yields an expression for the gradient of the weights at timestep $N$:
-$$\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,P,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).$$
+\begin{equation}
+\nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,P,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).    
+\end{equation}
 Substituting the above identity into the log-likelihood decomposition obtained earlier \ed{USE EQUATION NUMBERS TO MAKE THIS ARGUMENT MORE CONCRETE} yields
-\begin{equation*}
+\begin{equation}
     \nabla_\theta \hat{\ell}^1(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta} =\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,k_j}^{P,\theta} = \frac{1}{J}\sum_{j=1}^J w_{N,k_j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,k_j}^{A, P,\theta}\right).
-\end{equation*}
+\end{equation}
 Finally, observing that $\theta=\phi$ implies $w_{N,j}^{F,\theta}=1$, we obtain 
-\begin{equation*}
+\begin{equation}
     \nabla_\theta \hat{\ell}^1(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right).
-\end{equation*}
+\end{equation}
 This yields the gradient estimators of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter. 
 \end{proof}
 
 Note that the variance of the MOP-$\alpha$ log-likelihood estimate scales poorly with $N$ the moment $\theta\neq\phi$. 
 This can be seen by observing that
-\begin{equation*}
+\begin{equation}
     \nabla_\theta \hat{\ell}^1(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta} =\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,k_j}^{P,\theta} = \frac{1}{J}\sum_{j=1}^J w_{N,k_j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,k_j}^{A, P,\theta}\right).
-\end{equation*}
+\end{equation}
 When $\theta\neq\phi$, we see that $w_{N,k_j}^{P,\theta} = O(c^N)$. 
 When $\theta=\phi$, this is a special case of the \cite{poyiadjis11} estimator, which has $O(N^4)$ variance by a property of functionals of the particle filter \cite{delMoral03}. 
 
@@ -77,19 +87,23 @@ When $\theta=\phi$, this is a special case of the \cite{poyiadjis11} estimator, 
 First, write $$s_{n,j} = \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}$$
 as shorthand for the measurement density ratios. 
 Observe that, when $\alpha=0,$, the likelihood estimate becomes
-\begin{equation}
-\nonumber
-    \hat{\lik}^0(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J s_{n,j} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}.
-\end{equation}
+\begin{eqnarray}
+% \nonumber
+    \hat{\lik}^0(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} &=& \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} 
+    \\
+    &=& \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J s_{n,j} 
+    \\
+    &=& \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}.
+\end{eqnarray}
 We lose the nice telescoping property observed in the MOP-$1$ case, but this expression still yields something useful. 
 This is because its gradient when $\theta=\phi$ is therefore 
-\begin{align*}
+\begin{align}
     \nabla_\theta \hat{\ell}^0(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right) \\
     &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)} \\
     &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta s_{n,j}}{\sum_{j=1}^J s_{n,j}} \\
     &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)}{f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \phi}; \phi)} \\
     &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
-\end{align*}
+\end{align}
 where we use the log-derivative trick in the second equality, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$ in the fourth equality, and use the log-derivative trick again while noting that $\theta=\phi$ in the fifth equality. This yields the desired result.
 \end{proof}
 

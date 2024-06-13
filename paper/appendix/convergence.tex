@@ -33,9 +33,9 @@ Equivalently, with probability at least $1-\delta$, it holds that
 
 We will seek to use the concentration inequality of \cite{delMoral11} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. Fix $\theta = \phi$.
 From the decomposition in the proof of Lemma \ref{lem:mop-1-formula}, as $w_{N, j}^{F, \theta}=1$ when $\theta=\phi$, we have that
-$$
+\begin{equation}
 \nabla_\theta \hat{\ell}(\theta):=\frac{1}{J} \sum_{j=1}^J \nabla_\theta w_{N, j}^{F, \theta}=\frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N  w_{N, k_j}^{P, \theta} \nabla_\theta \log g_{n,k_j}^{A,\theta} = \frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N \nabla_\theta \log g_{n,k_j}^{A,\theta}.
-$$
+\end{equation}
 Define $\varphi_n^i(x_{n,j}^{F,\theta}) := \frac{\partial}{\partial\theta_i} \log g_{n,k_j}^{A,\theta}$, which is a functional of the filtering particles $x_{n,j}^{F,\theta} = x_{n,k_j}^{P,\theta}$. These are bounded measurable functionals bounded by $G'(\theta)$ by Assumption \ref{assump:bounded-measurement}. Therefore, these have bounded oscillation, satisfying the requirement that $\text{osc} \left(\frac{\partial}{\partial\theta_i} \varphi_i(x_{n,j}^{P,\theta}) \right) \leq G'(\theta)$. Note that \cite{delMoral11} in fact assume $\text{osc}(f) \leq 1$, so we simply scale their bound accordingly.
 
 Now we apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delMoral11} and a union bound over each $\varphi_n^i(x_{n,j}^{F,\theta})$, totaling $N$ timesteps and $p$ parameters, to find that
@@ -99,7 +99,9 @@ We additionally require, for $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$,
     J\gamma' \geq c + r_t(1+h^{-1}(t)) + \sqrt{2tJ}\beta_t.
 \end{align}
 We therefore require \ed{WE SAY ``REQUIRE'' AT VARIOUS POINTS, BUT THAT SUGGESTS NECESSITY WHEREAS I SUPPOSE WE MEAN SUFFICIENCY. I EDITED ONE OR TWO OF THESE.}
-$$J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'$$
+\begin{equation}
+J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'    
+\end{equation}
 for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c$ with probability at least $1-\exp(-t)$.
 
 \end{proof}
