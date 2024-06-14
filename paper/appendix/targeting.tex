@@ -129,7 +129,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \begin{equation}\label{eq:lemma2:g}
     \frac{\sum_j g(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].
     \end{equation}
-    Let $\bar{U}_j^J = \frac{J U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity \begin{equation}\frac{J^{-1}\sum_j h(\tilde Z_j^J) \, U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \, \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.\end{equation}
+    Let $\bar{U}_j^J = \frac{J \, U_j^J}{\sum_j U_j^J}$. Examine the numerator and denominator of the quantity \begin{equation}\frac{J^{-1}\sum_j h(\tilde Z_j^J) \, U_j^J}{J^{-1}\sum_j U_j^J} = \frac{J^{-1}\sum_j h(\tilde Z_j^J) \, \bar{U}_j^J}{J^{-1}\sum_j \bar{U}_j^J}.\end{equation}
     The denominator converges to $1$ almost surely. The numerator, on the other hand, is
     \begin{equation}
     \frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J,
@@ -138,10 +138,10 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \begin{eqnarray}        
     \lim_{J\to\infty} \E\left[\frac{1}{J}\sum_j h(\tilde Z_j^J)\, \bar{U}_j^J\right] 
     &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  
-      \E\left[ h(\tilde Z_j^J)\, \bar{U}_j^J\big|\tilde X_j^J, \bar U_j^J\right]
+      \E\Big[ h(\tilde Z_j^J)\, \bar{U}_j^J\Big|\tilde X_j^J, \bar U_j^J\Big]
     \right]
     \\
-    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  \E\big[h(Z) \big| X=\tilde X_j^J \big] \, \bar U_j^J\right].
+    &=& \lim_{J\to\infty} \E \left[\frac{1}{J}\sum_j  \E\Big[h(Z) \Big| X=\tilde X_j^J \Big] \, \bar U_j^J\right].
     \end{eqnarray}
     Applying (\ref{eq:lemma2:g}) with $g(x) = \E\big[h(Z) | X=x\big]$, the average on the right hand side converges almost surely to $\E\big\{\E[h(Z)|X]\big\}=\E[h(Z)].$
     It remains to swap the limit and expectations. We can do so with the bounded convergence theorem, and therefore obtain   

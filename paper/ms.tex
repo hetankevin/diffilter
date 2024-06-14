@@ -186,13 +186,13 @@ Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a f
             ${X}_{n,j}^{P,\theta}\sim \process_n\big(\cdot|{X}_{n-1,j}^{F, \theta};{\theta}\big)$. \newline
             \hspace*{4mm} Measurement density,
             $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$. \newline
-            \hspace*{4mm} Compute $L_n^{B,\theta,\alpha} ={\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}\, \big/\, {\sum_{j=1}^J  w^{P,\theta}_{n,j}}$. \newline
+            \hspace*{4mm} Compute $L_n^{B,\theta,\alpha} ={\sum_{j=1}^Jg^\theta_{n,j} \, w^{P,\theta}_{n,j}}\, \big/\, {\sum_{j=1}^J  w^{P,\theta}_{n,j}}$. \newline
             \hspace*{4mm} Conditional likelihood under $\phi$,
             $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$.\newline
             \hspace*{4mm} Select resampling indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) \propto g^{\phi}_{n,m}$. \newline
             \hspace*{4mm} Obtain resampled particles ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$. \newline
             \hspace*{4mm} Calculate resampled corrected weights
-            $w_{n,j}^{F,\theta}= w^{P,\theta}_{n,k_j}  { g^{\theta}_{n,k_j}} \, \big/ \, { g^{\phi}_{n,k_j}}$.\newline
+            $w_{n,j}^{F,\theta}= w^{P,\theta}_{n,k_j} \, g^{\theta}_{n,k_j} \, \big/ \, { g^{\phi}_{n,k_j}}$.\newline
             \hspace*{4mm} Compute $ L_n^{A,\theta,\alpha} = L_n^\phi\cdot {\sum_{j=1}^J w^{F,\theta}_{n,j}} \, \big/ \, {\sum_{j=1}^J  w^{P,\theta}_{n,j}}$.\newline
 		\textbf{Return:} likelihood estimate $\hat{\lik}(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\hat{\lik}(\theta) = \prod_{n=1}^N L_n^{B,\theta,\alpha}$, filtering distributions $\{(X_{n,j}^{F, \theta}, w^{F,\theta}_{n,j})\}_{n,j=1}^{N,J}.$
 \end{algorithm}
@@ -202,7 +202,7 @@ Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a f
 
 Algorithm~\ref{alg:mop} constructs two coupled sets of particles, one under $\phi \in \Theta$, and another with the process model at $\theta \in \Theta$ but with the resampling indices constructed from the first pass, with the baseline parameter, $\phi$.
 %% As the process model follows $\theta$ but the measurement model follows the baseline parameter $\phi$, we therefore call this a ``measurement off-parameter'' particle filter. %% DISCUSSED IN THE PREVIOUS SECTION
-The resampling indices, which we write as $k_j \sim \text{Categorical}(g^{\phi}_{n,1},...,g^{\phi}_{n,J})$, are a function of $\phi$ for any value of $\theta$.
+The resampling indices, which we write as $k_j \sim \text{Categorical}\big(g^{\phi}_{n,1},...,g^{\phi}_{n,J}\big)$, are a function of $\phi$ for any value of $\theta$.
 For the categorical distribution, we use systematic resampling \cite{arulampalam02,king16} which usually has superior performance to multinomial resampling.
 If $\theta$ and $\phi$ coincide, one only needs one particle filter run at $\theta=\phi$, otherwise one needs two runs at the same seed $\omega \in \Omega$.
 
@@ -211,7 +211,7 @@ Writing $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\g
 \arxiv{}{\vspace*{-1.5mm}}
 \begin{equation}
      \label{eq:mop-conditional-likelihood}
-     L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}, \hspace{15mm} 
+     L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j}\, w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}, \hspace{15mm} 
      L_n^{A,\theta,\alpha} = L_n^\phi\cdot \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
      \arxiv{}{\vspace*{-1.5mm}}
 \end{equation}
@@ -221,7 +221,7 @@ where the weights for each particle are updated recursively by
     \label{eq:weighting-scheme}
     w_{n,j}^{P,\theta} = (w_{n-1,j}^{F,\theta})^\alpha, 
     \hspace{5mm}
-    w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} { g^{\theta}_{n,k_j}}/{ g^{\phi}_{n,k_j}}, 
+    w^{F,\theta}_{n,j} = w^{P,\theta}_{n,k_j} \, g^{\theta}_{n,k_j} \, \big/ g^{\phi}_{n,k_j}, 
     \hspace{5mm}
     w^{F,\theta}_{0,j}= 1.
     \arxiv{}{\vspace*{-1.5mm}}
@@ -318,10 +318,10 @@ On the other hand, the second stage of IFAD enjoys a linear convergence rate und
 
 \begin{thm}[Linear Convergence of IFAD]
     
-Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $||\nabla_\theta \hat\ell^\alpha(\theta_m)|| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$, for some $\beta \in (0,1)$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation and the minimum eigenvalue of $H$ is greater than some $c > 0$ for all $m$ with probability at least $1-\delta$, the second stage of IFAD converges linearly to the MLE:
+Consider the second stage of IFAD (Algorithm \ref{alg:ifad}) where one stops if $\|\nabla_\theta \hat\ell^\alpha(\theta_m)\| \leq (1+\sigma) \epsilon$, where $\sigma \geq \frac{4 \Gamma}{(1-\beta)}$, for some $\beta \in (0,1)$. Assume $-\ell$ is strongly convex and smooth, $\gamma I \preceq \nabla_\theta^2 (-\ell) \preceq \Gamma I$. Choose the learning rate $\eta$ such that $\eta \leq \frac{c(1-\beta)}{2\Gamma}$. Then, for sufficiently large $\alpha$ and $J$ to ensure the score estimate is a $1/2$-approximation and the minimum eigenvalue of $H$ is greater than some $c > 0$ for all $m$ with probability at least $1-\delta$, the second stage of IFAD converges linearly to the MLE:
 \arxiv{}{\vspace*{-2mm}}
 $$
-\ell(\theta^*) - \ell(\theta_{m+1}) \leq \left(1-\eta\beta\frac{8\gamma}{9c}\right)(\ell(\theta^*)-\ell(\theta_m)).
+\ell(\theta^*) - \ell(\theta_{m+1}) \leq \Big(1-\eta\beta\, \frac{8\gamma}{9c}\Big)\big(\ell(\theta^*)-\ell(\theta_m)\big).
 $$
 \label{thm:mop-convergence}
 \end{thm}
@@ -343,7 +343,7 @@ We therefore see that the second stage of IFAD converges linearly to the MLE if 
         Run IF2 until initial "convergence" under cooling schedule $\eta_m$, or for a fixed number or iterations, to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_m := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
 		\textbf{While} procedure not converged: \newline
 		\hspace*{4mm} Run Algorithm \ref{alg:mop} to obtain $\hat\loglik(\theta_m).$ \newline
-		\hspace*{4mm} Obtain $g(\theta_m) = \nabla_{\theta_m} (-\hat\loglik(\theta_m))$, $H(\theta_m)$ s.t. $\lambda_{\min}(H(\theta_m)) \geq c$. \newline
+		\hspace*{4mm} Obtain $g(\theta_m) = \nabla_{\theta_m} \big(-\hat\loglik(\theta_m)\big)$, $H(\theta_m)$ s.t. $\lambda_{\min}\big(H(\theta_m)\big) \geq c$. \newline
 		\hspace*{4mm} Update $\theta_{m+1} := \theta_m - \eta (H(\theta_m))^{-1} g(\theta_m)$, $m:=m+1.$ \newline
 		\textbf{Return} $\hat{\theta} := \theta_m.$
 \end{algorithm}
@@ -361,15 +361,14 @@ As in \cite{king08, ionides15}, the transition dynamics follow a series of stoch
 \vspace*{-1mm}
 \begin{align*}
     dS&=\big(k \epsilon R^k+\delta(S-P)-\lambda(t) S\big)\, dt+d P-({\sigma S I}/{H})\, dB, \\
-    dI&=\left(\lambda(t) S-(m+\delta+\gamma) I\right)\, dt+({\sigma S I}/{H})\, dB, \\
+    dI&=\big(\lambda(t) S-(m+\delta+\gamma) I\big)\, dt+({\sigma S I}/{H})\, dB, \\
     dR^1&=\big(\gamma I-(k \epsilon+\delta) R^1\big)\, dt, \hspace{2mm} \dots \\
     dR^k&=\big(k \epsilon R^{k-1} -(k \epsilon+\delta) R^k\big)\, dt,
     \vspace*{-2mm}
 \end{align*}
 with Brownian motion $B(t)$, cholera death rate $m$, recovery rate $\gamma$, mean immunity duration $1/\epsilon$, standard deviation of the force of infection $\sigma$, and population death rate $\delta=0.02$. The force of infection, $\lambda_t$, is modeled by splines $(s_j)_{j=1}^6$
 \vspace*{-2mm}
-\begin{equation*}
-    \lambda_t=\exp\hspace{-1mm}\left(\hspace{-.5mm}\beta_{\text{trend}}(t-t_0)+\hspace{-1mm}\sum_{j=1}^{6} \beta_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm}\frac{I}{P} + \exp\hspace{-1mm} \left(\sum_{j=1}^{6} \omega_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm},
+\begin{equation*}    \lambda_t=\exp\hspace{-1mm}\left(\hspace{-.5mm}\beta_{\text{trend}}(t-t_0)+\hspace{-1mm}\sum_{j=1}^{6} \beta_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm}\frac{I}{P} + \exp\hspace{-1mm} \left(\sum_{j=1}^{6} \omega_j s_j(t)\hspace{-1mm}\right)\hspace{-1mm},
     \vspace*{-2mm}
 \end{equation*}
 where the coefficients $(\beta_j)_{j=1}^6$ model seasonality in the force of infection, $\beta_{\text{trend}}$ models the trend in the force of infection, and the $\omega_j$ represent seasonality of a non-human environmental reservoir of disease.
@@ -483,7 +482,7 @@ Here, we will show that MOP-$\alpha$ targets the filtering distribution and like
 \begin{enumerate}[label=(A\arabic*),itemsep=-1.2ex] 
     \item \textbf{Continuity of the Likelihood.} $\ell(\theta)$ has more than two continuous derivatives in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$. \label{assump:conti-lik}
     \item \textbf{Bounded Process Model.} There exist $\underbar{M}, \bar{M}$ such that $0 < \underbar{M} \leq f_{X_n|X_{n-1}}(x_n | x_{n-1};\theta) \leq \bar{M} < \infty$. \label{assump:bounded-process}
-    \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $||\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)||_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement}
+    \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $\|\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)\|_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement}
     \item \textbf{Bounded Gradient Estimates.} There are functions $G(\theta), H(\theta): \Theta \to [0,\infty)$ uniformly bounded by $G^*, H^*<\infty$, so the MOP-$\alpha$ gradient and Hessian estimates at $\theta=\phi$ are almost surely bounded by $G(\theta)$ and $H(\theta)$ for all $\alpha$. \label{assump:local-bounded-derivative}
     \item \textbf{Differentiability of Density Ratios and Simulator.} The measurement density, \arxiv{\\}{}$f_{Y_n|X_n}(y_n^*|x_n; \theta)$, and simulator have more than two continuous derivatives in $\theta$. \label{assump:diff-meas-and-sim}
 \end{enumerate}
@@ -506,7 +505,7 @@ That is, we show a strong law of large numbers for triangular arrays of particle
     When $\alpha=1$ or $\theta=\phi$, MOP-$\alpha$ targets the filtering distribution under $\theta$ and is strongly consistent for the likelihood under $\theta$. That is, for $\pi_n(\theta)=f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^* ; \theta)$ and any measurable and bounded functional $h$ and for $\hat\lik(\theta) = \prod_{n=1}^N L_n^{A,\theta,\alpha}$ or $\prod_{n=1}^N L_n^{B,\theta,\alpha}$, it holds that
     \arxiv{}{\vspace*{-2.5mm}}
     \begin{equation} \nonumber
-        \frac{\sum_{j=1}^J h(x_{n,j}^{F, \theta}) \, w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} [h(X_n)], \hspace{5mm} \hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).
+        \frac{\sum_{j=1}^J h(x_{n,j}^{F, \theta}) \, w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{F,\theta}} \stackrel{a.s.}{\to} E_{\pi_n(\theta)} \big[h(X_n)\big], \hspace{5mm} \hat\lik(\theta)  \stackrel{a.s.}{\to} \lik(\theta).
     \arxiv{}{\vspace*{-2.5mm}}
     \end{equation}
 \end{thm}
@@ -517,7 +516,7 @@ That is, we show a strong law of large numbers for triangular arrays of particle
     We provide a proof sketch here, deferring most of the details, and discussion of the after-resampling conditional likelihood estimate $L_n^{A,\theta,\alpha}$, to \arxiv{Appendix~\ref{appendix:targeting}}{the supplementary information}. 
     When $\theta=\phi$, regardless of the value of $\alpha$, the ratio ${g_{n,j}^\theta}/{g_{n,j}^\phi}=1,$ and this reduces to the vanilla particle filter.
     When $\alpha=1$ and $\theta\neq\phi,$ suppose inductively that $\{(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j})\}_{j=1}^J$ targets $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
-    It can then be shown that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$, that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$, and that weighting the particles by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,k_j}, w^{P,\theta}_{n,k_j} g^\theta_{n,k_j}/ g^\phi_{n,k_j})$,
+    It can then be shown that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j})\}_{j=1}^J$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$, that $\{(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} \, g^\theta_{n,j} )\}_{j=1}^J$ targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$, and that weighting the particles by $(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}) = (X^{P,\theta}_{n,k_j}, w^{P,\theta}_{n,k_j} \, g^\theta_{n,k_j} \big/ g^\phi_{n,k_j})$,
     resampling the $k_j$ with probabilities proportional to $g^\phi_{n,j}$, also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
     If the likelihood is estimated with the before-resampling conditional likelihoods $\hat\lik(\theta) = \prod_{n=1}^N L_n^{B,\theta,\alpha}$, the strong consistency is a direct consequence of our earlier result that $\{ \big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big) \}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$. 
 \end{proof}
@@ -554,21 +553,21 @@ We present an abbreviated proof here, postponing the full argument to \arxiv{App
     When $\alpha\in(0,1)$ and $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$. 
     There exists an $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
-    \begin{align*}
-        &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 
+    \begin{eqnarray*}
+        \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 
+        &\lesssim& \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right),
         \\
-        &\lesssim \min_{k \leq N} NpG'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right),\\[-1ex]
-        &\Var(\nabla_\theta \hat\ell^{\alpha}(\theta)) \lesssim \min_{k\leq N} NpG'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
-        \end{align*}
+        \Var\big(\nabla_\theta \hat\ell^{\alpha}(\theta)\big) &\lesssim& \min_{k\leq N} Np \, G'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
+        \end{eqnarray*}
 \end{thm}
 We defer the proof to \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material}, but provide a brief outline here. 
 The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the discounted weights are truncated at lag $k$. 
 The discount factor, $\alpha$, ensures strong mixing.
 The covariance of the derivative of MOP-$(\alpha,k)$ can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. 
 The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. 
-The latter is $\tilde{O}(NpG'(\theta)^2(k+\psi(\alpha)))$, by routine algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
+The latter is $\tilde{O}\big(Np \, G'(\theta)^2(k+\psi(\alpha))\big)$, by routine algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
 
-We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( NpG'(\theta)^2\big/J \big)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p$ and $G'$. 
+We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( Np \, G'(\theta)^2\big/J \big)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p$ and $G'$. 
 Combining that result with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. The phase transition arises as even though the particle filter has forgetting properties \cite{karjalainen23}, the resulting derivative estimate of \cite{poyiadjis11} does not, and we require both for the variance reduction. 
 
 
