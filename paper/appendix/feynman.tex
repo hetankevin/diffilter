@@ -4,12 +4,14 @@ In this section, we introduce the Feynman-Kac convention of \cite{delMoral04} th
 
 
 \paragraph{Markov kernels and the process model:} A Markov kernel $M$ with source $\gX_1$ and target $\gX_2$ is a map $M: \gX_1 \times \mathcal{B}(\gX_2) \to [0,1]$ such that for every set $A \in \mathcal{B}(\gX_2)$ and every point $x \in \gX_1$, the map $x \mapsto M(x, A)$ is a measurable function of $x$, and the map $A \mapsto M(x,A)$ is a probability measure on $\gX_2$. The quantity $M(x,A)$ can be thought of as the probability of transitioning to the set $A$ given that we are at the point $x$. If this yields a density, this then corresponds to the process density $f_{X_{2}|X_1}$ conditional on $x$ and integrated over $A$.  
-\item \textbf{Markov kernels and measures:} For any measure $\eta$, any Markov kernel $M$ on $\gX$, any point $x \in \gX$ and any measurable subset $A \subseteq \gX$, let 
+
+\paragraph{Markov kernels and measures:} For any measure $\eta$, any Markov kernel $M$ on $\gX$, any point $x \in \gX$ and any measurable subset $A \subseteq \gX$, let 
 \begin{align}
-    \eta(h) &= \int h d\eta = \int h(x) \eta(dx), \\(\eta M)(A) &= \int \eta(dx)M(x,A), \\
+    \eta(h) &= \int h \, d\eta = \int h(x) \eta(dx), \\(\eta M)(A) &= \int \eta(dx)M(x,A), \\
     (Mh)(x) &= \int M(x, dy) h(y).
 \end{align}
-\item \textbf{Compositions of Markov kernels:} The composition of a Markov kernel $M_1$ with another Markov kernel $M_2$ is another Markov kernel, given by 
+
+\paragraph{Compositions of Markov kernels:} The composition of a Markov kernel $M_1$ with another Markov kernel $M_2$ is another Markov kernel, given by 
 \begin{equation}
  (M_1M_2)(x, A) = \int M_1(x, dy) M_2(y, A).
 \end{equation}
@@ -61,7 +63,8 @@ and the composition of Markov kernels on particles from timestep $n$ to timestep
 One may wonder why \cite{karjalainen23} require this process to evolve on $\gX^{J}$. This is because at every timestep $n$, we in fact draw $X_{n, j}^P | \{X_{n-1, 1:J}^P = x_{n-1, 1:J}^P\} \sim \textbf{M}_n(x_{n-1, 1:J}^P, \cdot) = \eta_0^{\otimes J} \textbf{M}_{0,n}$ for $j=1,...,J$. 
 
 \paragraph{Forgetting of the particle filter:} 
-The above formalization yields a result from \cite{karjalainen23} that we require for our analysis of the bias, variance, and error of MOP-$\alpha$ -- the forgetting of the particle filter. That is, \cite{karjalainen23} show that
+The above formalization yields a result from \cite{karjalainen23} on the forgetting of the particle filter that we require for our analysis of the bias, variance, and error of MOP-$\alpha$.  
+That is, \cite{karjalainen23} show that
 \begin{equation}
 \beta_{\mathrm{TV}}\left(\mathbf{M}_{n, n+k}\right) \leq(1-\epsilon)^{\lfloor k /(O(\log J))\rfloor},
 \end{equation}

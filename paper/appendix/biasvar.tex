@@ -5,35 +5,54 @@ First, we note the following relation between the Dobrushin contraction coeffici
 \begin{lem}
     \label{lem:dobrushin-implies-alpha-mixing}
     Setting $X$ to be the particle collection at time $m$, and $Y$ at time $n$, we have that the alpha mixing coefficients,
-    $$\int | f_{XY} - f_X f_Y | < \alpha,$$
+    \begin{equation}
+    \int \big| f_{XY}(x,y) - f_X (x)\, f_Y(y) \big|\, dx\, dy < \alpha,
+    \end{equation}
     are bounded by the Dobrushin coefficient, i.e we have
-    $$\int | f_{Y|X}(y|x_1) - f_{Y|X}(y|x_2) |dy < \alpha$$ for all $x_1$, $x_2$.
+    \begin{equation}
+    \int \big| f_{Y|X}(y|x_1) - f_{Y|X}(y|x_2) \big| \, dy < \alpha
+    \end{equation} 
+    for all $x_1$, $x_2$.
 \end{lem}
 
 \begin{proof}
     We rewrite the alpha-mixing assertion as 
-    $$\int { \int |f_Y|X(y|x) - f_Y(y)| dy } f_X dx.$$
-    We claim that the Dobrushin coefficient implies $$\int | f_Y|X(y|x_1) - f_Y(y) |dy < \alpha$$ for all $x_1$. This is shown as follows:
-    \begin{align*}
-        \int | f_{Y|X}(y|x) - f_Y(y) |dy 
-        &= \int \left|  \int [f_{Y|X}(y|x_1) - f_{Y|X}(y|x)] f_X(x)dx \right|dy \\
-        &< \int   \int  | f_{Y|X}(y|x_1) - f_{Y|X}(y|x)] | dy f_X(x)dx \\
-        &< \int \alpha f_X(x)dx \\
+    \begin{equation}
+    \int { \int \big|f_{Y|X}(y|x) - f_Y(y)\big| \, dy } \, f_X(x) \, dx.
+    \end{equation}
+    We claim that the Dobrushin coefficient implies 
+    \begin{equation}
+    \int \big| f_{Y|X}(y|x_1) - f_Y(y) \big| \, dy < \alpha
+    \end{equation} 
+    for all $x_1$. This is shown as follows:
+    \begin{align}
+        \int \big| f_{Y|X}(y|x) - f_Y(y) \big| \, dy 
+        &= \int \left|  \int \big[f_{Y|X}(y|x_1) - f_{Y|X}(y|x)\big] f_X(x) \, dx \right|dy \\
+        &< \int   \int  \big| f_{Y|X}(y|x_1) - f_{Y|X}(y|x)\big| \, dy \, f_X(x)\, dx \\
+        &< \int \alpha f_X(x) \, dx \\
         &=\alpha
-    \end{align*}
+    \end{align}
     We then have the desired result.
 \end{proof}
 
 \subsection{Warm Up: MOP-$0$ Variance Bound}
-We now prove the variance bound, presented below. 
-\begin{thm}
-    
-\end{thm}
-We made Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} to leverage the results from \cite{karjalainen23} on the forgetting of the particle filter. This is required to show error bounds on the gradient estimates that we provide -- namely that the error of the MOP-$1$ estimator that corresponds to that of \cite{poyiadjis11} is $O(N^2)$, and that the variance of MOP-$\alpha$ for any $\alpha<1$ is $O(N)$. 
 
-We can decompose the MOP-$\alpha$ estimator as follows. When $\theta=\phi$,
-$$\hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \theta}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \theta})^\alpha}.$$
-Now, to illustrate the proof strategy for the general case in an easier context, we first analyze the special case when $\alpha=0.$ 
+Note that we made Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} to leverage the results from \cite{karjalainen23} on the forgetting of the particle filter. 
+This is required to show error bounds on the gradient estimates that we provide, namely that the error of the MOP-$1$ estimator, corresponding to the estimator of \cite{poyiadjis11}, is $O(N^4)$, and that the variance of MOP-$\alpha$ for any $\alpha<1$ is $O(N)$. 
+
+We can decompose the MOP-$\alpha$ estimator as follows. 
+When $\theta=\phi$,
+\begin{equation}
+\hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \theta}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \theta})^\alpha}.
+\end{equation}
+Now, to illustrate the proof strategy for the general case in an easier context, we first analyze the special case when $\alpha=0.$ We now prove the variance bound for this case, presented below. 
+
+\begin{thm}[Variance of Gradient Estimate of MOP-$0$]
+The variance of the gradient estimate from MOP-$0$, or the gradient estimate resulting from the algorithm of \cite{naesseth18}, is:
+ \begin{equation}
+     \Var(\nabla_\theta \hat\ell(\theta)) \lesssim \frac{G'(\theta)^2N}{J}.
+ \end{equation}
+\end{thm}
 
 \begin{proof}
 When $\alpha=0$, we have:
@@ -41,48 +60,63 @@ When $\alpha=0$, we have:
     \hat{\lik}(\theta) := \prod_{n=1}^N L_n^{A, \theta, \alpha} = \prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n,j}^{F,\theta}}{\sum_{j=1}^J w_{n,j}^{P,\theta}} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J s_{n,j} = \prod_{n=1}^N L_n^\phi \cdot \frac{1}{J}\sum_{j=1}^J \frac{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \theta})}{f_{Y_n|X_n}(y_n^*|x_{n,j}^{P, \phi})}.
 \end{equation}
 Similarly to the proof of Lemma \ref{lem:mop-0-formula}, its gradient when $\theta=\phi$ is therefore 
-\begin{align*}
+\begin{align}
     \nabla_\theta \hat{\ell}(\theta) &:= \sum_{n=1}^N \nabla_\theta \log\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right) \\
     &= \sum_{n=1}^N \frac{\nabla_\theta \left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)}{\left(L_n^\phi \frac{1}{J} \sum_{j=1}^J s_{n,j}\right)} \\
     &= \sum_{n=1}^N \frac{\sum_{j=1}^J \nabla_\theta s_{n,j}}{\sum_{j=1}^J s_{n,j}} \\
     &= \sum_{n=1}^N \frac{1}{J} \sum_{j=1}^J \frac{\nabla_\theta f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)}{f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \phi}; \phi)} \\
     &= \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
-\end{align*}
+\end{align}
 where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ when $\theta=\phi$, and use the log-derivative trick where $\theta=\phi$ again. The point here was that we establish that the gradient of the log-likelihood estimate is given by the sum of terms over all $N$ and $J$:
-$$\nabla_\theta \hat{\ell}(\theta) = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right).$$
+\begin{equation}
+\nabla_\theta \hat{\ell}(\theta) = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right).
+\end{equation}
 Therefore,
-\begin{align*}
-    \Var(\nabla_\theta \hat\ell(\theta)) &= \frac{1}{J^2}\Var\left(\sum_{n=1}^N\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    &= \frac{1}{J^2}\sum_{n=1}^N\Var\left(\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    &+ 2\sum_{m<n}\Cov\left(\frac{1}{J}\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_m|X_{m}}(y_m^*|x_{m,j}^{F, \theta}; \theta)\right), \frac{1}{J}\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    &= \sum_{n=1}^N \Var(\nabla_\theta\hat\ell_n(\theta)) + 2\sum_{m<n} \Cov(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta)).
-\end{align*}
+\begin{align}
+    \Var\big(\nabla_\theta \hat\ell(\theta)\big) &= \frac{1}{J^2}\Var\left(\sum_{n=1}^N\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    & \hspace{-15mm}= \frac{1}{J^2}\sum_{n=1}^N\Var\left(\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &\hspace{-15mm}+ 2\sum_{m<n}\Cov\left(\frac{1}{J}\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_m|X_{m}}(y_m^*|x_{m,j}^{F, \theta}; \theta)\right), \frac{1}{J}\sum_{j=1}^{J}\nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &\hspace{-15mm}= \sum_{n=1}^N \Var\big(\nabla_\theta\hat\ell_n(\theta)\big) + 2\sum_{m<n} \Cov\big(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta)\big).
+\end{align}
 Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
-$$\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+\begin{equation}
+\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},
+\end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. 
 
 %\kevin{How does the dobrushin contraction coefficient relate to the alpha-mixing coefficients? If you have a bound on the mixing time $b$, then the alpha mixing coefficients should just be $\alpha(t) \leq e^{-t/b}$.}
 
-By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is strong mixing, with $\alpha$-mixing coefficients $\alpha(k) \leq (1-\epsilon)^{\floor{k/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra). Therefore, by Davydov's inequality, noting that $\nabla_\theta\hat\ell_n(\theta)\leq G'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and WLOG assuming $\E[(\nabla_\theta\hat\ell_m(\theta))^4]^{1/4}\leq\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/4}$, we see that
-\begin{align*}
-    \Cov(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)) 
-    &\leq \alpha(n-m)^{1/2}\E[(\nabla_\theta\hat\ell_m(\theta))^4]^{1/4}\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/4}\\
-    &\leq \alpha(n-m)^{1/2}\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/2}.
-\end{align*}
-To bound this, we use the fact that $$\E[(\nabla_\theta\hat\ell_n(\theta))^4] = \E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^4]+\E[(\nabla_\theta\hat\ell_n(\theta))^2]^2$$
+By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is strong mixing, with $\alpha$-mixing coefficients $\alpha(k) \leq (1-\epsilon)^{\floor{k/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra). Therefore, by Davydov's inequality, noting that $\nabla_\theta\hat\ell_n(\theta)\leq G'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and without loss of generality labeling $m$ and $n$ such that $\E\big[(\nabla_\theta\hat\ell_m(\theta))^4\big]^{1/4}\leq\E\big[(\nabla_\theta\hat\ell_n(\theta))^4\big]^{1/4}$, we see that
+\begin{align}
+    \Cov\big(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)\big) 
+    &\leq \alpha(n-m)^{1/2} \, \E\big[(\nabla_\theta\hat\ell_m(\theta))^4\big]^{1/4}
+    \,
+    \E\big[(\nabla_\theta\hat\ell_n(\theta))^4\big]^{1/4}\\
+    &\leq \alpha(n-m)^{1/2}\, \E\big[(\nabla_\theta\hat\ell_n(\theta))^4\big]^{1/2}.
+\end{align}
+To bound this, we use the fact that 
+\begin{equation}
+\E\big[(\nabla_\theta\hat\ell_n(\theta))^4\big] = \E\Big[\big(\nabla_\theta\hat\ell_n(\theta)-\E\big[\nabla_\theta\hat\ell_n(\theta)\big]\big)^4\Big]+\E\big[(\nabla_\theta\hat\ell_n(\theta))^2\big]^2
+\end{equation}
 alongside Lemma 2 of \cite{karjalainen23}, which shows that
-$$\E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^4] \lesssim \frac{G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat\ell_n(\theta)-\E[\nabla_\theta\hat\ell_n(\theta)])^2] \lesssim \frac{G'(\theta)^2}{J}.$$
+\begin{equation}
+\E\Big[\big(\nabla_\theta\hat\ell_n(\theta)-\E\big[\nabla_\theta\hat\ell_n(\theta)\big]\big)^4\Big] \lesssim \frac{G'(\theta)^4}{J^2}, \hspace{10mm} \E\Big[\big(\nabla_\theta\hat\ell_n(\theta)-\E\big[\nabla_\theta\hat\ell_n(\theta)\big]\big)^2\Big] \lesssim \frac{G'(\theta)^2}{J}.
+\end{equation}
 It follows that 
-$$\E[(\nabla_\theta\hat\ell_n(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{G'(\theta)^4}{J^2}+\left(\frac{G'(\theta)^2}{J}\right)^2} = \frac{G'(\theta)^2}{J},$$
+\begin{equation}
+\E\big[(\nabla_\theta\hat\ell_n(\theta))^4\big]^{1/2} \lesssim  \sqrt{\frac{G'(\theta)^4}{J^2}+\left(\frac{G'(\theta)^2}{J}\right)^2} = \frac{G'(\theta)^2}{J},
+\end{equation}
 and we conclude that 
-$$\Cov(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c\log(J)}}}\frac{G'(\theta)^2}{J}.$$
+\begin{equation}
+\Cov\big(\nabla_\theta\hat\ell_m(\theta), \nabla_\theta\hat\ell_n(\theta)\big) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c\log(J)}}}\frac{G'(\theta)^2}{J}.
+\end{equation}
 Putting it all together, we see that
-\begin{align*}
-    \Var(\nabla_\theta \hat\ell(\theta)) &= \sum_{n=1}^N \Var(\nabla_\theta\hat\ell_n(\theta)) + 2\sum_{m<n} \Cov(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta))\\
+\begin{align}
+    \Var\big(\nabla_\theta \hat\ell(\theta)\big) &= \sum_{n=1}^N \Var\big(\nabla_\theta\hat\ell_n(\theta)\big) + 2\sum_{m<n} \Cov\big(\nabla_\theta\hat\ell_m(\theta),\nabla_\theta\hat\ell_n(\theta)\big)\\
     &\leq \frac{NG'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\frac{G'(\theta)^2}{J} \\
     &\leq \frac{G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\right) \\
     &\lesssim \frac{G'(\theta)^2N}{J}.
-\end{align*}
+\end{align}
 \end{proof}
 
 

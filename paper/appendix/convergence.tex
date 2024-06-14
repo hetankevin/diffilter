@@ -87,20 +87,20 @@ It is known that the minimum eigenvalue of a symmetric matrix is concave. Theref
 holds with high probability.
 We apply the particle Hoeffding concentration inequality from \cite{delMoral11} to find that  
 \begin{align}
-    \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \E_{\tilde{\pi}_t}\lambda_{\min}(H_j) &= \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \gamma' \geq -\frac{r_t}{J}(1+h^{-1}(t)) - \sqrt{\frac{2t}{J}}\beta_t \\
-    \sum_{j=1}^J \lambda_{\min}(H_j) &\geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma',
+    \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \E_{\tilde{\pi}_t}\lambda_{\min}(H_j) &= \frac{1}{J}\sum_{j=1}^J \lambda_{\min}(H_j) - \gamma' \geq -\frac{r_t}{J}\big(1+h^{-1}(t)\big) - \sqrt{\frac{2t}{J}}\beta_t \\
+    \sum_{j=1}^J \lambda_{\min}(H_j) &\geq -r_t\big(1+h^{-1}(t)\big) - \sqrt{2tJ}\beta_t + J\gamma',
 \end{align}
 with probability at least $1-\exp(-t)$. Here, $h(t) = \frac{1}{2}(t - \log(1+t))$. 
 The two additional model-specific parameters are $\beta_t$ and $r_t$, which do not depend on $J$. 
 
-We additionally require, for $c \in (0, \sum_{j=1}^J \E\lambda_{\min}(H_j))$,
+We additionally require, for $c \in \big(0, \sum_{j=1}^J \E\lambda_{\min}(H_j)\big)$,
 \begin{align}
-    \sum_{j=1}^J \lambda_{\min}(H_j) \geq -r_t(1+h^{-1}(t)) - \sqrt{2tJ}\beta_t + J\gamma' \geq c, \\
-    J\gamma' \geq c + r_t(1+h^{-1}(t)) + \sqrt{2tJ}\beta_t.
+    \sum_{j=1}^J \lambda_{\min}(H_j) \geq -r_t\big(1+h^{-1}(t)\big) - \sqrt{2tJ}\beta_t + J\gamma' \geq c, \\
+    J\gamma' \geq c + r_t\big(1+h^{-1}(t)\big) + \sqrt{2tJ}\beta_t.
 \end{align}
-We therefore require \ed{WE SAY ``REQUIRE'' AT VARIOUS POINTS, BUT THAT SUGGESTS NECESSITY WHEREAS I SUPPOSE WE MEAN SUFFICIENCY. I EDITED ONE OR TWO OF THESE.}
+It is therefore sufficient to have
 \begin{equation}
-J > \max\left\{\frac{2r_t(1+h^{-1}(t)) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t(1+h^{-1}(t))}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'    
+J > \max\left\{\frac{2r_t\big(1+h^{-1}(t)\big) + 2c}{\gamma'}, \frac{2(2t\beta_t^2+c)^2}{\gamma'^2}\right\} \geq  \frac{r_t\big(1+h^{-1}(t)\big)}{\gamma'} + \sqrt{2tJ}\beta_t/\gamma' + c/\gamma'    
 \end{equation}
 for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenvalue greater than or equal to $c$ with probability at least $1-\exp(-t)$.
 
@@ -114,23 +114,23 @@ In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney16}.
 Define $\theta_\eta = \theta_m + \eta p_m$, where $p_m=-(H(\theta_m))^{-1}g(\theta_m)$. 
 As in Roosta-Khorasani and Mahoney \cite{mahoney16}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
 \begin{equation}
-    f(\theta_m+\eta p_m) \leq f(\theta_m) + \eta\beta p_m^Tg(\theta_m),
+    f(\theta_m+\eta p_m) \leq f(\theta_m) + \eta\beta \, p_m^T \, g(\theta_m),
 \end{equation}
 holds for any $0< \eta < \tilde{\eta}$ and some $\beta \in (0,1)$.
 By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney16}, we have that choosing $J$ such that $||\nabla_\theta\hat{\ell}(\theta_m) - \nabla_\theta \ell(\theta_m)|| \leq \epsilon$ and $\lambda_{\min}(H(\theta_m)) \geq c>0$ for each $m$, yields
 \begin{align}
-    f(\theta_\eta)-f(\theta_m) \leq \eta p_m^Tg(\theta_m) + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
+    f(\theta_\eta)-f(\theta_m) \leq \eta p_m^T\, g(\theta_m) + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
 \end{align}
 with probability $1-\delta/2$. 
 From now on, we assume that we are on the success event of this high-probability statement. 
 Consequently, we have
 \begin{equation}
-    p_m^Tg(\theta_m) = -p_m^TH(\theta_m)p_m \geq -c||p_m||^2,
+    p_m^Tg(\theta_m) = -p_m^T\, H(\theta_m)\, p_m \geq -c||p_m||^2,
 \end{equation}
 and we can obtain a decrease in the objective. 
 Substituting this into the previous expression,
 \begin{align}
-    f(\theta_\eta)-f(\theta_m) \leq -\eta p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
+    f(\theta_\eta)-f(\theta_m) \leq -\eta p_m^TH(\theta_m)\, p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2,
 \end{align}
 the Armijo condition becomes
 \begin{align}
@@ -145,11 +145,11 @@ This holds and guarantees an iteration-independent lower bound if
 which is given by our choice of $\eta$.
 Now, first note that
 \begin{equation}
-||g(\theta_m)|| - ||\nabla_\theta f(\theta_m)|| \leq ||g(\theta_m) - \nabla_\theta f(\theta_m)|| \leq \epsilon => ||\nabla_\theta f(\theta_m)|| \geq ||g(\theta_m)|| - \epsilon
+||g(\theta_m)|| - ||\nabla_\theta f(\theta_m)|| \leq ||g(\theta_m) - \nabla_\theta f(\theta_m)|| \leq \epsilon \implies ||\nabla_\theta f(\theta_m)|| \geq ||g(\theta_m)|| - \epsilon
 \end{equation} 
 and
 \begin{equation}
-||\nabla_\theta f(\theta_m)||-||g(\theta_m)|| \leq ||\nabla_\theta f(\theta_m)-g(\theta_m)|| \leq \epsilon => ||g(\theta_m)|| \geq ||\nabla_\theta f(\theta_m)|| - \epsilon.
+||\nabla_\theta f(\theta_m)||-||g(\theta_m)|| \leq ||\nabla_\theta f(\theta_m)-g(\theta_m)|| \leq \epsilon \implies ||g(\theta_m)|| \geq ||\nabla_\theta f(\theta_m)|| - \epsilon.
 \end{equation}
 There are now two cases. 
 If the algorithm terminates and $||g(\theta_m)|| \leq \sigma \epsilon$, we can derive 
@@ -180,10 +180,10 @@ and now
 \end{eqnarray}
 Since $||A^{-1}|| = 1/\sigma_{\min}(A)$,
 \begin{align}
-    p_m^TH(\theta_m)p_m &= (-(H(\theta_m))^{-1}g(\theta_m))^TH(\theta_m)(-(H(\theta_m))^{-1}g(\theta_m)) \\
+    p_m^TH(\theta_m)p_m &= \big(-(H(\theta_m))^{-1}g(\theta_m)\big)^TH(\theta_m)\big(-(H(\theta_m))^{-1}g(\theta_m)\big) \\
     &= g(\theta_m)^T(H(\theta_m))^{-1}g(\theta_m) \\
     &\geq \frac{1}{c}||g(\theta_m)||^2 \\
-    &\geq \frac{1}{c}(||\nabla_\theta f(\theta_m)|| - \epsilon)^2 \\
+    &\geq \frac{1}{c}\big(||\nabla_\theta f(\theta_m)|| - \epsilon\big)^2 \\
     &\geq \frac{4}{9c}||\nabla_\theta f(\theta_m)||^2.
 \end{align}
 From the assumption that $f$ is $\gamma$-strongly convex, $\gamma I \preceq \nabla_\theta^2 -\ell \preceq \Gamma I$, by an implication of $\gamma$-strong convexity we have
@@ -192,29 +192,29 @@ From the assumption that $f$ is $\gamma$-strongly convex, $\gamma I \preceq \nab
 \end{align}
 and we put together:
 \begin{equation}
-    f(\theta_m) - f(\theta^*) \leq \frac{1}{2\gamma}||\nabla_\theta f(\theta_m)||^2 \leq \frac{9c}{4}\frac{1}{2\gamma}p_m^TH(\theta_m)p_m,
+    f(\theta_m) - f(\theta^*) \leq \frac{1}{2\gamma}\big\|\nabla_\theta f(\theta_m)\big||^2 \leq \frac{9c}{4}\frac{1}{2\gamma}\, p_m^TH(\theta_m)\, p_m,
 \end{equation}
 \begin{equation}
-    \frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \leq \frac{4}{9c}||\nabla_\theta f(\theta_m)||^2 \leq p_m^TH(\theta_m)p_m,
+    \frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \leq \frac{4}{9c}\big||\nabla_\theta f(\theta_m)\big||^2 \leq p_m^TH(\theta_m)\, p_m,
 \end{equation}
 \begin{equation}
-    f(\theta_m) - f(\theta^*) \leq \frac{9c}{8\gamma}p_m^TH(\theta_m)p_m,
+    f(\theta_m) - f(\theta^*) \leq \frac{9c}{8\gamma}\, p_m^TH(\theta_m)\, p_m,
 \end{equation}
 \begin{equation}
-    -\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \geq -\frac{4}{9c}||\nabla_\theta f(\theta_m)||^2 \geq -p_m^TH(\theta_m)p_m.
+    -\frac{8\gamma}{9c}\big(f(\theta_m) - f(\theta^*)\big) \geq -\frac{4}{9c}\big||\nabla_\theta f(\theta_m)\big||^2 \geq -p_m^TH(\theta_m)\, p_m.
 \end{equation}
 From earlier, as the Armijo condition is fulfilled with our choice of $\eta$ and $\epsilon$,
 \begin{align}
-    f(\theta_{m+1})-f(\theta_m) &\leq -\eta p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2 \\
-    &\leq -\eta\beta p_m^TH(\theta_m)p_m \\
-    &\leq -\eta\beta\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)).
+    f(\theta_{m+1})-f(\theta_m) &\leq -\eta \, p_m^TH(\theta_m)p_m + \epsilon\eta||p_m|| + \eta^2 \Gamma ||p_m||^2 / 2 \\
+    &\leq -\eta\beta \,  p_m^TH(\theta_m)\, p_m \\
+    &\leq -\eta\beta \, \frac{8\gamma}{9c}\, \big(f(\theta_m) - f(\theta^*)\big).
 \end{align}
 Therefore,
 \begin{align}
     f(\theta_{m+1}) - f(\theta^*) 
     &= f(\theta_{m+1})-f(\theta_m)+f(\theta_m)- f(\theta^*) \\
-    &\leq f(\theta_m)- f(\theta^*) -\eta\beta\frac{8\gamma}{9c}(f(\theta_m) - f(\theta^*)) \\
-    &= (1-\eta\beta\frac{8\gamma}{9c})(f(\theta_m) - f(\theta^*)).
+    &\leq f(\theta_m)- f(\theta^*) -\eta\beta\, \frac{8\gamma}{9c} \, \big(f(\theta_m) - f(\theta^*)\big) \\
+    &= \Big(1-\eta\beta\frac{8\gamma}{9c}\Big)\big(f(\theta_m) - f(\theta^*)\big).
 \end{align}
 
 \end{proof}

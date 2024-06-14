@@ -12,14 +12,14 @@ We now introduce the precise definition of an off-parameter resampled particle f
         \item The prediction particles at timestep $n$, $x_{n,j}^P$, are drawn from $X_{n,j}^P \sim \pi_n^J M_n$, and the prediction weights are given by $w_{n,j}^P = w_{n-1,j}^F$. 
         \item The prediction measure at timestep $n$ is given by 
         \begin{equation}
-        \eta_n^J = \frac{\sum_{j=1}^J w_{n,j}^P \delta_{x_{n,j}^P}}{\sum_{j=1}^J w_{n,j}^P}.
+        \eta_n^J = \frac{\sum_{j=1}^J w_{n,j}^P \, \delta_{x_{n,j}^P}}{\sum_{j=1}^J w_{n,j}^P}.
         \end{equation}
         \item The particles are resampled at every timestep $n$, yielding indices $k_j$ according to some arbitrary probabilities $(p_{n,j})_{j=1}^J$.
         \item the filtering measure at timestep $n$ is given by
         \begin{equation}
-        \pi_n^J = \frac{\sum_{j=1}^J \delta_{x_{n,j}^P }w_{n,j}^P g_{n,j}}{\sum_{j=1}^J w_{n,j}^Pg_{n,j}} \approx \frac{\sum_{j=1}^J \delta_{x_{n,k_j}^P }w_{n,k_j}^P g_{n,k_j}/p_{n,k_j}}{\sum_{j=1}^J w_{n,k_j}^Pg_{n,k_j}/p_{n,k_j}} = \frac{\sum_{j=1}^J w_{n,j}^F \delta_{x_{n,j}^F}}{\sum_{j=1}^J w_{n,j}^F}.
+        \pi_n^J = \frac{\sum_{j=1}^J \delta_{x_{n,j}^P } w_{n,j}^P \, g_{n,j}}{\sum_{j=1}^J w_{n,j}^P \, g_{n,j}} \approx \frac{\sum_{j=1}^J \delta_{x_{n,k_j}^P }w_{n,k_j}^P \, g_{n,k_j}\big/p_{n,k_j}}{\sum_{j=1}^J w_{n,k_j}^P\, g_{n,k_j}\big/p_{n,k_j}} = \frac{\sum_{j=1}^J w_{n,j}^F \, \delta_{x_{n,j}^F}}{\sum_{j=1}^J w_{n,j}^F}.
         \end{equation}
-        \item The prediction weights at the next timestep are given by $w_{n+1,j}^P = w_{n,j}^F =  w_{n,k_j}^P g_{n,k_j}/p_{n,k_j}$.
+        \item The prediction weights at the next timestep are given by $w_{n+1,j}^P = w_{n,j}^F =  w_{n,k_j}^P \, g_{n,k_j}\big/p_{n,k_j}$.
     \end{enumerate}
 \end{defn}
 
@@ -28,11 +28,11 @@ To prove that the weight correction is sufficient for almost sure convergence, w
 \begin{defn}[Targeting]
     A pair of random vectors $(X, W)$ drawn from some measure $g$ \textbf{targets} another measure $\pi$ if for any measurable and bounded functional $h$,
 \begin{equation}
-    E_g\{h(X) \cdot W\}=E_\pi\{h(X)\}.
+    E_g\big[h(X) \cdot W\big]=E_\pi\big[h(X)\big].
 \end{equation}  
     A set of particles \textbf{targeting} $\pi$ is a triangular array of pairs of random vectors $(X^J_j, W^J_j), j=1,2, \ldots,J$ such that for any measurable and bounded functional $h$,
 \begin{equation}
-    \frac{\sum_{j=1}^J h(X^J_j) W^J_j}{\sum_{j=1}^J W^J_j} \stackrel{a.s.}{\to} E_\pi(h(X))
+    \frac{\sum_{j=1}^J h(X^J_j) \, W^J_j}{\sum_{j=1}^J W^J_j} \stackrel{a.s.}{\to} E_\pi(h(X))
 \end{equation}
 as $J \to \infty$.
 \end{defn}
@@ -47,21 +47,21 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \label{lem:change-measure-proper-weights}
     Suppose that $\{(\tilde X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Now, let $\{(Y_j^J,V_j^J),j=1,\dots,J\}$ be a multinomial sample with indices $k_j$ drawn from $\{(\tilde X_j^J,U_j^J)\}$ where $(\tilde X_j^J,U_j^J)$ is represented, on average, proportional to $\pi^J_j J$ times. Write
     \begin{equation}
-    (Y_j^J,V_j^J) = \big(\tilde X^J_{k_j},U^J_{k_j}/\pi^J_{k_j}\big).
+    (Y_j^J,V_j^J) = \big(\tilde X^J_{k_j},U^J_{k_j}\big/\pi^J_{k_j}\big).
     \end{equation} 
     If the importance sampling weights $U_j/\pi_j$ are bounded, then $\{(Y^J_j,V^J_j),j=1,\dots,J\}$ targets $f_X$.
 \end{lem}
 
 \begin{proof}
     Note that as the $Y_j^J$ are a subsample from $X_j^J$, $h$ can be a function of $Y$ as well as it is one for $X$. We then expand
-    \begin{equation}\frac{\sum_j h(Y_j^J) V_j^J}{\sum_j V_j^J} = \frac{\sum_j h(\tilde X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}}.\end{equation}
+    \begin{equation}\frac{\sum_j h(Y_j^J) \, V_j^J}{\sum_j V_j^J} = \frac{\sum_j h(\tilde X_{k_j}^J)\, \frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}}.\end{equation}
     By hypothesis,
     \begin{equation}
-    \frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[f(X)].
+    \frac{\sum_j h(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}\big[f(X)\big].
     \end{equation}
     We want to show
     \begin{equation}\label{eq:lemma1:h}
-    \frac{\sum_j h(X_{k_j}^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(\tilde X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} 0.
+    \frac{\sum_j h(X_{k_j}^J)\, \frac{U_{k_j}^J}{\pi_{k_j}^J}}{\sum_j \frac{U_{k_j}^J}{\pi_{k_j}^J}} - \frac{\sum_j h(\tilde X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} 0.
     \end{equation}
     For this, it is sufficient to show that
    \begin{equation} 
@@ -71,15 +71,18 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     since an application of this result with $h(x)=1$ provides almost sure convergence of the denominator in (\ref{eq:lemma1:h}).
     Write $g(\tilde X_j^J) = h(\tilde X_j^J)\frac{U_{k_j}^J}{\pi_{k_j}^J}$. We therefore need to show that 
     \begin{equation}
-    \sum_j Z_j^J := \sum_j \left(g(\tilde X_{k_j}^J) -  g(\tilde X_j^J) \pi_j^J \right) \stackrel{a.s.}{\to} 0.
+    \sum_j Z_j^J := \sum_j \left(g(\tilde X_{k_j}^J) -  g(\tilde X_j^J) \, \pi_j^J \right) \stackrel{a.s.}{\to} 0.
 \end{equation}
-    Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E[\left(Z_j^J\right)^4] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where noting that the $Z_j^J$ are conditionally independent given the $\tilde{X}_j^J$ and $U_j^J$,
-    \begin{eqnarray*} 
+    Because the functional $h$ and importance sampling weights $u_{k_j}^J/\pi_{k_j}^J$ are bounded, we have that $\E\big[(Z_j^J)^4\big] < \infty$. We can then follow the argument of \cite{chopin20} from this point on, where noting that the $Z_j^J$ are conditionally independent given the $\tilde{X}_j^J$ and $U_j^J$,
+    \begin{eqnarray} 
     \E\left[\left(\sum_j Z_j^J\right)^4 \Bigg| (\tilde X_j^J,U_j^J)_{j=1}^J \right] 
-    &=& J\E\left[(Z_1^J)^4|(\tilde X_j^J,U_j^J)_{j=1}^J\right] + 3J(J-1)\left(\E\big[(Z_j^J)^2|(\tilde X_j^J,U_j^J)_{j=1}^J\big]\right) 
+    &=& J\, \E\left[(Z_1^J)^4|(\tilde X_j^J,U_j^J)_{j=1}^J\right] 
+    \nonumber
+    \\
+    && \hspace{10mm}+ \hspace{2mm} 3J(J-1)\left(\E\big[(Z_j^J)^2\big|(\tilde X_j^J,U_j^J)_{j=1}^J\big]\right) 
     \\ 
     &\leq& CJ^2,
-    \end{eqnarray*}
+    \end{eqnarray}
     for some $C>0$. 
     Taking expectations on both sides yields
     \begin{equation}\E\left[\left(\sum_j Z_j^J\right)^4 \right]  \leq CJ^2\end{equation}
@@ -89,8 +92,8 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     \mathbb{E}\left[\left(\sum_{j=1}^J Z_j^J\right)^4\right] \leq \frac{C}{\epsilon^4J^2},\end{equation}
     and as these terms are summable we can apply Borel-Cantelli to conclude that these deviations happen only finitely often for every $\epsilon>0,$ giving us the almost-sure convergence for   
     \begin{equation} 
-    \sum_j h(X_{k_j}^J)\frac{u_{k_j}^J}{\pi_{k_j}^J}
-    -  \sum_j h(X_j^J)\frac{u_j^J}{\pi_j^J}\pi_j^J \stackrel{a.s.}{\to} 0.
+    \sum_j h(X_{k_j}^J)\, \frac{u_{k_j}^J}{\pi_{k_j}^J}
+    -  \sum_j h(X_j^J)\, \frac{u_j^J}{\pi_j^J}\, \pi_j^J \stackrel{a.s.}{\to} 0.
     \end{equation} 
     Similarly, we also have that
     \begin{equation} 
@@ -147,33 +150,37 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
 
 \begin{lem}[Particle Posteriors]
     \label{lem:posterior-proper-weights}
-    Suppose that $\{(X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$. Also suppose that $(X^{\prime J}_j,U^{\prime J}_j) = \big(X_j^J,U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$. Then, if $U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big)$ and $U_j^J \cdot f_{Z|X}(z^*|X_j^J)\big) / f_Z(z^*)$ are bounded, $\{(X^{\prime J}_j,U^{\prime J}_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
+    Suppose that $\{(X_j^J,U_j^J),j=1,\dots,J\}$ targets $f_X$.
+    Also suppose that $(X^{\prime J}_j,U^{\prime J}_j) = \big(X_j^J,U_j^J \, f_{Z|X}(z^*|X_j^J)\big)$. 
+    Then, if $U_j^J \, f_{Z|X}(z^*|X_j^J)$ and $U_j^J \, f_{Z|X}(z^*|X_j^J) \big/ f_Z(z^*)$ are bounded, $\{(X^{\prime J}_j,U^{\prime J}_j)\}$ targets $f_{X|Z}(\cdot | z^*)$.
 \end{lem}
 
 \begin{proof}
     Again, we want to show that
-     \begin{equation}\frac{\sum_j h(X_j^J) \cdot U_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j U_j^J \cdot f_{Z|X}(z^*|X_j^J)} \stackrel{a.s.}{\to} \E_{f_{X|Z}}[h(X)|z^*].\end{equation}
+     \begin{equation}
+     \frac{\sum_j h(X_j^J) \cdot U_j^J \cdot f_{Z|X}(z^*|X_j^J)}{\sum_j U_j^J \cdot f_{Z|X}(z^*|X_j^J)} \stackrel{a.s.}{\to} \E_{f_{X|Z}}\big[h(X)\big|z^*\big].
+     \end{equation}
     We already have that for any measurable bounded $g$,
     \begin{equation}
-        \frac{\sum_j g(X_j^J)U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}[g(X)].
+        \frac{\sum_j g(X_j^J)\, U_j^J}{\sum_j U_j^J} \stackrel{a.s.}{\to} \E_{f_X}\big[g(X)\big].
         \label{eq:lemma-posterior-hypothesis}
     \end{equation}
     Consider the following:
     \begin{equation}
-    \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}
-    \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \right)^{-1}.
+    \frac{J^{-1} \sum_j h(X_j^J) \, f_{Z|X}(z^*|X_j^J)\,  {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}
+    \times \left( \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) \, {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}} \right)^{-1}.
     \end{equation}
     We will apply Equation (\ref{eq:lemma-posterior-hypothesis}) to the numerator and the denominator in the ratio above individually. The numerator converges to 
     \begin{equation}
-    \frac{J^{-1} \sum_j h(X_j^J) f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \stackrel{a.s.}{\to} \E_{f_X}[h(X)f_{Z|X}(z^*|X)],
+    \frac{J^{-1} \sum_j h(X_j^J) \, f_{Z|X}(z^*|X_j^J) \, {U}_j^{J}}{J^{-1} \sum_j {u}_j^{J}} \stackrel{a.s.}{\to} \E_{f_X}\big[h(X)\, f_{Z|X}(z^*|X)\big],
     \end{equation}
     while the reciprocal of the denominator converges to 
     \begin{equation} 
-    \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}  \stackrel{a.s.}{\to} \E_{f_X}[f_{Z|X}(z^*|X)] = f_Z(z^*).
+    \frac{J^{-1} \sum_j f_{Z|X}(z^*|X_j^J) \, {U}_j^{J}}{J^{-1} \sum_j {U}_j^{J}}  \stackrel{a.s.}{\to} \E_{f_X}\big[f_{Z|X}(z^*|X)\big] = f_Z(z^*).
     \end{equation}
     Now we take advantage of the identities
     \begin{eqnarray}
-    \frac{\E_{f_X}[h(X)f_{Z|X}(z^*|X)]}{f_Z(z^*)} &=& \E_{f_X}\left[\frac{h(X)f_{Z|X}(z^*|X)}{f_Z(z^*)}\right] 
+    \frac{\E_{f_X}\big[h(X)\, f_{Z|X}(z^*|X)\big]}{f_Z(z^*)} &=& \E_{f_X}\left[\frac{h(X)\, f_{Z|X}(z^*|X)}{f_Z(z^*)}\right] 
     \\
     &=& \E_{f_X}\left[h(X)\frac{f_{X|Z}(X|z^*)}{f_X(X)}\right] =  \E_{f_{X|Z}}\big[h(X)|z^*\big],
     \end{eqnarray}
@@ -244,7 +251,7 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P}_{n,j},w^{P}_{n,j} g^\theta_{n,j} \big)\big\}$ therefore targets  $\pi_n$.
     Lemma \ref{lem:change-measure-proper-weights} guarantees that the resampling rule, given by 
     \begin{equation}
-    \big(X^{F}_{n,j},w^{F}_{n,j}\big) = \big(X^{P}_{n,k_j}, w^{P}_{n,k_j} g_{n,k_j}\big/ p_{n,k_j}\big),
+    \big(X^{F}_{n,j},w^{F}_{n,j}\big) = \big(X^{P}_{n,k_j}, w^{P}_{n,k_j} \, g_{n,k_j}\big/ p_{n,k_j}\big),
     \end{equation}
     with resampling probabilities proportional to $p_{n,j}$, therefore also targets $\pi_n$.
 \end{proof}
@@ -260,10 +267,10 @@ We state Lemma~\ref{lem:change-measure-proper-weights} assuming multinomial resa
     the MOP-1 filter targets the posterior.
     Specifically, suppose inductively that $\big\{\big(X^{F,\theta}_{n-1,j},w^{F,\theta}_{n-1,j}\big)\big\}$ is properly weighted for $f_{X_{n-1}|Y_{1:n-1}}(x_{n-1}|y^*_{1:n-1};\theta)$.
     Then, Lemma \ref{lem:marginal-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j}\big)\big\}$ targets $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
-    Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} g^\theta_{n,j} \big)\big\}$ therefore targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
+    Lemma \ref{lem:posterior-proper-weights} tells us that $\big\{\big(X^{P,\theta}_{n,j},w^{P,\theta}_{n,j} \, g^\theta_{n,j} \big)\big\}$ therefore targets  $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
     Lemma \ref{lem:change-measure-proper-weights} guarantees that the resampling rule, given by 
     \begin{equation}
-    \big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \big(X^{P,\theta}_{n,k_j}, w^{P,\theta}_{n,k_j} g^\theta_{n,k_j}\big/ g^\phi_{n,k_j}\big),
+    \big(X^{F,\theta}_{n,j},w^{F,\theta}_{n,j}\big) = \big(X^{P,\theta}_{n,k_j}, w^{P,\theta}_{n,k_j} \, g^\theta_{n,k_j}\big/ g^\phi_{n,k_j}\big),
     \end{equation}
     with resampling weights proportional to $g^\phi_{n,j}$, therefore also targets $f_{X_{n}|Y_{1:n}}(x_{n}|y^*_{1:n};\theta)$.
 \end{proof}
@@ -294,7 +301,7 @@ This has addressed filtering, but not quite yet the likelihood evaluation. For t
     \label{lem:lik-proper-weight}
   $f_{Y_n|Y_{1:n-1}}(y_n^*|y_{1_n-1}^*;\theta)$ is consistently estimated by either the before-resampling estimate,
 \begin{equation}\label{L1}
-L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
+L_n^{B,\theta} =  \frac{\sum_{j=1}^Jg^\theta_{n,j} \, w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}},
 \end{equation}
 or by the after-resampling estimate,
 \begin{equation}\label{L2}
@@ -308,15 +315,14 @@ $f_{X_{n}|Y_{1:n-1}}(x_{n}|y^*_{1:n-1};\theta)$.
 To see  (\ref{L2}),
 we write the numerator of (\ref{lem:change-measure-proper-weights}) as
 \begin{equation}
-L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
-= L^\phi_n \sum_{j=1}^J w_{n,j}^{FC,\theta} \frac{g^\phi_{n,j}}{L_n^\phi}
+L^\phi_n \sum_{j=1}^J \left[ \frac{g^\theta_{n,j}}{g^\phi_{n,j}} \, w^{P,\theta}_{n,j}\right] \frac{g^\phi_{n,j}}{L_n^\phi}
+= L^\phi_n \sum_{j=1}^J w_{n,j}^{FC,\theta} \, \frac{g^\phi_{n,j}}{L_n^\phi}
 \end{equation}
 Using Lemma \ref{lem:change-measure-proper-weights}, we resample according to probabilities $\frac{g^\phi_{n,j}}{L_n^\phi}$ to see this is properly estimated by
 \begin{equation}
 L^\phi_n \sum_{j=1}^J w^{F,\theta}_{n,j},
 \end{equation}
 from which we obtain (\ref{L2}).
-
 Using Lemma \ref{lem:lik-proper-weight}, we obtain a likelihood estimate,
 \begin{equation}
 L^{A,\theta} = \prod_{n=1}^N \left( L^\phi_n \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J w^{P,\theta}_{n,j}}\right).

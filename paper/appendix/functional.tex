@@ -53,7 +53,7 @@ Multiplying both sides of the expression by $w_{N,j}^{P,\theta} $ yields an expr
 \begin{equation}
 \nabla_\theta w_{N,j}^{P,\theta} = w_{N,j}^{P,\theta} \sum_{n=1}^N \nabla_\theta \log g_{n,j}^{A,P,\theta} = w_{N,j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, P,\theta}\right).    
 \end{equation}
-Substituting the above identity into the log-likelihood decomposition obtained earlier \ed{USE EQUATION NUMBERS TO MAKE THIS ARGUMENT MORE CONCRETE} yields
+Substituting the above identity into the log-likelihood decomposition obtained earlier in Equation \ref{eq:log-derivative-identity} yields
 \begin{equation}
     \nabla_\theta \hat{\ell}^1(\theta) := \frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,j}^{F,\theta} =\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{N,k_j}^{P,\theta} = \frac{1}{J}\sum_{j=1}^J w_{N,k_j}^{P,\theta} \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,k_j}^{A, P,\theta}\right).
 \end{equation}
