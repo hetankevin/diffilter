@@ -547,28 +547,35 @@ We present an abbreviated proof here, postponing the full argument to \arxiv{App
 \end{proof}
 
 
-\subsection{MOP-$\alpha$ Bias and Variance}
+\subsection{MOP-$\alpha$ Error, Bias and Variance}
+
+We now provide a result showing that MOP-$\alpha$ has a desirable bias-variance tradeoff, achieving desirable rates while trading off between the low-variance but asymptotically biased estimate of \cite{naesseth18} and the high-variance but consistent estimate of \cite{poyiadjis11}. As the bias itself is difficult to analyze, we instead analyze the MSE and variance. The below result applies for any $\alpha \in [0,1)$, but not $\alpha=1$, as the gradient estimate when $\alpha=1$ has no forgetting properties. 
+
 \begin{thm}
     \label{thm:mop-biasvar}
-    When $\alpha\in(0,1)$ and $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)(1-\alpha)^{-1}$. 
+    When $\alpha\in (0,1)$ and $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)/(1-\alpha)$. 
     There exists an $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
-    \begin{eqnarray*}
+    \begin{eqnarray}
         \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 
-        &\lesssim& \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right),
+        &\lesssim& \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right), \label{eq:mop-mse}
         \\
-        \Var\big(\nabla_\theta \hat\ell^{\alpha}(\theta)\big) &\lesssim& \min_{k\leq N} Np \, G'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{16\alpha^{2k}}{(1-\alpha)^2}N\right).
-        \end{eqnarray*}
+        \Var\big(\nabla_\theta \hat\ell^{\alpha}(\theta)\big) &\lesssim& \min_{k\leq N} Np \, G'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}N\right). \label{eq:mop-variance}
+        \end{eqnarray}
 \end{thm}
 We defer the proof to \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material}, but provide a brief outline here. 
 The variance bound can be reduced to the approximation error between MOP-$\alpha$ and a variant called MOP-$(\alpha,k)$ where the discounted weights are truncated at lag $k$. 
 The discount factor, $\alpha$, ensures strong mixing.
 The covariance of the derivative of MOP-$(\alpha,k)$ can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. 
 The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. 
-The latter is $\tilde{O}\big(Np \, G'(\theta)^2(k+\psi(\alpha))\big)$, by routine algebra, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
+The latter can be shown to be $\tilde{O}\big(Np \, G'(\theta)^2(k+\psi(\alpha))\big)$, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
 
-We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( Np \, G'(\theta)^2\big/J \big)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p$ and $G'$. 
+\paragraph{Interpretation:} The result in Theorem \ref{thm:mop-biasvar} provides theoretical backing for the empirical result observed in Figure \ref{fig:biasvar} of the desirable bias-variance tradeoff that MOP-$\alpha$ enjoys. The first term in the MSE bound in Equation \ref{eq:mop-mse} corresponds to the error of the particle approximation, the second mixing error, and the third and fourth the error between the MOP-$(1,k)$ estimate and the MOP-$\alpha$ estimate. As $\alpha$ goes to $1$, choosing $k$ appropriately, the first, third and fourth term (corresponding to the variance) increases, while the second term (corresponding to the bias) decreases. Likewise, the first term in the variance bound in Equation \ref{eq:mop-variance} corresponds to the error of the particle approximation, while the second corresponds to mixing error. As $\alpha$ goes to $1$, the variance increases. 
+
+\paragraph{Bias-Variance Tradeoff:} We also show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( Np \, G'(\theta)^2\big/J \big)$, and note that \cite{poyiadjis11} establish that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p$ and $G'$. 
 Combining that result with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. The phase transition arises as even though the particle filter has forgetting properties \cite{karjalainen23}, the resulting derivative estimate of \cite{poyiadjis11} does not, and we require both for the variance reduction. 
+
+In contrast, as $Nk^2 \leq N^4$ and $\alpha, k$ can be as large as desired to balance the impact of the last three terms, MOP-$\alpha$ achieves a lower MSE than MOP-$1$ does. We also show that MOP-$0$ achieves a MSE of $\tilde{O}\big(NpG'(\theta)^2(J^{-1}+(1-\epsilon)^{\lfloor1/c\log(J)\rfloor})\big)$, where the second term corresponds to uncontrolled mixing error. Unlike MOP-$\alpha$, MOP-$0$ has no opportunity to tune $\alpha$ and $k$ to reduce said mixing error, leading to uncontrolled asymptotic bias. 
 
 
 
