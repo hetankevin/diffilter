@@ -50,7 +50,7 @@ Now, to illustrate the proof strategy for the general case in an easier context,
 \begin{thm}[Variance of MOP-$0$ Gradient Estimate]
 The variance of the gradient estimate from MOP-$0$, i.e. the algorithm of \cite{naesseth18}, is:
  \begin{equation}
-     \Var(\nabla_\theta \hat\ell^0(\theta)) \lesssim \frac{NpG'(\theta)^2}{J}.
+     \Var(\nabla_\theta \hat\ell^0(\theta)) \lesssim \frac{Np \, G'(\theta)^2}{J}.
  \end{equation}
 \end{thm}
 
@@ -74,9 +74,9 @@ where we use the log-derivative trick, observe that $\sum_{j=1}^J s_{n,j} = J$ w
 Therefore, for a given $\theta_i$ in the parameter vector $\theta$,
 \begin{align}
     \Var\left(\frac{\partial}{\partial_{\theta_i}} \hat\ell^0(\theta)\right) &= \frac{1}{J^2}\Var\left(\sum_{n=1}^N\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    & \hspace{-15mm}= \frac{1}{J^2}\sum_{n=1}^N\Var\left(\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    &\hspace{-15mm}+ 2\sum_{m<n}\Cov\left(\frac{1}{J}\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_m|X_{m}}(y_m^*|x_{m,j}^{F, \theta}; \theta)\right), \frac{1}{J}\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
-    &\hspace{-15mm}= \sum_{n=1}^N \Var\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right) + 2\sum_{m<n} \Cov\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0(\theta),\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right).
+    & \hspace{-20mm}= \frac{1}{J^2}\sum_{n=1}^N\Var\left(\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &\hspace{-20mm}+ 2\sum_{m<n}\Cov\left(\frac{1}{J}\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_m|X_{m}}(y_m^*|x_{m,j}^{F, \theta}; \theta)\right), \frac{1}{J}\sum_{j=1}^{J}\frac{\partial}{\partial_{\theta_i}} \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right)\right) \\
+    &\hspace{-20mm}= \sum_{n=1}^N \Var\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right) + 2\sum_{m<n} \Cov\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0(\theta),\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right).
 \end{align}
 Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
 \begin{equation}
@@ -86,22 +86,24 @@ i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ an
 
 %\kevin{How does the dobrushin contraction coefficient relate to the alpha-mixing coefficients? If you have a bound on the mixing time $b$, then the alpha mixing coefficients should just be $\alpha(t) \leq e^{-t/b}$.}
 
-By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is strong mixing, with $\alpha$-mixing coefficients $\alpha(k) \leq (1-\epsilon)^{\floor{k/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra). Therefore, by Davydov's inequality, noting that $\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0^0(\theta)\leq G'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and without loss of generality labeling $m$ and $n$ such that $\E\big[(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0^0(\theta))^4\big]^{1/4}\leq\E\big[(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0^0(\theta))^4\big]^{1/4}$, we see that
+By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is strong mixing, with $\alpha$-mixing coefficients $\alpha(k) \leq (1-\epsilon)^{\floor{k/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra). Therefore, by Davydov's inequality, noting that $\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\leq G'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and without loss of generality labeling $m$ and $n$ such that $\E\big[(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0(\theta))^4\big]^{1/4}\leq\E\big[(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta))^4\big]^{1/4}$, we see that
 \begin{align}
-    \Cov\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0^0(\theta), \frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0^0(\theta)\right) 
-    &\leq \alpha(n-m)^{1/2} \, \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0^0(\theta)\right)^4\right]^{1/4}
+    \Cov\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0(\theta), \frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right) 
+    &\leq \alpha(n-m)^{1/2} \, \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_m^0(\theta)\right)^4\right]^{1/4}
     \,
-    \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0^0(\theta)\right)^4\right]^{1/4}\\
-    &\leq \alpha(n-m)^{1/2}\, \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0^0(\theta)\right)^4\right]^{1/2}.
+    \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right)^4\right]^{1/4}\\
+    &\leq \alpha(n-m)^{1/2}\, \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right)^4\right]^{1/2}.
 \end{align}
 To bound this, we use the fact that 
 \begin{equation}
 \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right)^4\right] = \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)-\E\left[\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right]\right)^4\right]+\E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right)^2\right]^2
 \end{equation}
 alongside Lemma 2 of \cite{karjalainen23}, which shows that
-\begin{equation}
-\E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)-\E\left[\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right]\right)^4\right] \lesssim \frac{G'(\theta)^4}{J^2}, \hspace{10mm} \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)-\E\left[\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right]\right)^2\right] \lesssim \frac{G'(\theta)^2}{J}.
-\end{equation}
+\begin{eqnarray}
+\E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)-\E\left[\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right]\right)^4\right] &\lesssim& \frac{G'(\theta)^4}{J^2}, 
+\\
+\E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)-\E\left[\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right]\right)^2\right] &\lesssim& \frac{G'(\theta)^2}{J}.
+\end{eqnarray}
 It follows that 
 \begin{equation}
 \E\left[\left(\frac{\partial}{\partial_{\theta_i}}\hat\ell_n^0(\theta)\right)^4\right]^{1/2} \lesssim  \sqrt{\frac{G'(\theta)^4}{J^2}+\left(\frac{G'(\theta)^2}{J}\right)^2} = \frac{G'(\theta)^2}{J},
@@ -117,17 +119,16 @@ Putting it all together, we see that
     &\leq \frac{G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c\log(J)}}}\right) \\
     &\lesssim \frac{G'(\theta)^2N}{J}.
 \end{align}
-
 It then follows that as $\theta \in \Theta \subseteq \R^p$, 
 \begin{equation}
-    \Var\big(\nabla_{\theta} \hat\ell(\theta)\big) \lesssim \frac{NpG'(\theta)^2}{J}.
+    \Var\big(\nabla_{\theta} \hat\ell(\theta)\big) \lesssim \frac{Np \, G'(\theta)^2}{J}.
 \end{equation}
 \end{proof}
 
 
 \paragraph{Remark:} Note that the factor of $N$ that pops up here is due to the use of the unnormalized gradient. If one divides the gradient estimate by $\sqrt{N}$ before usage, the variance does not depend on the horizon. If one divides by $N$, the error is $O(1/\sqrt{NJ})$.
 
-The variance here of $\frac{NpG'(\theta)^2}{J}$ can be thought of as a lower bound for the variance of MOP-$\alpha$. We will later see that the variance of MOP-$\alpha$ contains this term, and an additional term that corresponds to the memory of the MOP-$\alpha$ gradient estimate.
+The variance here of $\frac{Np \, G'(\theta)^2}{J}$ can be thought of as a lower bound for the variance of MOP-$\alpha$. We will later see that the variance of MOP-$\alpha$ contains this term, and an additional term that corresponds to the memory of the MOP-$\alpha$ gradient estimate.
 
 Although the variance of MOP-$0$ is desirable, it unfortunately has large uncontrollable asymptotic bias. Error bounds for the bias and MSE of MOP-$0$ \cite{naesseth18} are also fortunately special cases (where $k=1$, $\alpha=0$) of the bias and MSE analysis we conduct for MOP-$\alpha$. We will later see that these showcase the large uncontrollable asymptotic bias of MOP-$0$. 
 
@@ -140,7 +141,8 @@ Coupled with a bound ensuring that the $k$-truncated estimator provides an estim
 
 \begin{thm}[Variance of MOP-$\alpha$ Gradient Estimate]
     When $\alpha \in (0,1)$, the variance of the gradient estimate from MOP-$\alpha$ is
-    $$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \min_{k\leq N} \left(\frac{k^2G'(\theta)^2Np}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}NpG'(\theta)^2 \right).$$
+    \begin{equation}\Var\big(\nabla_\theta \hat\ell(\theta)\big) \lesssim \min_{k\leq N} \left(\frac{k^2G'(\theta)^2Np}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}Np \, G'(\theta)^2 \right).
+    \end{equation}
 \end{thm}
 \begin{proof}
     
@@ -161,31 +163,37 @@ This lets us bound the cumulative weight discrepancies by
     &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\sum_{i=1}^n\alpha^{(n-i)}\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) - \sum_{i=n-k}^n{\alpha^{(n-i)}}\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)\right)\right\rVert_2^2 \\
     &= \left\lVert\frac{1}{J}\sum_{j=1}^J \nabla_\theta \left(\sum_{i=1}^{n-k}\alpha^{(n-i)}\log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) \right)\right\rVert_2^2\\
     &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_2^2\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}pG'(\theta)^2\\
-    &\leq pG'(\theta)^2\frac{\alpha^k-\alpha^n}{1-\alpha},
+    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}p \, G'(\theta)^2\\
+    &\leq p \, G'(\theta)^2\frac{\alpha^k-\alpha^n}{1-\alpha},
 \end{align}
 where the second-last line follows from Assumption \ref{assump:bounded-measurement}.
-
-
-We can then bound $||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||$:
+We can then bound $\|\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)\|$ as follows:
 \begin{align}
-    &\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2\\
-    &= \left\lVert\sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) - \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) \right\rVert_2^2\\
-    &= \Bigg\lVert\sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)- \log\left(\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)\\
-    &\qquad\qquad -\log\left(\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right) + \log\left(\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)\Bigg)\Bigg\rVert_2^2 \\
-    &= \left\lVert\sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,k}\right)
-    -\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,k}\right)\Bigg)\right\rVert_2^2 \\
+    &\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2
+    \\ \nonumber
+    &= \left\lVert\sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) - \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) \right\rVert_2^2
+    \\ \nonumber
+    &= \Bigg\lVert\sum_{n=1}^N \nabla_\theta \Bigg(\log\left(\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)- \log\left(\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)
+    \\
+    &\qquad\qquad -\log\left(\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right) + \log\left(\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}\right)\Bigg)\Bigg\rVert_2^2 
+    \\ 
+    &= \left\lVert\sum_{n=1}^N \nabla_\theta \Bigg(\!\log\!\left(\sum_{j=1}^Jw_{n,j}^{F,\theta}\right) \!-\! \log\!\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,k}\right)
+    \!-\! \log\!\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta}\right) \!+\! \log \! \left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,k}\right)\!\Bigg)\right\rVert_2^2 
+    \\ \nonumber
     &\leq \sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,k}\right)\right)\right\lVert_{\infty}
-    +\sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,k}\right)\right)\right\rVert_2^2,
+    \\ 
+    & \qquad\qquad +\sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,k}\right)\right)\right\rVert_2^2,
 \end{align}
-and each of these two terms is bounded by $\frac{\alpha^k}{1-\alpha}NpG'(\theta)^2$. So we now know that
-$$\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2 \leq  \frac{2\alpha^k}{1-\alpha}NpG'(\theta)^2,$$
+and each of these two terms is bounded by $\frac{\alpha^k}{1-\alpha}Np \, G'(\theta)^2$. So we now know that
+\begin{equation}\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2 \leq  \frac{2\alpha^k}{1-\alpha}Np \, G'(\theta)^2,\end{equation}
 which is our desired error bound. 
-
 Now, we bound the variance of $\hat s_k(\theta)$. 
 Recall that we defined
-$$\hat s_k(\theta) = \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) = \sum_{n=1}^N \nabla_\theta \left(\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta, k}\right)-\log\left(\sum_{j=1}^J w_{n-1,j}^{A, F,\theta, k}\right)\right).$$
-
+\begin{eqnarray}
+\hat s_k(\theta) &=& \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) 
+\\
+&=& \sum_{n=1}^N \nabla_\theta \left(\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta, k}\right)-\log\left(\sum_{j=1}^J w_{n-1,j}^{A, F,\theta, k}\right)\right).
+\end{eqnarray}
 We can then decompose this expression with the log-derivative trick while noting that $w_{n,j}^{F,\theta, k} = 1$ whenever $\theta=\phi$, to see that
 \begin{align}
     \hat s_k(\theta) 
@@ -194,87 +202,100 @@ We can then decompose this expression with the log-derivative trick while noting
     &= \sum_{n=1}^N \left(\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{n,j}^{F,\theta, k}-\frac{1}{J}\sum_{j=1}^J \nabla_\theta w_{n-1,j}^{A,F,\theta, k}\right)\\
     &= \frac{1}{J}\sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \left(w_{n,j}^{F,\theta, k}- w_{n-1,j}^{A,F,\theta, k}\right).
 \end{align}
-
-
 It now follows that we need to bound the variance at a single timestep, namely
-$$\text{Var}\left(\frac{1}{J}\sum_{j=1}^J\nabla_\theta \left(w_{n,j}^{F,\theta, k}- w_{n-1,j}^{A,F,\theta, k}\right)\right).$$
-
+\begin{equation}
+\Var\left(\frac{1}{J}\sum_{j=1}^J\nabla_\theta \left(w_{n,j}^{F,\theta, k}- w_{n-1,j}^{A,F,\theta, k}\right)\right).
+\end{equation}
 We use the log-derivative trick yet again to find, noting that $w_{n,j}^{F,\theta, k}=1$ when $\theta=\phi$, that
 \begin{align}
-    \nabla_\theta w_{n,j}^{F,\theta, k} = \frac{\nabla_\theta w_{n,j}^{F,\theta, k}}{w_{n,j}^{F,\theta, k}} = \nabla_\theta \log(w_{n,j}^{F,\theta, k}) = \sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) = \sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right).
+    \nabla_\theta w_{n,j}^{F,\theta, k} = \frac{\nabla_\theta w_{n,j}^{F,\theta, k}}{w_{n,j}^{F,\theta, k}} = \nabla_\theta \log(w_{n,j}^{F,\theta, k}) &= \sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right) 
+    \\
+    &= \sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right).
 \end{align}
-
 Then,
 \begin{align}
-    \text{Var}\left(\nabla_\theta \left(w_{n,j}^{F,\theta, k}- w_{n-1,j}^{A,F,\theta, k}\right)\right) 
-    &= \text{Var}\left(\nabla_\theta \left(\sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right)- \sum_{i=n-k-1}^{n-1} \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right)\right)\right) \\
-    &= \text{Var} \left(\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1}\log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right).
+    &\Var\left(\nabla_\theta \left(w_{n,j}^{F,\theta, k}- w_{n-1,j}^{A,F,\theta, k}\right)\right) 
+    \\
+    &\qquad = \Var\left(\nabla_\theta \left(\sum_{i=n-k}^n \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right)- \sum_{i=n-k-1}^{n-1} \alpha^{n-i} \nabla_\theta \log\left(g_{i,j}^{A,F,\theta}\right)\right)\right) \\
+    &\qquad = \Var \left(\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1}\log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right).
 \end{align}
+Note that \begin{equation}\hat s_{n,k}(\theta) := \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \nabla_\theta \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\end{equation} is a function bounded by $C\frac{G'(\theta)(1-\alpha^k)}{1-\alpha} =: CG'(\theta)r$ in each coordinate for some constant $C$ (by Assumption \ref{assump:bounded-measurement}) that depends only on $k$ timesteps, and not $n$. We can therefore invoke Lemma 2 of \cite{karjalainen23} to bound the $L_2$ error of each of the $k$ (from time $n-k$ to time $n$) functionals from its expectation under the posterior by $Cr\sqrt{p}G'(\theta)J^{-1/2}k$. That is, we have that
+\begin{equation}\E\left[\|\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)\|_2^2\right]^{1/2} \leq \frac{Cr\sqrt{p}G'(\theta) k}{\sqrt{J}}.\end{equation}
 
 
-Note that $$\hat s_{n,k}(\theta) := \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \nabla_\theta \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)$$ is a function bounded by $C\frac{G'(\theta)(1-\alpha^k)}{1-\alpha} =: CG'(\theta)r$ in each coordinate for some constant $C$ (by Assumption \ref{assump:bounded-measurement}) that depends only on $k$ timesteps, and not $n$. We can therefore invoke Lemma 2 of \cite{karjalainen23} to bound the $L_2$ error of each of the $k$ (from time $n-k$ to time $n$) functionals from its expectation under the posterior by $Cr\sqrt{p}G'(\theta)J^{-1/2}k$. That is, we have that
-$$\E\left[||\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)||_2^2\right]^{1/2} \leq \frac{Cr\sqrt{p}G'(\theta) k}{\sqrt{J}}.$$
+By the bias-variance decomposition, this in turn bounds the variance at a single timestep by $C^2r^2p \, G'(\theta)^2J^{-1}k^2$. Concretely, we have that
+\begin{equation}\Var\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{r^2k^p2G'(\theta)^2}{J}.\end{equation}
 
-
-By the bias-variance decomposition, this in turn bounds the variance at a single timestep by $C^2r^2pG'(\theta)^2J^{-1}k^2$. Concretely, we have that
-$$\text{Var}\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{r^2k^p2G'(\theta)^2}{J}.$$
-
-It now remains to bound the variance of $\hat s_k(\theta)$ by considering the covariance of each of the $N$ terms that comprise it. We decompose
+It now remains to bound the variance of $\hat s_k(\theta)$ by considering the covariance of each of the $N$ terms that comprise it. 
+We decompose
 \begin{align}
-    \text{Var}(\nabla_\theta \hat s_k(\theta)) &= \text{Var}\left(\sum_{n=1}^N \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \\
-    &= \sum_{n=1}^N\text{Var}\left(\hat s_{n,k}(\theta)\right)+ 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \\
-    &\lesssim \frac{r^2k^2pG'(\theta)^2N}{J} + 2\sum_{m<n}\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right).
+    \Var(\nabla_\theta \hat s_k(\theta)) &= \Var\left(\sum_{n=1}^N \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \\
+    &= \sum_{n=1}^N\Var\left(\hat s_{n,k}(\theta)\right)+ 2\sum_{m<n}\Cov\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \\
+    &\lesssim \frac{r^2k^2p \, G'(\theta)^2N}{J} + 2\sum_{m<n}\Cov\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right).
 \end{align}
 
 Similarly to the proof of the MOP-$0$ case, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
-$$\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+\begin{equation}
+\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},
+\end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. By Lemma \ref{lem:dobrushin-implies-alpha-mixing}, the particle filter itself is strongly mixing, with $\alpha$-mixing coefficients $\alpha(l) \leq (1-\epsilon)^{\floor{l/(c\log(J))}}$. Therefore, functions of particles are strongly mixing as well, with $\alpha$-mixing coefficients bounded by the original (to see this, observe that the $\sigma$-algebra of the functionals is contained within the original $\sigma$-algebra).
 
 We now derive the $\alpha$-mixing coefficients of $(\hat s_{n,k}(\theta))_{n=1}^N$. Observe that $\hat s_{n,k}$ is strong mixing at lag $k+1$, as all weights beyond $k$ timesteps are truncated. We therefore have that the mixing time of $\hat s_k(\theta)$ is $O(1+k+\log(J))$, and that the $\alpha$-mixing coefficients for $(\hat s_{n,k}(\theta))_{n=1}^N$ are given by $\alpha(l) \leq (1-\epsilon)^{\floor{l/(c(1+k+\log(J)))}}$.
-
 Therefore, by Davydov's inequality and Lemma 2 of \cite{karjalainen23}, and noting that $\hat s_{n,k}(\theta) \leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, by a similar argument to the MOP-0 case, we find that 
-
-$$\text{Cov}\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \lesssim (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2pG'(\theta)^2}{J}.$$
-
-Concretely, noting that $\nabla_\theta\hat s_{n,k}(\theta)\leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and WLOG assuming $\E[(\nabla_\theta\hat\hat s_{m,k}(\theta))^4]^{1/4}\leq\E[(\nabla_\theta\hat\hat s_{n,k}(\theta))^4]^{1/4}$, we apply Davydov's inequality to see that
+\begin{equation}\Cov\left(\hat s_{m,k}(\theta), \hat s_{n,k}(\theta)\right) \lesssim (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2p \, G'(\theta)^2}{J}.\end{equation}
+Concretely, noting that $\nabla_\theta\hat s_{n,k}(\theta)\leq CrG'(\theta)$ by Assumption \ref{assump:bounded-measurement}, and, without loss of generality, assuming $\E[(\nabla_\theta\hat s_{m,k}(\theta))^4]^{1/4}\leq\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/4}$, we apply Davydov's inequality to see that
 \begin{align}
-    \text{Cov}(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)) 
-    &\leq \alpha(n-m)^{1/2}\E[(\nabla_\theta\hat s_{m,k}(\theta))^4]^{1/4}\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/4}\\
-    &\leq \alpha(n-m)^{1/2}\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/2}.
+    \Cov\big(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)\big) 
+    &\leq \alpha(n-m)^{1/2} \, \E\big[(\nabla_\theta\hat s_{m,k}(\theta))^4\big]^{1/4} \, \E\big[(\nabla_\theta\hat s_{n,k}(\theta))^4\big]^{1/4}\\
+    &\leq \alpha(n-m)^{1/2} \, \E\big[(\nabla_\theta\hat s_{n,k}(\theta))^4\big]^{1/2}.
 \end{align}
-
-To bound this, we use the fact that $$\E[(\nabla_\theta\hat s_{n,k}(\theta))^4] = \E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^4]+\E[(\nabla_\theta\hat s_{n,k}(\theta))^2]^2$$
+To bound this, we use the fact that 
+\begin{equation}
+\E\big[(\nabla_\theta\hat s_{n,k}(\theta))^4\big] = \E\Big[\big(\nabla_\theta\hat s_{n,k}(\theta)-\E\big[\nabla_\theta\hat s_{n,k}(\theta)]\big)^4\Big]+\E\big[(\nabla_\theta\hat s_{n,k}(\theta))^2\big]^2
+\end{equation}
 alongside Lemma 2 of \cite{karjalainen23}, which alongside the fact that
-$$\E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^4] \lesssim \frac{r^4p^2G'(\theta)^4}{J^2}, \;\; \E[(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)])^2] \lesssim \frac{r^2pG'(\theta)^2}{J},$$
+\begin{eqnarray}
+\E\Big[\big(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)]\big)^4\Big] &\lesssim& \frac{r^4p^2G'(\theta)^4}{J^2}, 
+\\
+\E\Big[\big(\nabla_\theta\hat s_{n,k}(\theta)-\E[\nabla_\theta\hat s_{n,k}(\theta)]\big)^2\Big] &\lesssim& \frac{r^2p \, G'(\theta)^2}{J},
+\end{eqnarray}
 allows us to find that 
-$$\E[(\nabla_\theta\hat s_{n,k}(\theta))^4]^{1/2} \lesssim  \sqrt{\frac{r^4p^2G'(\theta)^4}{J^2}+\left(\frac{r^2pG'(\theta)^2}{J}\right)^2} = \frac{r^2pG'(\theta)^2}{J},$$
+\begin{equation}
+\E\Big[\big(\nabla_\theta\hat s_{n,k}(\theta)\big)^4\Big]^{1/2} \lesssim  \sqrt{\frac{r^4p^2G'(\theta)^4}{J^2}+\left(\frac{r^2p \, G'(\theta)^2}{J}\right)^2} = \frac{r^2p \, G'(\theta)^2}{J},
+\end{equation}
 and conclude that 
-$$\text{Cov}(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2pG'(\theta)^2}{J}.$$
-
-
+\begin{equation}\Cov\big(\nabla_\theta\hat s_{m,k}(\theta), \nabla_\theta\hat s_{n,k}(\theta)\big) \leq (1-\epsilon)^{\frac{1}{2}\floor{\frac{|n-m|}{c(1+k+\log(J))}}}\frac{r^2p \, G'(\theta)^2}{J}.\end{equation}
 Putting it all together, we see that
 \begin{align}
-    \text{Var}(\nabla_\theta \hat s_{k}(\theta)) &= \sum_{n=1}^N \text{Var}(\nabla_\theta\hat s_{n,k}(\theta)) + 2\sum_{m<n} \text{Cov}(\nabla_\theta\hat s_{m,k}(\theta),\nabla_\theta\hat s_{n,k}(\theta))\\
-    &\leq \frac{Nr^2pk^2G'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\frac{r^2pG'(\theta)^2}{J} \\
-    &\leq \frac{r^2pk^2G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\right) \\
-    &\lesssim \frac{k^2r^2pG'(\theta)^2N}{J}.
+    \Var\big(\nabla_\theta \hat s_{k}(\theta)\big) &= \sum_{n=1}^N \Var\big(\nabla_\theta\hat s_{n,k}(\theta)\big) + 2\sum_{m<n} \Cov\big(\nabla_\theta\hat s_{m,k}(\theta),\nabla_\theta\hat s_{n,k}(\theta)\big)
+    \\
+    &\leq \frac{Nr^2pk^2G'(\theta)^2}{J} + 2\sum_{n=1}^{N-1} (N-n)(1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\frac{r^2p \, G'(\theta)^2}{J} 
+    \\
+    &\leq \frac{r^2pk^2G'(\theta)^2}{J} \left(N + 2\sum_{n=1}^{N-1} (N-n) (1-\epsilon)^{\frac{1}{2}\floor{\frac{n}{c(1+k+\log(J))}}}\right) 
+    \\
+    &\lesssim \frac{k^2r^2p \, G'(\theta)^2N}{J}.
 \end{align}
 
-We will now use this result to bound $\text{Var}(\nabla_\theta \hat s_k(\theta)$ proper. For random variables $X,Y$ where $|X-Y|$ is bounded almost surely by some $M$, we have that 
-$$X-\E X - 2M \leq Y - \E Y \leq X - \E X + 2M$$
+We will now use this result to bound $\Var(\nabla_\theta \hat s_k(\theta)$ proper. For random variables $X,Y$ where $|X-Y|$ is bounded almost surely by some $M$, we have that 
+\begin{equation}X-\E X - 2M \leq Y - \E Y \leq X - \E X + 2M\end{equation}
 so,
-$$(Y-\E Y)^2 \leq (X-\E X - 2M)^2 + (X-\E X +2M)^2.$$
+\begin{equation}(Y-\E Y)^2 \leq (X-\E X - 2M)^2 + (X-\E X +2M)^2.\end{equation}
 Taking expectations, we get
-$$\text{Var}(Y) \leq \text{Var}(X) + 8M^2.$$
-
+\begin{equation}
+\Var(Y) \leq \Var(X) + 8M^2.
+\end{equation}
 It follows from this result and the result we proved earlier, namely that
-$$||\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)||_2^2 \leq \frac{2\alpha^k}{1-\alpha}NpG'(\theta)^2,$$
+\begin{equation}
+\big\|\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta)\big\|_2^2 \leq \frac{2\alpha^k}{1-\alpha}Np \, G'(\theta)^2,
+\end{equation}
 that the variance of MOP-$\alpha$ proper is bounded by, for any $k \leq N$,
 that the variance of MOP-$\alpha$ proper is bounded by
-$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \frac{k^2r^2G'(\theta)^2Np}{J} + \frac{\alpha^{k}}{1-\alpha}NpG'(\theta)^2.$$
-
+\begin{equation}
+\Var\big(\nabla_\theta \hat\ell(\theta)\big) \lesssim \frac{k^2r^2G'(\theta)^2Np}{J} + \frac{\alpha^{k}}{1-\alpha}Np \, G'(\theta)^2.
+\end{equation}
 As the above holds for any $k \leq N$,
-$$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \min_{k\leq N} \left(\frac{k^2pG'(\theta)^2Np}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}NpG'(\theta)^2 \right).$$
+\begin{equation}
+\Var\big(\nabla_\theta \hat\ell(\theta)\big) \lesssim \min_{k\leq N} \left(\frac{k^2p \, G'(\theta)^2Np}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}Np \, G'(\theta)^2 \right).\end{equation}
 \end{proof}
 
 
@@ -283,7 +304,7 @@ $$\text{Var}(\nabla_\theta \hat\ell(\theta)) \lesssim \min_{k\leq N} \left(\frac
 \begin{thm}[MSE of MOP-$\alpha$]
     When $\alpha \in (0,1)$, the MSE of MOP-$\alpha$ is given by
     \begin{equation}
-        \E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 \lesssim \min_{k \leq N} NpG'(\theta)^2\left(\frac{k^2}{J}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\frac{\alpha^k  + \alpha^{k+1} - \alpha}{1-\alpha}\right).
+        \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 \; \lesssim \; \min_{k \leq N} Np \, G'(\theta)^2\left(\frac{k^2}{J}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\frac{\alpha^k  + \alpha^{k+1} - \alpha}{1-\alpha}\right).
     \end{equation}
 \end{thm}
 
@@ -293,97 +314,121 @@ The broad idea is that the first term can be controlled by a mixing argument, th
 
 The first term is the problem term. We will first bound the ground truth of conditional scores from particle approximation conditional on correct filtering distribution at time $n-k$, and then bound that from the particle approximation resulting from an arbitrary filtering distribution at time $n-k$. That is, where $\hat\pi_n$ is the particle approximation at time $n$ of the posterior $\pi_n$ and we write $\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)$ for the truncated MOP-$1$ conditional score estimate given the correct filtering distribution at time $n-k$, we can first observe that
 \begin{equation}
-    ||\nabla_\theta\ell_\theta - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 =  \left\lVert\sum_{n=1}^N \nabla_\theta \hat\ell_n^\alpha(\theta) - \sum_{n=1}^N \nabla_\theta \ell_n(\theta)\right\rVert_2^2 \leq \sum_{n=1}^N\left\lVert \nabla_\theta \hat\ell_n^\alpha(\theta) -  \nabla_\theta \ell_n(\theta)\right\rVert_2^2,
+    \big\|\nabla_\theta\ell_\theta - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 =  \left\lVert\sum_{n=1}^N \nabla_\theta \hat\ell_n^\alpha(\theta) - \sum_{n=1}^N \nabla_\theta \ell_n(\theta)\right\rVert_2^2 \leq \sum_{n=1}^N\left\lVert \nabla_\theta \hat\ell_n^\alpha(\theta) -  \nabla_\theta \ell_n(\theta)\right\rVert_2^2,
 \end{equation}
 and decompose
-\begin{align}
-    &\sum_{n=1}^N\left\lVert \nabla_\theta \hat\ell_n^\alpha(\theta) -  \nabla_\theta \ell_n(\theta)\right\rVert_2^2 \\
-    &\leq \sum_{n=1}^N||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2 + \sum_{n=1}^N||\nabla_\theta\hat s_{n,k}^1(\theta) - \nabla_\theta\hat s_{n,k}^\alpha(\theta)||_2^2 + \sum_{n=1}^N||\nabla_\theta\hat s_{n,k}^\alpha(\theta) -  \nabla_\theta\hat\ell_n^\alpha(\theta)||_2^2.
+\begin{align} \nonumber
+    & \sum_{n=1}^N\left\lVert \nabla_\theta \hat\ell_n^\alpha(\theta) -  \nabla_\theta \ell_n(\theta)\right\rVert_2^2 \; \leq  \; \sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2  \; +
+     \\ & \hspace{20mm}
+     \sum_{n=1}^N\|\nabla_\theta\hat s_{n,k}^1(\theta) - \nabla_\theta\hat s_{n,k}^\alpha(\theta)\|_2^2 + \sum_{n=1}^N\|\nabla_\theta\hat s_{n,k}^\alpha(\theta) -  \nabla_\theta\hat\ell_n^\alpha(\theta)\|_2^2.
 \end{align}
-As before, we bound the first term, $\sum_{n=1}^N||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2$, by decomposing it into two terms, 
-$$\sum_{n=1}^N||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2 \leq \sum_{n=1}^N ||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)||_2^2 + \sum_{n=1}^N ||\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2.$$
-
+As before, we bound the first term, $\sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2$, by decomposing it into two terms, 
+\begin{eqnarray}
+\nonumber
+\hspace{-10mm} \sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2 &\leq&
+\\
+&& \hspace{-40mm}
+\sum_{n=1}^N \|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)\|_2^2 + \sum_{n=1}^N \|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2.
+\end{eqnarray}
 The first term is a particle approximation dependent on $k$ timesteps, so by Lemma 2 of \cite{karjalainen23}, this is bounded by
-$$\E||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)||_2^2 \leq \frac{CpG'(\theta)^2k^2}{J}.$$
+\begin{equation}\E\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)\|_2^2 \leq \frac{Cp \, G'(\theta)^2k^2}{J}.\end{equation}
 
 The second term amounts to bounding the difference between functionals of two different particle measures that mix under the same Markov kernel. Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
-$$\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+\begin{equation}\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},\end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. 
 
 Then, we can bound 
-$\E||\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2$ by
-$$\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu \textbf{M}_{n,n+k}-\nu \textbf{M}_{n,n+k}\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}} = \beta_{TV}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+$\E\|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2$ by
+\begin{equation}\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu \textbf{M}_{n,n+k}-\nu \textbf{M}_{n,n+k}\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}} = \beta_{TV}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},\end{equation}
 implying that
-\begin{align}
-    \E||\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2 
-    &\lesssim \sup_{\mu, \nu} \sup_{||\psi||_\infty \leq 1/2} pG'(\theta)^2\left|(\mu \textbf{M}_{n,n+k})(\psi)-(\nu \textbf{M}_{n,n+k})(\psi)\right| \\
-    &\leq \sup_{\mu, \nu} pG'(\theta)^2\|\mu \textbf{M}_{n,n+k}-\nu \textbf{M}_{n,n+k}\|_{\mathrm{TV}} \\
-    &\leq pG'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} ||\hat\pi_{n-k} - \pi_{n-k}||_{\text{TV}} \\
-    &\leq pG'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} \sup_{||\psi||_{\infty} \leq 1/2} |\hat\pi_{n-k}(\psi) - \pi_{n-k}(\psi)| \\
-    &\lesssim pG'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}}.
-\end{align}
-
+\begin{eqnarray}
+ && \hspace{-30mm}
+    \E\big\|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\big\|_2^2 
+\\
+    &\lesssim& \sup_{\mu, \nu} \sup_{\|\psi\|_\infty \leq 1/2} p \, G'(\theta)^2\big|(\mu \textbf{M}_{n,n+k})(\psi)-(\nu \textbf{M}_{n,n+k})(\psi)\big| 
+\\
+    &\leq& \sup_{\mu, \nu} p \, G'(\theta)^2\big\|\mu \textbf{M}_{n,n+k}-\nu \textbf{M}_{n,n+k}\big\|_{\mathrm{TV}} 
+\\
+    &\leq& p \, G'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} \|\hat\pi_{n-k} - \pi_{n-k}\|_{\text{TV}} 
+\\
+    &\leq& p \, G'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} \sup_{\|\psi\|_{\infty} \leq 1/2} \big|\hat\pi_{n-k}(\psi) - \pi_{n-k}(\psi)\big| 
+\\
+    &\lesssim& p \, G'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}}.
+\end{eqnarray}
 Therefore, we have that
 \begin{align}
-    &\E||\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_k^1(\theta)||_2^2 \\
-    &\leq \sum_{n=1}^N \E||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)||_2^2 + \sum_{n=1}^N \E||\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)||_2^2\\
-    &\lesssim N\frac{CpG'(\theta)^2k^2}{J} + NpG'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}}.
+    &\E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_k^1(\theta)\big\|_2^2 \\
+    &\leq \sum_{n=1}^N \E\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)\big\|_2^2 + \sum_{n=1}^N \E\big\|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\big\|_2^2\\
+    &\lesssim N\frac{Cp \, G'(\theta)^2k^2}{J} + Np \, G'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}}.
 \end{align}
-
-
-
-
-Now that the first term $\E||\nabla_\theta\ell(\theta)||_2^2$ is taken care of, it remains to bound $$\E||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_2^2 \text{ and } \E||\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)||_2^2.$$
-
-
+Now that the first term, $\E\|\nabla_\theta\ell(\theta)\|_2^2$, is taken care of, it remains to bound 
+$\E\|\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)\|_2^2$ 
+and
+$\E\|\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)\|_2^2$.
 We see, by a similar argument to the variance bound, that
 \begin{align}
-    &\E||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_2^2\\
-    &\leq \sum_{n=1}^N \E\left\lVert\nabla_\theta \Bigg(\left|\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,1,k}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha,k}\right)\right|
-    +\left|\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,1,k}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,\alpha,k}\right)\right|\Bigg)\right\rVert_2^2.
+    & \hspace{-20mm} \nonumber
+    \E\big\|\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)\big\|_2^2
+    \\ \nonumber
+    &\leq \; \sum_{n=1}^N \E\left\lVert\nabla_\theta \Bigg(\left|\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,1,k}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha,k}\right)\right|
+    + \right.
+    \\ & \hspace{30mm} \left.
+    \left|\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,1,k}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,\alpha,k}\right)\right|\Bigg)\right\rVert_2^2.
 \end{align}
 Each of these terms can be bounded using the log-derivative trick and that $w_{n,j}^{F,\theta,1,k} = w_{n,j}^{F,\theta,\alpha,k} = 1$ when $\theta=\phi$,
 \begin{align}
-    &\left\lVert\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,1,k}\right)-\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,\alpha,k}\right)\right\rVert_{2}^2\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=n-k}^{n}(1-\alpha^{(n-i)})\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_2^2\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=n-k}^{n}(1-\alpha^{(n-i)})pG'(\theta)^2\\
-    &\leq pG'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right),
+    & \hspace{-30mm}
+    \left\lVert\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,1,k}\right)-\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,\alpha,k}\right)\right\rVert_{2}^2
+    \\
+    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=n-k}^{n}(1-\alpha^{(n-i)})\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_2^2
+    \\
+    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=n-k}^{n}(1-\alpha^{(n-i)})p \, G'(\theta)^2
+    \\
+    &\leq p \, G'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right),
 \end{align}
 where the second-last line follows from Assumption \ref{assump:bounded-measurement}.
-
 So, 
 \begin{align}
-    \E||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_\infty
-    \leq 2NpG'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right) 
-    \leq 2NpG'(\theta)^2k.
+    \E\big\|\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)\big\|_\infty
+    \leq 2Np \, G'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right) 
+    \leq 2Np \, G'(\theta)^2k.
 \end{align}
-
-
-Now, we address the third term, $\E||\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)||_\infty$. From the variance argument, we know that we can bound $||\nabla_\theta\hat\ell^\alpha(\theta) - \hat s_k^\alpha(\theta)||$:
+Now, we address the third term, $\E\|\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)\|_\infty$. From the variance argument, we know that we can bound $\|\nabla_\theta\hat\ell^\alpha(\theta) - \hat s_k^\alpha(\theta)\|$:
 \begin{align}
-    &\left\lVert\nabla_\theta\hat\ell^\alpha(\theta) - \hat s_k^\alpha(\theta) \right\rVert_2^2\\
-    &= \left\lVert\sum_{n=1}^N \nabla_\theta \log\left(\frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) - \sum_{n=1}^N \nabla_\theta\log\left(\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) \right\rVert_2^2\\
-    &\leq \sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha}\right)- \log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha,k}\right)\right)\right\lVert_2^2
+    &\left\lVert \nabla_\theta\hat\ell^\alpha(\theta) - \hat s_k^\alpha(\theta) \right\rVert_2^2
+    \\
+    &= \left\lVert\sum_{n=1}^N \! \nabla_\theta \log \! \left( \! \frac{\sum_{j=1}^J\prod_{i=1}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=1}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) 
+    \!-\! 
+\sum_{n=1}^N\!\nabla_\theta\log\!\left(\!\frac{\sum_{j=1}^J\prod_{i=n-k}^n\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}{\sum_{j=1}^J\prod_{i=n-k}^{n-1}\left(\frac{g_{i,j}^{A,F,\theta}}{g_{i,j}^{A,F,\phi}} \right)^{\alpha^{(n-i)}}}\right) \! \right\rVert_2^2
+    \\ \nonumber
+    &\leq \sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha}\right)- \log\!\left(\sum_{j=1}^Jw_{n,j}^{F,\theta,\alpha,k}\right)\right)\right\lVert_2^2
+    \\ & \hspace{40mm}
     +\sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta, \alpha}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,\alpha, k}\right)\right)\right\rVert_2^2.
 \end{align}
-
 Using the log-derivative trick and that $w_{n,j}^{F,\theta,\alpha} = w_{n,j}^{F,\theta,\alpha,k} = 1$ when $\theta=\phi$,
 \begin{align}
     &\left\lVert\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,\alpha}\right)-\nabla_\theta\log\left(\sum_{j=1}^J w_{n,j}^{F,\theta,\alpha,k}\right)\right\rVert_2^2\\
     &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}\left\lVert\nabla_\theta\log\left(g_{i,j}^{A,F,\theta} \right)\right\rVert_2^2\\
-    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}pG'(\theta)^2\\
-    &\leq pG'(\theta)^2\frac{\alpha^k-\alpha^n}{1-\alpha},
+    &\leq \frac{1}{J}\sum_{j=1}^J \sum_{i=1}^{n-k}\alpha^{(n-i)}p \, G'(\theta)^2\\
+    &\leq p \, G'(\theta)^2\frac{\alpha^k-\alpha^n}{1-\alpha},
 \end{align}
 where the second-last line follows from Assumption \ref{assump:bounded-measurement}. Putting it together and taking expectations on both sides, we obtain
-$$\E\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2 \leq  \frac{2\alpha^k}{1-\alpha}NpG'(\theta)^2,$$
+\begin{equation}
+\E\left\lVert\nabla_\theta\hat\ell(\theta) - \hat s_k(\theta) \right\rVert_2^2 \leq  \frac{2\alpha^k}{1-\alpha}Np \, G'(\theta)^2,
+\end{equation}
 which is our desired error bound. 
-
 Therefore, our decomposition yields the MSE bound
 \begin{align}
-    &\E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)||_2^2 \\
-    &\leq \E||\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_k^1(\theta)||_2^2 + \E||\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)||_2^2 + \E||\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)||_2^2 \\
-    &\lesssim \min_{k \leq N} \left(N\frac{CpG'(\theta)^2k^2}{J} + NpG'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} + 2NpG'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right) + 2\frac{\alpha^k}{1-\alpha}NpG'(\theta)^2\right) \\
-    &\lesssim \min_{k \leq N} NpG'(\theta)^2\left(\frac{k^2}{J}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\frac{\alpha^k  + \alpha^{k+1} - \alpha}{1-\alpha}\right).
+    & \hspace{-5mm}
+    \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 
+    \\
+    &\leq \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_k^1(\theta)\big\|_2^2 + \E\big\|\nabla_\theta\hat s_k^1(\theta) - \nabla_\theta\hat s_k^\alpha(\theta)\big\|_2^2 + \E\big\|\nabla_\theta\hat s_k^\alpha(\theta) -  \nabla_\theta\hat\ell^\alpha(\theta)\big\|_2^2 
+    \\ \nonumber
+    &\lesssim \min_{k \leq N} \left(N\frac{Cp \, G'(\theta)^2k^2}{J} + Np \, G'(\theta)^2(1-\epsilon)^{\floor{k/(c\log(J))}} \right.
+    \\
+    & \hspace{40mm} \left.
+    + 2Np \, G'(\theta)^2\left(k-\frac{\alpha(1-\alpha^k)}{1-\alpha}\right) + 2\frac{\alpha^k}{1-\alpha}Np \, G'(\theta)^2\right) \\
+    &\lesssim \min_{k \leq N} Np \, G'(\theta)^2\left(\frac{k^2}{J}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\frac{\alpha^k  + \alpha^{k+1} - \alpha}{1-\alpha}\right).
 \end{align}
 
 \end{proof}
@@ -391,40 +436,54 @@ Therefore, our decomposition yields the MSE bound
 \begin{cor}[MSE of MOP-$0$]
     The MSE of MOP-$0$, i.e. the estimator of \cite{naesseth18}, is
     \begin{equation}
-        \E||\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^0(\theta)||_2^2 \lesssim NpG'(\theta)^2\left(\frac{1}{J}+(1-\epsilon)^{\floor{1/(c\log(J))}}\right).
+        \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^0(\theta)\big\|_2^2 \; \lesssim 
+        \; Np \, G'(\theta)^2\left(\frac{1}{J}+(1-\epsilon)^{\floor{1/(c\log(J))}}\right).
     \end{equation}
 \end{cor}
 \begin{proof}
     Observe that MOP-$0$ is equivalent to MOP-$(1,1)$. Noting that $k=1$ and that we only need to bound the difference between $\nabla_\theta \ell(\theta)$ and $\nabla_\theta \hat s_1^1(\theta)$, repeating the above arguments almost verbatim allows us to obtain this result. 
 
     
-As before, we bound the first term, $\sum_{n=1}^N||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2$, by decomposing it into two terms, 
-$$\sum_{n=1}^N||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2 \leq \sum_{n=1}^N ||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)||_2^2 + \sum_{n=1}^N ||\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2.$$
-
+As before, we bound the first term, $\sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\|_2^2$, by decomposing it into two terms, 
+\begin{eqnarray} \nonumber
+\hspace{-10mm} \sum_{n=1}^N\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2 &\leq 
+\\ &&\hspace{-45mm} 
+\sum_{n=1}^N \big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)\big\|_2^2 + \sum_{n=1}^N \big\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2.
+\end{eqnarray}
 The first term is a particle approximation dependent on $1$ timesteps, so by Lemma 2 of \cite{karjalainen23}, this is bounded by
-$$\E||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)||_2^2 \leq \frac{CpG'(\theta)^2}{J}.$$
+\begin{equation}\E\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)\big\|_2^2 \leq \frac{Cp \, G'(\theta)^2}{J}.\end{equation}
 
 The second term amounts to bounding the difference between functionals of two different particle measures that mix under the same Markov kernel. Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
-$$\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},$$
+\begin{equation}
+\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},
+\end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. 
 
 Then, we can bound 
-$\E||\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2$ by
-$$\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu \textbf{M}_{n,n+1}-\nu \textbf{M}_{n,n+1}\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}} = \beta_{TV}(\textbf{M}_{n,n+1}) \leq (1-\epsilon)^{\floor{1/(c\log(J))}},$$
+$\E\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\|_2^2$ by
+\begin{equation}
+\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu \textbf{M}_{n,n+1}-\nu \textbf{M}_{n,n+1}\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}} = \beta_{TV}(\textbf{M}_{n,n+1}) \leq (1-\epsilon)^{\floor{1/(c\log(J))}},
+\end{equation}
 implying that
 \begin{align}
-    \E||\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2 
-    &\lesssim \sup_{\mu, \nu} \sup_{||\psi||_\infty \leq 1/2} pG'(\theta)^2\left|(\mu \textbf{M}_{n,n+1})(\psi)-(\nu \textbf{M}_{n,n+1})(\psi)\right| \\
-    &\leq \sup_{\mu, \nu} pG'(\theta)^2\|\mu \textbf{M}_{n,n+1}-\nu \textbf{M}_{n,n+1}\|_{\mathrm{TV}} \\
-    &\leq pG'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}} ||\hat\pi_{n-1} - \pi_{n-1}||_{\text{TV}} \\
-    &\leq pG'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}} \sup_{||\psi||_{\infty} \leq 1/2} |\hat\pi_{n-1}(\psi) - \pi_{n-1}(\psi)| \\
-    &\lesssim pG'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}}.
+    & \hspace{-10mm}
+    \E\big\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2 
+    \\ & \hspace{30mm}
+    \lesssim \sup_{\mu, \nu} \sup_{\|\psi\|_\infty \leq 1/2} p \, G'(\theta)^2\big|(\mu \textbf{M}_{n,n+1})(\psi)-(\nu \textbf{M}_{n,n+1})(\psi)\big| 
+    \\ & \hspace{30mm}
+    \leq \sup_{\mu, \nu} p \, G'(\theta)^2\big\|\mu \textbf{M}_{n,n+1}-\nu \textbf{M}_{n,n+1}\big\|_{\mathrm{TV}} 
+    \\ & \hspace{30mm}
+    \leq p \, G'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}} \|\hat\pi_{n-1} - \pi_{n-1}\|_{\text{TV}} 
+    \\ & \hspace{30mm}
+    \leq p \, G'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}} \sup_{\|\psi\|_{\infty} \leq 1/2} \big|\hat\pi_{n-1}(\psi) - \pi_{n-1}(\psi)\big| 
+    \\ & \hspace{30mm}
+    \lesssim p \, G'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}}.
 \end{align}
 
 Therefore, we have that
 \begin{align}
-    &\E||\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_1^1(\theta)||_2^2 \\
-    &\leq \sum_{n=1}^N \E||\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)||_2^2 + \sum_{n=1}^N \E||\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)||_2^2\\
-    &\lesssim N\frac{CpG'(\theta)^2}{J} + NpG'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}}.
+    &\E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta\hat s_1^1(\theta)\big\|_2^2 \\
+    &\leq \sum_{n=1}^N \E\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)\big\|_2^2 + \sum_{n=1}^N \E\big\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2\\
+    &\lesssim N\frac{Cp \, G'(\theta)^2}{J} + Np \, G'(\theta)^2(1-\epsilon)^{\floor{1/(c\log(J))}}.
 \end{align}
 \end{proof}
