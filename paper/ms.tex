@@ -351,7 +351,7 @@ We therefore see that the second stage of IFAD converges linearly to the MLE if 
 
 \section{Application to a Cholera Transmission Model}
 
-The cholera transmission model that \cite{king08} developed for Dhaka, Bangladesh, has been used to benchmark the performance of various POMP inference methods \cite{ionides15, wood16, wycoff24}, and we employ it here for the same purpose.
+The cholera transmission model that \cite{king08} developed for Dhaka, Bangladesh, has been used to benchmark the performance of various POMP inference methods \cite{ionides15, fasiolo16, wycoff24}, and we employ it here for the same purpose.
 This model categorizes individuals in a population as susceptible, $S(t)$, infected, $I(t)$, and recovered, $R(t)$ and so is called an SIR compartmental model.
 In this case, the compartment $R(t)$ is further subdivided into 
 %. where the population at time $t$, $H_t$, is divided into the susceptible compartment $S_t$, infected compartment $I_t$, and
@@ -633,12 +633,6 @@ We thank Nicolas Chopin for helpful communications regarding the strong law of l
 \showacknow{} % Display the acknowledgments section
 }
 
-%\bibsplit[2]
-%Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
-
-% \bibliographystyle{pnas-new}
-% Bibliography
-\bibliography{bib-ifad}
 
 \arxiv{
 \appendix
@@ -674,5 +668,12 @@ We thank Nicolas Chopin for helpful communications regarding the strong law of l
 \section{Figures for Bayesian Inference}
 \label{appendix:bayes}
 \input{appendix/bayes}
+
+%\bibsplit[2]
+%Use \bibsplit to split the references from the body of the text. Value "[2]" represents the number of reference in the left column (Note: Please avoid single column figures & tables on this page.)
+
+% \bibliographystyle{pnas-new}
+% Bibliography
+\bibliography{bib-ifad}
 
 \end{document}
