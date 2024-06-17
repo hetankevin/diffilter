@@ -226,14 +226,14 @@ Note that
 \hat s_{n,k}(\theta) := \frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \nabla_\theta \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)
 \end{equation} 
 is a function bounded by $C\frac{G'(\theta)(1-\alpha^k)}{1-\alpha} =: CG'(\theta)r$ in each coordinate for some constant $C$ (by Assumption \ref{assump:bounded-measurement}) that depends only on $k$ timesteps, and not $n$. 
-Subsequently, we suppress vector and matrix notation for the coordinates of $\theta$ and its derivatives, and their variances and covariances, with inequalities interpreted coordinatewise.
+Subsequently, we suppress vector and matrix notation for the coordinates of $\theta$ and its derivatives, and their variances and covariances, with the variance of a vector interpreted as the sum of the variance of its components.
 We invoke Lemma 2 of \cite{karjalainen23} to bound the $L_2$ error of each of the $k$ (from time $n-k$ to time $n$) functionals from its expectation under the posterior by $Cr\sqrt{p}G'(\theta)J^{-1/2}k$. 
 That is, we have that
 \begin{equation}\E\left[\|\hat s_{n,k}(\theta) - \E_{\pi}\hat s_{n,k}(\theta)\|_2^2\right]^{1/2} \leq \frac{Cr\sqrt{p}G'(\theta) k}{\sqrt{J}}.\end{equation}
 
 
 By the bias-variance decomposition, this in turn bounds the variance at a single timestep by $C^2r^2p \, G'(\theta)^2J^{-1}k^2$. Concretely, we have that
-\begin{equation}\Var\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{r^2k^p2G'(\theta)^2}{J}.\end{equation}
+\begin{equation}\Var\left(\frac{1}{J}\sum_{j=1}^J\sum_{i=n-k}^n \nabla_\theta\left(\alpha^{n-i} \log\left(g_{i,j}^{A,F,\theta}\right)- \alpha^{n-i+1} \log\left(g_{i-1,j}^{A,F,\theta}\right)\right)\right) \lesssim \frac{r^2k^2p2G'(\theta)^2}{J}.\end{equation}
 
 It now remains to bound the variance of $\hat s_k(\theta)$ by considering the covariance of each of the $N$ terms that comprise it. 
 We decompose
@@ -287,10 +287,13 @@ Putting it all together, we see that
     &\lesssim \frac{k^2r^2p \, G'(\theta)^2N}{J}.
 \end{align}
 
-We will now use this result to bound $\Var(\nabla_\theta \hat s_k(\theta)$ proper. For random variables $X,Y$ where $|X-Y|$ is bounded almost surely by some $M$, we have that 
-\begin{equation}X-\E X - 2M \leq Y - \E Y \leq X - \E X + 2M\end{equation}
+We will now use this result to bound $\Var\big(\nabla_\theta \hat s_k(\theta)\big)$ proper. 
+For random variables $X,Y$ where $|X-Y|$ is bounded almost surely by some $M$, we have that 
+\begin{equation}
+X-\E X - 2M \leq Y - \E Y \leq X - \E X + 2M\end{equation}
 so,
-\begin{equation}(Y-\E Y)^2 \leq (X-\E X - 2M)^2 + (X-\E X +2M)^2.\end{equation}
+\begin{equation}
+(Y-\E Y)^2 \leq (X-\E X - 2M)^2 + (X-\E X +2M)^2.\end{equation}
 Taking expectations, we get
 \begin{equation}
 \Var(Y) \leq \Var(X) + 8M^2.
