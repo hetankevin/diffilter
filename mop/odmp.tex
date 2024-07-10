@@ -1,0 +1,259 @@
+\documentclass[12p]{article}
+\usepackage{fullpage}
+\parskip 2mm
+
+%% for algorithm pseudocode
+\usepackage{enumerate,alltt,xstring}
+\usepackage[ruled,noline,linesnumbered]{algorithm2e}
+\SetKwFor{For}{for}{do}{end}
+\SetKwFor{While}{while}{do}{end}
+\SetKwInput{KwIn}{input}
+\SetKwInput{KwOut}{output}
+\SetKwInput{KwCplx}{complexity}
+\SetKwInput{KwIndices}{note}
+\SetKwBlock{Begin}{procedure}{}
+\DontPrintSemicolon
+\newcommand\argequals{{\,=\,}}
+\newcommand\data[1]{#1^*}
+\newcommand\giventh{{\hspace{0.5mm};\hspace{0.5mm}}}
+\newcommand\seq[2]{{#1}\!:\!{#2}}
+\newcommand\mydot{{\,\cdot\,}}
+\newcommand\given{{\,\vert\,}}
+\newcommand\normal{{\mathrm{Normal}}}
+\newcommand\vmeasure{V}
+\newcommand\emeasure{e}
+
+\newcommand\Time{N}
+\newcommand\ttime{n}
+\newcommand\Np{J}
+\newcommand\np{j}
+\newcommand\altNp{q}
+\newcommand\prob{\mathrm{Prob}}
+\newcommand\code[1]{\texttt{#1}}
+
+\begin{document}
+
+\title{ADPF for overdispersed continuous-time Markov chains}
+\date{\today}
+\maketitle
+
+\begin{abstract}
+  We propose a combination of MOP and DOP to carry out inference for overdispersed continuous time Markov chains.
+  This algorithm, currently called PPOP (Proposal Partially Off Policy), is described in Section 3.
+  First, we review MOP and DOP.
+\end{abstract}
+
+\section{MOP-$\alpha$}
+
+%%%%  MOP(alpha) PFILTER PSEUDOCODE
+\begin{algorithm}
+  \caption{\textbf{Measurement off policy (MOP-$\alpha$) SMC}:
+    \label{alg:mop-alpha}
+  }
+  Initialize filter particles:
+  simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\theta}\right)$ for $j$ in $\seq{1}{J}$\;
+  Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
+  \;
+  \For{$n$ in $\seq{1}{N}$}{
+    Simulate for prediction:
+    ${X}_{n,j}^{P,\theta}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\theta}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop-alpha:step1}
+    \;
+    Prediction weights with discounting: $w_{n,j}^{P,\theta} = \big(w_{n-1,j}^{F,\theta}\big)^\alpha$ for $j\ \mathrm{in}\ \seq{1}{J}$
+    \nllabel{mop-alpha:discount}
+    \;
+    Evaluate measurement density:
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\theta}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+    Conditional likelihood under $\phi$: 
+    $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \nllabel{mop-alpha:Lphi}
+    \;
+    Normalize weights:
+    $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \;
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{mop-alpha:systematic}\;
+    Resample particles: ${X}_{n,j}^{F,\theta}={X}_{n,k_{j}}^{P,\theta}$
+    \;
+    Filter weights corrected for resampling:
+    $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{mop-alpha:weight:update}
+    \;
+    Resample filter weights:
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{mop-alpha:step2}
+    \;
+    After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+  }
+\end{algorithm}
+
+
+Algorithm~\ref{alg:mop-alpha} just repeats MOP-$\alpha$ from the earlier MOP/DOP draft.
+The final estimate of the likelihood is either based on the after-resampling conditional likelihood estimate
+  \begin{equation} \label{mop:likA}
+    L^A(\theta) = \left(\frac{1}{J}\sum_{j=1}^J w^{F,\theta}_{N,j} \right)
+    \prod_{n=1}^N L_n^\phi
+  \end{equation}
+  or the before-resampling estimate,
+ \begin{equation}\label{mop:likB}
+   L^B(\theta) = \prod_{n=1}^N \frac{\sum_{j=1}^J w^{P,\theta}_{N,j} \, g^{\theta}_{N,j}}{\sum_{j=1}^J w^{P,\theta}_{N,j}}.
+  \end{equation}
+ with $L^B(\theta)$ presumably having slightly lower variance.
+
+\section{DOP-$\alpha$}
+
+Algorithm~\ref{alg:dop-alpha} is a doubly off policy particle filter, meaning that both \code{rprocess} and \code{rmeasure} are computed at $\phi$ and particles are reweighted to correspond to $\theta$.
+Something like this is needed to deal with discrete latent state spaces, which are beyond the realm of MOP.
+This algorithm is not plug-and-play.
+It seems to require transition probabilities (or at least their ratios) between observation times.
+In the next section, we show how this can combined with MOP-$\alpha$ to make an algorithm which is practical for over-dispersed continuouse time Markov chains 
+
+NOTE: THIS IS STILL PROVISIONAL. FOR EXAMPLE, WE PROBABLY NEED dinit SINCE WE CAN'T ASSUME WE CAN DIFFERENTIATE THROUGH TAHT. THE PREVIOUS COP VERSION DID NOT DO THAT. OR, IN PRACTICE, MAYBE ONE CAN DO A DISCRETE OPTIMIZATION OVER THE IVP, IF IT IS ACTUALLY A DISCRETE PARAMETER? ALTERNATIVELY, IT MIGHT BE GOOD TO HAVE A PRIOR OF CONVENIENCE FOR THE IVPS. PERHAPS PUTTIG MASS ON AN INITIAL COMPARTMENT VALUE $C_0$ GIVEN BY $\mathrm{round}(\theta_C)-1, \mathrm{round}(\theta_C), \mathrm{round}(\theta_C)+1$ where $\theta_C$ is a continuous parameter for the value of $C_0$.
+
+%%%%  DOP(alpha) PFILTER PSEUDOCODE
+\begin{algorithm}[t!]
+  \caption{\textbf{Doubly off policy (DOP-$\alpha$) SMC}:
+    \label{alg:dop-alpha}
+  }
+  Initialize filter particles:
+  simulate ${X}_{0,j}^{F,\phi}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\phi}\right)$ for $j$ in $\seq{1}{J}$\;
+  Initialize relative weights: $w^{F,\theta}_{0,j}= 1$ for $j$ in $\seq{1}{J}$
+  \;
+  \For{$n$ in $\seq{1}{N}$}{
+    Prediction weights with discounting: $w_{n,j}^{P,\theta} = \big(w_{n-1,j}^{F,\theta}\big)^\alpha$ for $j\ \mathrm{in}\ \seq{1}{J}$
+    \nllabel{dop-alpha:discount}
+    \;
+    Simulate for prediction:
+    ${X}_{n,j}^{P,\phi}\sim {f}_{{X}_{n}|{X}_{n-1}}\big(\mydot|{X}_{n-1,j}^{F};{\phi}\big)$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{dop-alpha:step1}
+    \;
+    Adjust weights: $\displaystyle w_{n,j}^{P,\theta} = w_{n,j}^{P,\theta} \times
+    \frac{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\phi}|{X}_{n-1,j}^{F};{\theta}\big)}{{f}_{{X}_{n}|{X}_{n-1}}\big({X}_{n,j}^{P,\phi}|{X}_{n-1,j}^{F};{\phi}\big)}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \nllabel{dop-alpha:dproc}
+    \;
+    Evaluate measurement density:
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\phi}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+    Conditional likelihood under $\phi$: 
+    $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \nllabel{dop-alpha:Lphi}
+    \;
+    Normalize weights:
+    $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \;
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{dop-alpha:systematic}\;
+    Resample particles: ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$
+    \;
+    Filter weights corrected for resampling:
+    $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{dop-alpha:weight:update}
+    \;
+    Resample filter weights:
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{dop-alpha:step2}
+    \;
+    After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+  }
+\end{algorithm}
+
+\section{Process partially off policy (PPOP-$\alpha$)}
+
+OR RENAME TO, E.G., COMPARTMENT MODEL AUTOMATIC DIFFERENTIATION (CMAD)
+
+We suppose that, conditionally on a continuous integrated noise process $\Sigma(t)$, the latent process $X(t)$ is a multinomial Markov compartment model.
+We can formalize this definition, but it is intended to correspond to the class of models for which an Euler multinomial approximation is appropriate, where the Euler rate between $t$ and $t+\delta$ depends on $\Sigma(t+\delta)-\Sigma(t)$ and $X(t)$.
+We suppose $K_n$ Euler timesteps between $t_n$ and $t_{n+1}$.
+In practice, the intermediate times $\{t_{n_0}=t_n,t_{n,1},\dots,t_{K_n}=t_{n+1}\}$ may be chosen so that $\delta_{n,k}=t_{n_{k+1}} - t_{n_{k}}\le \delta$ for some $\delta$.
+We write $X_{n,k}=X(t_{n,k})$ and we note that $X_n=X_{n,0}$ and $X_{n+1}=X_{n,K_n}$.
+
+As for MOP and DOP, PPOP in Algorithm~\ref{alg:ppop-alpha} supposes that the algorithm is run first at $\theta=\phi$ and then at arbitrary $\theta$.
+To differentiate it at $\theta=\phi$, we need only one pass, or rather the two passes correspond to the two passes that AD does automatically. 
+
+Discounting can be done at each individual Euler timestep, $t_{n,k} $, or just at observation times, $t_n$.
+The finer discretization is slightly smoother and respects the mixing that occurs within the interval $[t_{n-1},t_n]$.
+The extra computation will be negligible in most situations. Therefore, that is what we initially propose.
+
+%%%%  PPOP(alpha) PFILTER PSEUDOCODE
+\begin{algorithm}[t!]
+  \caption{\textbf{Process partially off policy (PPOP-$\alpha$) SMC}:
+    \label{alg:ppop-alpha}
+  }
+  Initialize filter particles:
+  simulate ${X}_{0,j}^{F,\theta}\sim {f}_{{X}_{0}}\left(\mydot\giventh{\phi}\right)$ for $j$ in $\seq{1}{J}$\;
+  Initialize relative weights: $w^{F,\theta}_{0,j}= \frac{ {f}_{{X}_{0}}\left({X}_{0,j}^{F,\theta}\giventh{\theta}\right)}{ {f}_{{X}_{0}}\left({X}_{0,j}^{F,\theta}\giventh{\phi}\right)}$ for $j$ in $\seq{1}{J}$
+  \;
+  \For{$n$ in $\seq{1}{N}$}{
+    \For{$k$ in $\seq{1}{K_n}$}{
+      Prediction weights with discounting: $w_{n,k,j}^{P,\theta} = \big(w_{n,k-1,j}^{F,\theta}\big)^\alpha$ for $j\ \mathrm{in}\ \seq{1}{J}$
+      \nllabel{ppop-alpha:discount}
+      \;
+      Simulate $\Delta\Sigma^{\theta}_k= \Sigma(t+\delta)-\Sigma(t)$
+      \;
+      Simulate for prediction:
+      ${X}_{n,k,j}^{P,\phi}\sim \mathrm{reulermultinom}\big({X}_{n,k-1,j}^{F}, \rho(\phi,\Delta\Sigma^{\phi}_k),t_{n,k-1},t_{n,k}\big)$
+      %%for $j\ \mathrm{in}\ \seq{1}{J}$
+      \nllabel{ppop-alpha:step1}
+      \;
+      Adjust weights:
+      $\displaystyle w_{n,k,j}^{P,\theta} = w_{n,j}^{P,\theta} \times
+      \frac{
+        \mathrm{deulermultinom}\big({X}_{n,k-1,j}^{F}, {X}_{n,k,j}^{F}, \rho(\theta,\Delta\Sigma^{\theta}_k),t_{n,k-1},t_{n,k}\big)
+  }{
+        \mathrm{deulermultinom}\big({X}_{n,k-1,j}^{F}, {X}_{n,k,j}^{F}, \rho(\phi,\Delta\Sigma^{\phi}_k),t_{n,k-1},t_{n,k}\big)
+}$
+%%      for $j\ \mathrm{in}\ \seq{1}{J}$
+      \nllabel{ppop-alpha:dproc}
+      \;
+    }
+    Evaluate measurement density:
+    $g^{\theta}_{n,j}={f}_{{Y}_{n}|{X}_{n}}(y_{n}^{*}|{X}_{n,j}^{P,\phi}\giventh{\theta})$ for $j$ in $\seq{1}{J}$\;
+    Before-resampling conditional likelihood: $\displaystyle L_n^{B,\theta,\alpha} = \frac{\sum_{j=1}^Jg^\theta_{n,j} w^{P,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+    Conditional likelihood under $\phi$: 
+    $L_n^{\phi} = \frac{1}{J}\sum_{m=1}^{J}g^{\phi}_{n,m}$
+    \nllabel{ppop-alpha:Lphi}
+    \;
+    Normalize weights:
+    $\displaystyle \tilde{g}^{\phi}_{n,j}= \frac{g^{\phi}_{n,j}}{JL_n^{\phi}}$
+    for $j\ \mathrm{in}\ \seq{1}{J}$
+    \;
+    Apply systematic resampling to select indices $k_{1:J}$ with $\prob\big(k_{j}=m\big) =\tilde{g}^{\phi}_{n,m}$ \nllabel{ppop-alpha:systematic}\;
+    Resample particles: ${X}_{n,j}^{F,\phi}={X}_{n,k_{j}}^{P,\phi}$
+    \;
+    Filter weights corrected for resampling:
+    $\displaystyle w^{FC,\theta}_{n,j}= w^{P,\theta}_{n,j} \times \frac{ g^{\theta}_{n,j}}{ g^{\phi}_{n,j}}$ for $j\ \mathrm{in}\ \seq{1}{J}$ \nllabel{ppop-alpha:weight:update}
+    \;
+    Resample filter weights:
+    $w_{n,j}^{F,\theta}= {w}_{n,k_{j}}^{FC,\theta}$
+    for $j$ in $\seq{1}{J}$ \nllabel{ppop-alpha:step2}
+    \;
+    After-resampling conditional likelihood: $\displaystyle L_n^{A,\theta,\alpha} = L_n^\phi \, \frac{\sum_{j=1}^J w^{F,\theta}_{n,j}}{\sum_{j=1}^J  w^{P,\theta}_{n,j}}$
+    \;
+  }
+\end{algorithm}
+
+It remains to define reulermultinom and deulermultinom. This is carried out separately for departured from each compartment, which are supposed to be infinitesially independent given $\Sigma(t)$.
+Suppose compartments are labeled $c=1,\dots,C$, and we have $N_{ab}(t)$ counting total transitions from compartment $a$ to $b$ by time $t$.
+We formally work with the Markov process $X(t)=\{N_{ab}(t), (a,b)\in 1:C \times 1:C\}$. together with an initial compartment membership $X(t_0)$, with the compartment membership process, $X_c(t)$, being defined implicitly.
+
+Then, the Euler multinomial approximation, with rate function $\rho_{ab}(x,t,\theta)$ and multiplicative integrated noise process $\Sigma(t)$, with variance depending on $\theta$, has the form
+\[
+\{\Delta N_{cb}(t), b\in 1:C \} \sim \mathrm{multinomial}(X_c,\pi_{c})
+\]
+where $\pi_c=(\pi_{c1},\dots,\pi_{cC})$ is specified in terms of the individual rates, $r_{ca}=\rho_{ca}\Delta\Sigma_{ca}$, and the total rate, $R_c=\sum_{a\neq c}r_{ca}$ as
+\[
+\pi_{ca}=\left\{
+  \begin{array}{lcl}
+    (r_{ca}/R_c) (1-\exp\{-R_c\}) &,& a\neq c \\
+    1-\sum_{b\neq c} pi_{cb} &,& a=c
+  \end{array}
+  \right.
+  \]
+The transitions are independent for $c\in 1:C$ conditional on $\Delta\Sigma(t)$ and $X(t)$.
+
+
+\end{document}
+
