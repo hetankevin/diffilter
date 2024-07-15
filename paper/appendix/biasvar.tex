@@ -364,7 +364,6 @@ The first term of Equation \ref{eq:mse-decomp} is a particle approximation depen
 Bounding the second term of Equation \ref{eq:mse-decomp} amounts to bounding the difference between functionals of two different particle measures that mix under the same Markov kernel. Here, we use Assumptions \ref{assump:bounded-process} and \ref{assump:bounded-measurement} that ensure strong mixing. We know from Theorem 3 of \cite{karjalainen23} that when $\textbf{M}_{n,n+k}$ is the $k$-step Markov operator from timestep $n$ and $\beta_{\text{TV}}(M) = \sup _{x, y \in E}\|M(x, \cdot)-M(y, \cdot)\|_{\mathrm{TV}}=\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu M-\nu M\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}}$ is the Dobrushin contraction coefficient of a Markov operator, 
 \begin{equation}\beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},\end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. 
-
 Then, we can bound 
 $\E\|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2$ by
 \begin{equation}\sup _{\mu, \nu \in \mathcal{P}, \mu \neq \nu} \frac{\|\mu \textbf{M}_{n,n+k}-\nu \textbf{M}_{n,n+k}\|_{\mathrm{TV}}}{\|\mu-\nu\|_{\mathrm{TV}}} = \beta_{TV}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},\end{equation}
@@ -486,7 +485,6 @@ The second term amounts to bounding the difference between functionals of two di
 \beta_{\text{TV}}(\textbf{M}_{n,n+k}) \leq (1-\epsilon)^{\floor{k/(c\log(J))}},
 \end{equation}
 i.e. the mixing time of the particle filter is $O(\log(J))$, where $\epsilon$ and $c$ depend on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ in \ref{assump:bounded-process} and \ref{assump:bounded-measurement}. 
-
 Then, we can bound 
 $\E\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\|_2^2$ by
 \begin{equation}
