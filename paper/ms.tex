@@ -338,7 +338,7 @@ To see the importance of this innovation, we briefly summarize the empirical res
 The convergence of IF2 (and so the first stage of IFAD) to a neighborhood of the MLE happens rapidly in practice. 
 In the case of the Dhaka cholera model of \cite{king08}, when an aggressive geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, initial convergence happens within 40 iterations. 
 However, even slower cooling and large amounts of Monte Carlo replication using IF2 fail to get within five log-likelihood units of the maximum on this problem (Figure~\ref{fig:boxplot}).
-These numerical results are consistent with theoretical results for iterated filtering \cite{doucet15-if}.
+These numerical results are consistent with theoretical results for iterated filtering, showing slow convergence close to the maximum \cite{doucet15-if}.
 IF2, without assistance from AD, requires additional computationally intensive techniques, such as repeated pruning and profiling, to reach the inferentially critical region within one log unit of the maximum.
 
 Gradient methods can struggle with saddle points, local minima, and nonlinear ridges.
