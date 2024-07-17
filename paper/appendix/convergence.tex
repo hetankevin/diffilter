@@ -3,6 +3,9 @@
 
 The analysis in this section roughly follows the analysis in \cite{mahoney16}, except with the caveat that none of the matrix concentration bounds they use apply here as the particles are dependent. We instead use the concentration inequality from \cite{delMoral11} to bound the gradient and Hessian estimates. In this section, we fix $\omega \in \Omega$ only within each filtering iteration, evaluate Algorithm \ref{alg:mop} at $\theta=\phi$, and analyze Algorithm \ref{alg:ifad} post-iterated filtering.
 
+%\ed{TECHNICALLY, IF WE CLAIM THAT A PROOF FOR ALPHA=1 CAN BE GENERALIZED TO ANY ALPHA, WE ARE CLAIMING A PROOF FOR ALL ALPHA, AND SO WE DO NOT NEED TO SAY WE ARE ONLY PROVING IT FOR ALPHA=1. IF WE REALLY ONLY CLAIM TO HAVE SHOWN IT FOR ALPHA=1, THAT SHOULD BE IN THE STATEMENT. IF WE CLAIM THE WHOLE RESULT, PERHAPS WE CAN POSTPONE THE DISCUSSION OF THIS 2-STAGE METHOD TO THE SUPPLEMENT? AT THIS POINT, ``THE REQUIRED EPSILON-APPROXIMATION'' IS NOT DEFINED FOR THE READER, SO IT IS HARD TO COMPREHEND THE ARGUMENT.}
+For simplicity, we only provide the argument for MOP-$1$ and note that the general case follows as the required $\epsilon$-approximation can still be obtained for sufficiently large $\alpha$. 
+When $\alpha=1$, the required $J$ is given in the below lemmas. 
 
 The convergence analysis in Theorem \ref{thm:mop-convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
 

@@ -336,8 +336,8 @@ To design an effective procedure for likelihood maximization with MOP-$\alpha$, 
 To see the importance of this innovation, we briefly summarize the empirical results in Section~\ref{sec:cholera}.
 
 The convergence of IF2 (and so the first stage of IFAD) to a neighborhood of the MLE happens rapidly in practice. 
-In the case of the Dhaka cholera model of \cite{king08}, when an aggressive geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used,  \ed{[initial convergence happens  BE MORE PRECISE] initial convergence to within xxx=40?? log-likelihood units of the maximum} occurs within 40 iterations. 
-However, even when applying much larger amounts of Monte Carlo effort, IF2 fails to get within five log-likelihood units of the maximum on this problem (Figure~\ref{fig:boxplot}).
+In the case of the Dhaka cholera model of \cite{king08}, when an aggressive geometric cooling multiplier of 0.95 and initial random walk standard deviation of 0.02 is used, we require no more than 40 iterations of IF2 to obtain a suitable warm-start of acceptable quality. 
+However, even when applying much larger amounts of Monte Carlo effort, IF2 fails to get within seven log-likelihood units of the maximum on this problem (Figure~\ref{fig:boxplot}).
 These numerical results are consistent with theoretical results for iterated filtering, showing slow convergence close to the maximum \cite{doucet15-if}.
 IF2, without assistance from AD, requires additional computationally intensive techniques, such as repeated pruning and profiling, to reach the inferentially critical region within one log unit of the maximum.
 
@@ -364,9 +364,6 @@ $$
 \arxiv{}{\vspace*{-5mm}}
 The proof of Theorem~\ref{thm:linear} uses results from randomized numerical linear algebra, building on Theorem~6 of\cite{mahoney16}. 
 Details are deferred to \arxiv{Appendix~\ref{appendix:convergence}}{the supplementary information}. 
-\ed{TECHNICALLY, IF WE CLAIM THAT A PROOF FOR ALPHA=1 CAN BE GENERALIZED TO ANY ALPHA, WE ARE CLAIMING A PROOF FOR ALL ALPHA, AND SO WE DO NOT NEED TO SAY WE ARE ONLY PROVING IT FOR ALPHA=1. IF WE REALLY ONLY CLAIM TO HAVE SHOWN IT FOR ALPHA=1, THAT SHOULD BE IN THE STATEMENT. IF WE CLAIM THE WHOLE RESULT, PERHAPS WE CAN POSTPONE THE DISCUSSION OF THIS 2-STAGE METHOD TO THE SUPPLEMENT? AT THIS POINT, ``THE REQUIRED EPSILON-APPROXIMATION'' IS NOT DEFINED FOR THE READER, SO IT IS HARD TO COMPREHEND THE ARGUMENT.}
-For simplicity, we only prove this for MOP-$1$ and note that the general case follows as the required $\epsilon$-approximation can still be obtained for sufficiently large $\alpha$. 
-When $\alpha=1$, the required $J$ is given in \arxiv{Appendix~\ref{appendix:convergence}}{the supplementary information}. 
 This result shows that particle estimates for the gradient can enjoy the same linear convergence rate on well-conditioned problems as gradient descent with access to the score. 
 
 We therefore see that the second stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is $\gamma$-strongly convex in a neighborhood of the MLE and (2) the first stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE. 
