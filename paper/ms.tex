@@ -518,7 +518,7 @@ Using a NUTS algorithm powered by MOP-$\alpha$ with this prior significantly low
     \centering
     \includegraphics[width=\arxiv{\textwidth/\real{1.25}}{\textwidth/\real{2.5}}]{imgs/pmcmc/nuts_eb.png}
     \arxiv{}{\vspace*{-1mm}}
-    \caption{Convergence diagnostics for NUTS with the informative nonparametric empirical Bayes prior from applying KDE to preliminary searches using IF2, with $4$ chains. We display the results for the trend parameter in the Dhaka cholera model of \cite{king08}. NUTS mixes quickly, and the posterior estimates from each chain share roughly the same posterior mode.}
+    \caption{Convergence diagnostics for NUTS when estimating $\beta_{\text{trend}}$ with the informative nonparametric empirical Bayes prior from applying KDE to preliminary searches using IF2, with $4$ chains. NUTS mixes quickly, and the posterior estimates from each chain share roughly the same posterior mode.}
     \label{fig:nuts-eb}
     \arxiv{}{\vspace*{-4mm}}
 \end{figure}
@@ -554,7 +554,7 @@ We show here that MOP-$\alpha$ targets the filtering distribution under $\theta$
 Employing $\alpha<1$ lead to inconsistency when $\theta$ deviates from $\phi$, but this bias disappears as $\theta$ approaches $\phi$.
 
 While the result is presented here as specific to MOP-$\alpha$, we prove a more general result in \arxiv{Appendix~\ref{appendix:targeting}}{the supplementary material}.
-This is a strong law of large numbers for triangular arrays of particles resampled according to an arbitrary resampling rule not necessarily in proportion to the targeted distribution of interest, to weights that encode the cumulative discrepancy between the resampling and the target distribution.
+This is a strong law of large numbers for triangular arrays of particles resampled arbitrarily, with resampling probabilities not proportion to the targeted distribution of interest, to weights that correct for the cumulative discrepancy between the resampling and the target distribution.
 
 %\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
