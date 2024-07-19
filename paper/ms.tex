@@ -152,9 +152,9 @@ The process is parameterized by an unknown parameter $\theta \in \Theta \subsete
 % \end{align*}
 
 We suppose that the discete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$.
-The existence of this density is necessary to define the likelihood function, but plug-and-play algorithms do not have access to evaluation of this density.
-Instead, they have access to a corresponding simulator, which we write as $\process_n\left(x_n\mid x_{n-1}; \theta\right)$.
-We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, which we suppose can be evaluated. We write $y_n^*$ for the actual values of the observations that were observed.
+The existence of this density is necessary to define the likelihood function, but plug-and-play algorithms do not explicitly evaluate this density.
+Instead, they have access to a corresponding simulator, which we, write as $\process_n\left(x_n\mid x_{n-1}; \theta\right)$.
+We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, which  can be directly evaluated. We write $y_n^*$ for the actual values of the observations that were observed.
 We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$.
 Superscripts $x_{n,j}^A$ of particles denote the ancestral trajectory of particle $j$ at time $n$,  and $k_j$
 denotes the resample indices drawn for each particle $j$. 
@@ -184,7 +184,7 @@ We suppose that the simulator is a differentiable function of $\theta$ for every
 This condition is also known as the {\it reparameterization trick} \cite{corenflos21}.
 Supposing also that the measurement model is differentiable in $\theta$, direct differentiation of MOP-$\alpha$ is available via AD.
 Theorem~\ref{thm:mop-functional-forms} shows that MOP-$\alpha$ is constructed so this direct derivative obtains the score estimator of  \cite{poyiadjis11, scibior21} when $\alpha=1$ and that of \cite{naesseth18} when $\alpha=0$.
-Setting $\alpha<1$ adds bias but reduces variance, raising opportunities for a favorable tradeoff as illustrated in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}).
+Setting $\alpha<1$ adds bias but reduces variance, producing opportunities for a favorable tradeoff as illustrated in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}).
 
 
 \begin{algorithm}[H]
@@ -298,7 +298,7 @@ However, their approach is not plug-and-play because they use transition densiti
 
 We defer the proof to \arxiv{Appendix~\ref{appendix:functional}}{the supplementary material}. 
 The argument relies on a useful decomposition of the after-resampling estimate $L_n^{A,\theta,\alpha}$. 
-Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting $\theta=\phi$ implies that $w_{n,j}^{P,\theta}$ evaluates to $1$, yield the result. 
+Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting $\theta=\phi$ implies that $w_{n,j}^{P,\theta}$ evaluates to $1$. 
 This further illustrates how $\alpha$ dictates the memory of the gradient estimate. 
 As \cite{scibior21} remarks, the MOP-$0$ estimator of \cite{naesseth18} only considers single-step quantities, and is ``memoryless'' beyond a single step. 
 In contrast, the MOP-$1$ estimate of \cite{poyiadjis11, scibior21} only considers the surviving particles at time $N$ and so fully tracks dependencies over time. 
@@ -319,7 +319,7 @@ The construction of MOP-$\alpha$ bypasses the issue of differentiating through a
 We defer the theoretical analysis of MOP-$\alpha$ to Section \ref{sec:thms}, but first we highlight a few key results.
 MOP-$\alpha$ estimates the likelihood and conditional distributions of latent variables, as one expects of a particle filter (Theorem \ref{thm:mop-targeting}).
 When differentiated, we obtain the estimators of \cite{poyiadjis11, scibior21, naesseth18} as special cases (Theorem \ref{thm:mop-functional-forms}).
-In particular, MOP-$1$ is consistent for the score (Theorem \ref{thm:mop-grad-consistency}), has rates for its bias and variance under different choices of $\alpha$ (Theorem \ref{thm:mop-biasvar}) that illustrate the desirable bias-variance tradeoff observed empirically in Figure \ref{fig:biasvar}, and enjoys a linear rate of convergence for gradient descent with the resulting gradient estimate (Theorem \ref{thm:mop-convergence}).  
+In particular, MOP-$1$ is consistent for the score (Theorem \ref{thm:mop-grad-consistency}), has rates for its bias and variance under different choices of $\alpha$ that illustrate the desirable bias-variance tradeoff observed empirically in Figure \ref{fig:biasvar}  (Theorem \ref{thm:mop-biasvar}), and enjoys a linear rate of convergence for gradient descent with the resulting gradient estimate (Theorem \ref{thm:mop-convergence}).  
 
 
 \arxiv{}{\vspace*{-2mm}}
@@ -349,7 +349,7 @@ In combination, these two methods avoid their respective weaknesses and provide,
 \arxiv{}{\vspace*{-2mm}}
 \subsection{Linear Convergence Rates}
 
-The AD stage confers a linear convergence rate for IFAD under the usual smoothness and strong convexity assumptions in convex optimization theory, as we show below in Theorem \ref{thm:mop-convergence}.
+The AD stage confers a linear convergence rate for IFAD, up to a small region near the MLE shrinking in $J$, under the usual smoothness and strong convexity assumptions in convex optimization theory, as we show below in Theorem \ref{thm:mop-convergence}.
 
 \begin{thm}[Linear Convergence of IFAD] \label{thm:linear}
     
@@ -362,7 +362,7 @@ $$
 \label{thm:mop-convergence}
 \end{thm}
 \arxiv{}{\vspace*{-5mm}}
-The proof of Theorem~\ref{thm:linear} uses results from randomized numerical linear algebra, building on Theorem~6 of\cite{mahoney16}. 
+The proof of Theorem~\ref{thm:linear} uses results from randomized numerical linear algebra, building on Theorem~6 of \cite{mahoney16}. 
 Details are deferred to \arxiv{Appendix~\ref{appendix:convergence}}{the supplementary information}. 
 This result shows that particle estimates for the gradient can enjoy the same linear convergence rate on well-conditioned problems as gradient descent with access to the score. 
 
@@ -643,8 +643,8 @@ As $\alpha$ goes to $1$, the variance increases.
 
 \paragraph{Bias-Variance Tradeoff:} We show in \arxiv{Appendix~\ref{appendix:biasvar}}{the supplementary material} that the variance of MOP-$0$ is $\tilde{O}\big( Np \, G'(\theta)^2\big/J \big)$.
 Previously, \cite{poyiadjis11} established that the variance of MOP-$1$ is $\tilde{O}(N^4/J)$, ignoring factors of $p$ and $G'$. 
-Combining these results with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
-The phase transition arises as even though the particle filter has forgetting properties \cite{karjalainen23}, the resulting derivative estimate of \cite{poyiadjis11} does not, and we require both for the variance reduction. 
+Combining these results with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between the variances of MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
+The phase transition arises because even though the particle filter has forgetting properties \cite{karjalainen23}, the resulting derivative estimate of \cite{poyiadjis11} does not, and we require both for the variance reduction. 
 
 In contrast, as $Nk^2 \leq N^4$ and $\alpha, k$ can be as large as desired to balance the impact of the last three terms, MOP-$\alpha$ achieves a lower MSE than MOP-$1$ does. We also show that MOP-$0$ achieves a MSE of $\tilde{O}\big(NpG'(\theta)^2(J^{-1}+(1-\epsilon)^{\lfloor1/c\log(J)\rfloor})\big)$, where the second term corresponds to uncontrolled mixing error. Unlike MOP-$\alpha$, MOP-$0$ has no opportunity to tune $\alpha$ (or $k$) to reduce said mixing error, leading to uncontrolled asymptotic bias. 
 
