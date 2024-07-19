@@ -332,7 +332,8 @@ If $\theta$ is evaluated at $\phi$, the particles at $\theta$ and $\phi$ coincid
 \arxiv{}{\vspace*{-2mm}}
 \subsection{Optimization}
 
-To design an effective procedure for likelihood maximization with MOP-$\alpha$, we propose a simple algorithm we call Iterated Filtering followed by Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad}. IFAD runs a few iterations of IF2 to warm-start an iterative first or second-order method that uses the MOP-$\alpha$ gradient estimate. 
+To design an effective procedure for likelihood maximization with MOP-$\alpha$, we propose a simple algorithm we call Iterated Filtering followed by Automatic Differentiation (IFAD) in Algorithm \ref{alg:ifad}. IFAD runs a few iterations of IF2 to warm-start an iterative first or second-order method that uses the MOP-$\alpha$ gradient estimate.
+We write the algorithm in a fairly general manner, requiring only a Hessian estimate $H(\theta)$ with minimum eigenvalue no smaller than $c$, but in practice we use $H=I_p$ that corresponds to gradient descent.
 To see the importance of this innovation, we briefly summarize the empirical results in Section~\ref{sec:cholera}.
 
 The convergence of IF2 (and so the first stage of IFAD) to a neighborhood of the MLE happens rapidly in practice. 
@@ -451,7 +452,7 @@ For each method, we performed 100 searches, initialized with 100 initial startin
 \paragraph{IFAD Successfully Finds the MLE:} Previously, an MLE at a log-likelihood of $-3748.6$ was reported by \cite{king16}.
 This MLE was obtained with much computational effort, using many global and local IF2 searches and with the assistance of likelihood profiling, 8 years after the model was first proposed by \cite{king08}.
 Meanwhile, \cite{ionides15} only achieve a maximum log-likelihood of $-3768.6$, while the best log-likelihood found by \cite{king08} was only $-3793.4$.
-Despite being initialized for a global search, IFAD manages to get much closer to the MLE over the $100$ searches than \cite{ionides15} and finds it up to $2.5$ standard deviations of Monte Carlo error, as seen in Table~\ref{table:mle}.
+Despite being initialized for a global search, IFAD manages to get much closer to the MLE over the $100$ searches than \cite{ionides15} and finds it up to $2.5$ standard deviations of Monte Carlo log-likelihood error, as seen in Table~\ref{table:mle}.
 On this problem, the sequence of local searches, refinement, and likelihood profiling that was previously required for finding the MLE is not necessary with IFAD. 
 In other words, the improvement in numerical efficiency of IFAD over IF2 is so large that routine application of IFAD (consisting of a collection of Monte Carlo replications from random starting points) generates results outside the reach of a routine application of IF2. 
 When interpreting Table~\ref{table:mle}, bear in mind that by Wilks' Theorem, any difference of over $1.92$ log units has statistical relevance when testing one parameter at the $0.05$ significance level, and therefore may have scientific value.
