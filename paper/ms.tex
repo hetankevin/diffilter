@@ -535,7 +535,7 @@ This speedup in the mixing time of particle MCMC by over three orders of magnitu
 Here, we will show that MOP-$\alpha$ targets the filtering distribution and likelihood under $\theta$, is consistent when $\alpha=1$, and characterize rates for its bias and variance under different choices of $\alpha$. To do so, we require the following assumptions:
 
 \arxiv{}{\vspace*{-2mm}}
-\begin{enumerate}[label=(A\arabic*),itemsep=-1.2ex] 
+\begin{enumerate}[label=(A\arabic*),itemsep=-1.4ex, , font=\small] 
     \item \textbf{Continuity of the Likelihood.} $\ell(\theta)$ has more than two continuous derivatives in a neighborhood $\left\{\theta: \ell(\theta)>\lambda_1\right\}$ for some $\lambda_1<\sup _{\varphi} \ell(\varphi)$. \label{assump:conti-lik}
     \item \textbf{Bounded Process Model.} There exist $\underbar{M}, \bar{M}$ such that $0 < \underbar{M} \leq f_{X_n|X_{n-1}}(x_n | x_{n-1};\theta) \leq \bar{M} < \infty$. \label{assump:bounded-process}
     \item \textbf{Bounded Measurement Model.} There exist $\underbar{G}, \bar{G}$ such that $0<\underbar{G} \leq f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right) \leq \bar{G}<\infty$ and there exists $G'(\theta)$ with $\|\nabla_\theta \log f_{Y_n \mid X_n}\left(y_n^* \mid x_n; \theta\right)\|_\infty \leq G'(\theta)< \infty$. \label{assump:bounded-measurement}
@@ -554,7 +554,7 @@ We show here that MOP-$\alpha$ targets the filtering distribution under $\theta$
 Employing $\alpha<1$ lead to inconsistency when $\theta$ deviates from $\phi$, but this bias disappears as $\theta$ approaches $\phi$.
 
 While the result is presented here as specific to MOP-$\alpha$, we prove a more general result in \arxiv{Appendix~\ref{appendix:targeting}}{the supplementary material}.
-This is a strong law of large numbers for triangular arrays of particles resampled arbitrarily, with resampling probabilities not proportion to the targeted distribution of interest, to weights that correct for the cumulative discrepancy between the resampling and the target distribution.
+This is a strong law of large numbers for triangular arrays of particles resampled arbitrarily, with resampling probabilities not proportional to the targeted distribution of interest, reweighted to correct for the cumulative discrepancy between the resampling and the target distribution.
 
 %\kevin{Should we just show the general result? That is, for an arbitrary set of indices $k_{n,j}$ generated in proportion to some arbitrary weights $\pi_{n,j}$ that do not necessarily sum to $1$ as the estimate is self-normalized, reweighting the particles by $w_{n,a(j)}g_{n,a(j)}/\pi_{n,a(j)}$ targets the posterior. $\pi_{n,j}$ can depend on $\{(x_{n,1:J},g_{n,1:J})\}$ as long as the resampling is carried out independently of $\{(x_{n,1:J},g_{n,1:J})\}$, conditional on $\pi_{n,1:J}$}
 
@@ -580,7 +580,7 @@ This is a strong law of large numbers for triangular arrays of particles resampl
 \end{proof}
 
 \arxiv{}{\vspace*{-2mm}}
-\subsection{MOP-$1$ Is Consistent for the Score}
+\subsection{MOP-$1$ Gradient Is Consistent for the Score}
 
 Although we have shown the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} estimate the Fisher score by 
 $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta)$ and not
@@ -612,17 +612,17 @@ The below result applies for any $\alpha \in [0,1)$, but not $\alpha=1$, as the 
 
 \begin{thm}[MSE and Variance of MOP-$\alpha$]
     \label{thm:mop-biasvar}
-    When $\alpha\in (0,1)$ and $\theta=\phi$, define $\psi(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)/(1-\alpha)$. 
+    When $\alpha\in (0,1)$ and $\theta=\phi$, define $\psi_k(\alpha)=(\alpha^k  + \alpha^{k+1} - \alpha)/(1-\alpha)$. 
     There exists an $\epsilon>0$ depending on $\bar{M}, \underbar{M}, \bar{G}, \underbar{G}$ as in \cite{karjalainen23} such that the MSE and variance of MOP-$\alpha$ are:
     \vspace*{-1ex}
     \arxiv{\begin{eqnarray}
         \E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 
-        &\lesssim& \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right), \label{eq:mop-mse}
+        &\lesssim& \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi_k(\alpha)\right), \label{eq:mop-mse}
         \\
         \Var\big(\nabla_\theta \hat\ell^{\alpha}(\theta)\big) &\lesssim& \min_{k\leq N} Np \, G'(\theta)^2\left(\frac{k^2}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}N\right). \label{eq:mop-variance}
         \end{eqnarray}}{\begin{align}
         &\E\big\|\nabla_\theta\ell(\theta) - \nabla_\theta \hat\ell^\alpha(\theta)\big\|_2^2 \label{eq:mop-mse}\\
-        &\lesssim \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi(\alpha)\right), \nonumber 
+        &\lesssim \min_{k \leq N} Np \, G'(\theta)^2\left(k^2J^{-1}+(1-\epsilon)^{\floor{k/(c\log(J))}}+k+\psi_k(\alpha)\right), \nonumber 
         \\
         &\Var\big(\nabla_\theta \hat\ell^{\alpha}(\theta)\big) \lesssim \min_{k\leq N} Np  G'(\theta)^2\hspace{-0.8ex}\left(\hspace{-0.8ex}\frac{k^2}{(1-\alpha)^2J} + \frac{\alpha^{k}}{1-\alpha}N\hspace{-0.8ex}\right). \label{eq:mop-variance}
         \end{align}}
@@ -634,7 +634,7 @@ The variance bound can be reduced to the approximation error between MOP-$\alpha
 The discount factor, $\alpha$, ensures strong mixing.
 The covariance of the derivative of MOP-$(\alpha,k)$ can be controlled with Davydov's inequality and a standard $L^p$ error bound for the particle filter. 
 The MSE bound considers the error between the score and MOP-$(1,k)$, and the error between MOP-$(1,k)$ and MOP-$\alpha$. 
-The latter can be shown to be $\tilde{O}\big(Np \, G'(\theta)^2(k+\psi(\alpha))\big)$, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
+The latter can be shown to be $\tilde{O}\big(Np \, G'(\theta)^2(k+\psi_k(\alpha))\big)$, and the former can be controlled with a result on the the forgetting of the particle filter from \cite{karjalainen23} and the very same $L^p$ error bound mentioned above. 
 
 \paragraph{Interpretation:} Theorem \ref{thm:mop-biasvar} provides theoretical understanding of the results observed in Figure \ref{fig:biasvar} that show the empirically favorable bias-variance tradeoff enjoyed by MOP-$\alpha$.
 The first term in the MSE bound in Equation \ref{eq:mop-mse} corresponds to the error of the particle approximation, the second mixing error, and the third and fourth the error between the MOP-$(1,k)$ and MOP-$\alpha$ estimates. 
@@ -647,7 +647,7 @@ Previously, \cite{poyiadjis11} established that the variance of MOP-$1$ is $\til
 Combining these results with Theorem \ref{thm:mop-biasvar} shows that MOP-$\alpha$ interpolates between the variances of MOP-$0$ and MOP-$1$, as $N \leq Nk^2 \leq N^4$, with a phase transition as soon as $\alpha<1$. 
 The phase transition arises because even though the particle filter has forgetting properties \cite{karjalainen23}, the resulting derivative estimate of \cite{poyiadjis11} does not, and we require both for the variance reduction. 
 
-In contrast, as $Nk^2 \leq N^4$ and $\alpha, k$ can be as large as desired to balance the impact of the last three terms, MOP-$\alpha$ achieves a lower MSE than MOP-$1$ does. We also show that MOP-$0$ achieves a MSE of $\tilde{O}\big(NpG'(\theta)^2(J^{-1}+(1-\epsilon)^{\lfloor1/c\log(J)\rfloor})\big)$, where the second term corresponds to uncontrolled mixing error. Unlike MOP-$\alpha$, MOP-$0$ has no opportunity to tune $\alpha$ (or $k$) to reduce said mixing error, leading to uncontrolled asymptotic bias. 
+In contrast, as $Nk^2 \leq N^4$ and $\alpha, k$ can be as large as desired to balance the impact of the last three terms of Equation \ref{eq:mop-mse}, MOP-$\alpha$ achieves a lower MSE than MOP-$1$ does. We also show that MOP-$0$ achieves a MSE of $\tilde{O}\big(NpG'(\theta)^2(J^{-1}+(1-\epsilon)^{\lfloor1/c\log(J)\rfloor})\big)$, where the second term corresponds to uncontrolled mixing error. Unlike MOP-$\alpha$, MOP-$0$ has no opportunity to tune $\alpha$ (or $k$) to reduce said mixing error, leading to uncontrolled asymptotic bias. 
 
 
 \arxiv{}{\vspace*{-2mm}}
@@ -671,6 +671,18 @@ Our implementation of the particle filter, simulator, and MOP-$\alpha$ in \textt
 \arxiv{}{\vspace*{-2mm}}
 \section{Discussion}
 
+Practical likelihood-based data analysis involves many likelihood optimizations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
+In particular, profile likelihood confidence intervals require a sequence of optimizations.
+Additionally, a careful scientist should consider many model variations, to see whether the conclusions of the study are sensitive to alternative model specifications.
+Coding model variations is relatively simple when using plug-and-play inference methodology.
+However, assessing the scientific potential of these variations requires likelihood optimization.
+If many rounds of laborious searching are required to attain the maximum (as arises in previous methods) that has practical consequences for the rate at which scientists can evaluate hypotheses.
+We have demonstrated, for the first time, a plug-and-play maximum likelihood approach which can directly maximize the likelihood for the complex benchmark model of \cite{king08}, requiring some Monte Carlo replication but not prolonged sequences of explorations.
+We anticipate that this will promote scientific advances in all domains where complex POMP models arise.
+
+\arxiv{}{\vspace*{-2mm}}
+\subsection{Further Work}
+
 If the simulator is discontinuous in $\theta$, MOP-$\alpha$ no longer applies.
 We are working on a variation of MOP-$\alpha$ applicable to this case.
 Specifically, differentiable transition density ratios can be used instead of a differentiable simulator.
@@ -684,17 +696,6 @@ Our gradient estimate can be used for variational inference to approximate the p
 Discounting the weights by some $\alpha \in [0,1]$ is not the only way to interpolate between the estimators of \cite{naesseth18} and \cite{poyiadjis11}. 
 As the proof of Theorem \ref{thm:mop-biasvar} implies, we can also truncate the weights at a fixed lag, corresponding to the MOP-$(1,k)$ estimate mentioned. 
 The analysis is similar, with comparable rates but with a slightly less convenient implementation. 
-
-Practical likelihood-based data analysis involves many likelihood optimizations \cite{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
-In particular, profile likelihood confidence intervals require a sequence of optimizations.
-Additionally, a careful scientist should consider many model variations, to see whether the conclusions of the study are sensitive to alternative model specifications.
-Coding model variations is relatively simple when using plug-and-play inference methodology.
-However, assessing the scientific potential of these variations requires likelihood optimization.
-If many rounds of laborious searching are required to attain the maximum (as arises in previous methods) that has practical consequences for the rate at which scientists can evaluate hypotheses.
-We have demonstrated, for the first time, a plug-and-play maximum likelihood approach which can directly maximize the likelihood for the complex benchmark model of \cite{king08}, requiring some Monte Carlo replication but not prolonged sequences of explorations.
-We anticipate that this will promote scientific advances in all domains where complex POMP models arise.
-
-
 
 \arxiv{
 \section*{Acknowledgments}
