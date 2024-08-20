@@ -114,7 +114,7 @@ Algorithmic advances are needed to make plug-and-play likelihood maximization fo
 We examine plug-and-play AD as a tool to do so by providing a likelihood gradient. Recent advances in AD for particle filters \cite{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in POMP models.
 However, existing approaches are either asymptotically biased \cite{naesseth18, jonschkowski18}, have high variance \cite{poyiadjis11, scibior21}, are computationally expensive \cite{corenflos21, chen24}, or require access to transition densities \cite{poyiadjis11, scibior21, singh22, chen24}. Scibior and Wood \cite{scibior21} showed that the estimators derived by Poyiadjis et al. \cite{poyiadjis11} can be attained with standard AD software using an algorithmic procedure, called a {\it stop-gradient}, which allows selected expressions to be evaluated but not differentiated.
 
-However, \cite{scibior21} used their estimator within an algorithm which does not have the plug-and-play property and which has high Monte Carlo variability, while the stop-gradient procedure is introduced without mathematical motivation.
+However, the algorithm of \cite{scibior21} that can be modified to have the plug-and-play property recovers an estimator with high Monte Carlo variability \cite{poyiadjis11}. Additionally, while the stop-gradient procedure is undeniably effective, the reason why the correction recovers the \cite{poyiadjis11} estimator remains somewhat unclear.
 We use \cite{scibior21} and \cite{poyiadjis11} as our starting point in developing a new approach remedying these issues.
 
 We start by presenting a new construction of the gradient estimator of \cite{scibior21} and \cite{poyiadjis11}.
@@ -292,7 +292,7 @@ We defer the proof to \arxiv{Appendix~\ref{appendix:functional}}{the supplementa
 The argument relies on a useful decomposition of the after-resampling estimate $L_n^{A,\theta,\alpha}$. 
 Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting $\theta=\phi$ implies that $w_{n,j}^{P,\theta}$ evaluates to $1$. 
 
-The result in Theorem \ref{thm:mop-functional-forms} provides mathematical intuition for why \cite{scibior21}'s use of the stop-gradient procedure in the particle filter recovers the estimate of \cite{poyiadjis11}. When $\theta=\phi$, the correction $g_{n,k_j}^\theta/g_{n,k_j}^\phi$ is equivalent to $g_{n,k_j}^\theta / \text{stop\_gradient}(g_{n,k_j}^\theta)$. As such, the use of the stop-gradient in \cite{scibior21} can be seen as a special case of the MOP-$\alpha$ weight correction for $\alpha=1, \theta=\phi$.
+The result in Theorem \ref{thm:mop-functional-forms} provides mathematical intuition for why \cite{scibior21}'s use of the stop-gradient procedure in the particle filter recovers the estimate of \cite{poyiadjis11}. When $\theta=\phi$, the correction $g_{n,k_j}^\theta/g_{n,k_j}^\phi$ is equivalent to $g_{n,k_j}^\theta / \text{stop\_gradient}(g_{n,k_j}^\theta)$, and is implemented in this way in practice. As such, the use of the stop-gradient in \cite{scibior21} can be seen as the MOP-$\alpha$ weight correction for $\alpha=1, \theta=\phi$.
 
 % This further illustrates how $\alpha$ dictates the memory of the gradient estimate. 
 % As \cite{scibior21} remarks, the MOP-$0$ estimator of \cite{naesseth18} only considers single-step quantities, and is ``memoryless'' beyond a single step. 
@@ -317,9 +317,9 @@ The result in Theorem \ref{thm:mop-functional-forms} provides mathematical intui
 % In particular, MOP-$1$ is consistent for the score (Theorem \ref{thm:mop-grad-consistency}), has rates for its bias and variance under different choices of $\alpha$ that illustrate the desirable bias-variance tradeoff observed empirically in Figure \ref{fig:biasvar}  (Theorem \ref{thm:mop-biasvar}), and enjoys a linear rate of convergence for gradient descent with the resulting gradient estimate (Theorem \ref{thm:mop-convergence}).  
 
 
-\arxiv{}{\vspace*{-4mm}}
+\arxiv{}{\vspace*{-3mm}}
 \section{Practical Maximum-Likelihood Estimation}
-
+\arxiv{}{\vspace*{-1mm}}
 %One can think of MOP-$\alpha$ as taking a likelihood estimate at $\phi$, reweighting it to instead target the likelihood at $\theta$, and then taking the derivative with respect to $\theta$ of the above estimate. 
 
 If $\theta$ is evaluated at $\phi$, the particles at $\theta$ and $\phi$ coincide. One then only needs to run one particle filter at $\theta=\phi$, setting the particles at $\phi$ to be copies of the particles at $\theta$ where gradients don't propagate. This is done algorithmically through the \texttt{stop\_gradient()} function in \texttt{JAX}, coinciding with and justifying the use of the stop-gradient operation in \cite{scibior21}.
