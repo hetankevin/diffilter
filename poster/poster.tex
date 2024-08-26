@@ -1,0 +1,304 @@
+% Gemini theme
+% https://github.com/anishathalye/gemini
+%
+% We try to keep this Overleaf template in sync with the canonical source on
+% GitHub, but it's recommended that you obtain the template directly from
+% GitHub to ensure that you are using the latest version.
+
+\documentclass[final]{beamer}
+
+% ====================
+% Packages
+% ====================
+
+
+\newcommand{\off}{\operatorname{off}}
+\newcommand{\on}{\operatorname{on}}
+\newcommand{\gX}{\mathcal{X}}
+\newcommand{\gA}{\mathcal{A}}
+\newcommand{\gS}{\mathcal{S}}
+\newcommand{\gF}{\mathcal{F}}
+\newcommand{\gT}{\mathcal{T}}
+\newcommand{\gL}{\mathcal{L}}
+\newcommand{\Reg}{\text{Reg}}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[size=custom,width=36,height=24,scale=1]{beamerposter}
+\usetheme{gemini}
+\usecolortheme{gemini}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\input{paper/macros}
+%\usepackage{enumitem}
+
+\usepackage[skins,theorems]{tcolorbox}
+%\tcbset{colback=white}
+\tcbset{highlight math style={enhanced,colframe=red,colback=white}}
+
+\usepackage{colortbl} % Add this package to use \cellcolor
+\definecolor{lightgreen}{rgb}{0.9, 1, 0.9} % Light green color definition
+
+
+\pgfplotsset{compat=1.14}
+
+% ====================
+% Lengths
+% ====================
+
+% If you have N columns, choose \sepwidth and \colwidth such that
+% (N+1)*\sepwidth + N*\colwidth = \paperwidth
+
+\setlength{\paperwidth}{36in}
+\setlength{\paperheight}{24in}
+
+
+\newlength{\sepwidth}
+\newlength{\colwidth}
+\setlength{\sepwidth}{0.025\paperwidth}
+\setlength{\colwidth}{0.3\paperwidth}
+
+\newcommand{\separatorcolumn}{\begin{column}{\sepwidth}\end{column}}
+
+\newcommand{\cross}[1][1pt]{\ooalign{%
+  \rule[1ex]{1ex}{#1}\cr% Horizontal bar
+  \hss\rule{#1}{.7em}\hss\cr}}% Vertical bar
+
+% ====================
+% Title
+% ====================
+
+\title{Automatic differentiation accelerates inference
+for partially-observed Markov processes}
+
+\author{Kevin Tan \inst{*} \and Giles Hooker \inst{*} \and Edward L. Ionides \inst{\cross[.4pt]$\cdot$}}
+
+\institute[shortinst]{\inst{*} Department of Statistics and Data Science, University of Pennsylvania \quad  \inst{\cross[.4pt]} Department of Statistics, University of Michigan}
+
+% ====================
+% Footer (optional)
+% ====================
+
+\footercontent{
+  \hfill
+   \hfill
+  }
+% (can be left out to remove footer)
+
+% ====================
+% Logo (optional)
+% ====================
+
+% use this to include logos on the left and/or right side of the header:
+ %\logoright{\includegraphics[scale=0.24]{logo1.png}}
+%\logoleft{\includegraphics[scale=2.5]{sci logo.png}}
+
+% ====================
+% Body
+% ====================
+
+\begin{document}
+
+\begin{frame}[t]
+\begin{columns}[t]
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+  \begin{block}{Introduction}
+  
+\textbf{Inference for continuous-time, continuous-state hidden Markov models.}
+
+\begin{tcolorbox}[enhanced,colback=white!100!white,colframe=red!100!red]
+\textbf{\textcolor{red}{Partially-Observed Markov Process (POMP)}}: 
+\begin{itemize}
+    \item Unknown Markov process $\{X_t, t \geq t_0\}$, but we have observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.  
+    \item Given measurements $y_n^*$, estimate both the latent state of the system $x_n$ at timesteps $t_0,...,t_N$ and system parameters $\theta \in \Theta$. 
+\end{itemize}
+\end{tcolorbox}
+e.g. given monthly cholera case counts, estimate number of infected and recovered people in the population, and how transmissible the disease is. 
+
+  \end{block}
+  
+  \begin{block}{Problem}
+  Maximum likelihood with only a simulator, cannot evaluate $f_{X_n|X_{n-1};\theta}$.
+
+  \begin{tcolorbox}[enhanced,colback=white!100!white,colframe=red!100!red]
+  \begin{center}
+      \textbf{Cannot use the EM algorithm!}
+  \end{center}
+\end{tcolorbox}
+
+  \textbf{What to do now?} Particle filters provide a Monte Carlo approximation of the \textbf{filtering distribution} $f_{X_n|Y_{1:n};\theta}$ and the \textbf{log-likelihood} $\ell(\theta)$.
+  
+  \textbf{Gradient descent} using autodiff (AD) on the likelihood estimate? \textcolor{red}{But:}
+  \begin{enumerate}
+      \item Likelihood estimate not differentiable due to Monte Carlo resampling.
+      \item Previous work \cite{corenflos21, naesseth18, scibior21} circumvents this, but computationally expensive, has uncontrolled asymptotic bias, or high variance. 
+  \end{enumerate}
+  \end{block}
+  
+  \begin{alertblock}{Solution: Off-Parameter Resampling}
+
+    \textbf{Reconstruct likelihood} at $\theta$ by cumulatively reweighting particles resampled at a \textbf{baseline parameter} $\phi \in \Theta$. Take gradient at $\theta=\phi$.
+
+    When treating the particles at $\phi$ as constants, you're now differentiating through (1) a differentiable simulator and (2) a series of measurement density ratios, so the resulting likelihood estimate is smooth!
+
+    \textbf{Bias-variance tradeoff:} Discount cumulative reweighting by $\alpha \in [0,1]$.
+
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.5\linewidth]{}
+        \caption{Caption}
+        \label{fig:enter-label}
+    \end{figure}
+  \end{alertblock}
+%Only simulation-based method for maximum likelihood available \cite{ionides15} gets close (\~40 nats) to the MLE quickly, but fails to find it ($\geq 7$ nats away). 
+
+% \vspace{0.5em}
+%  \begin{alertblock}{tl;dr}
+    
+%     \begin{itemize}
+%         \item Modified an optimistic algorithm for general function approximation algorithm called GOLF \cite{jin2021bellmaneluder, xie2022policy}. 
+%         \item Including the offline dataset in parameter estimation achieves provable improvements in regret over pure offline/online learning. 
+%         \vspace{0.5ex}
+%         \item How? Consider {\it arbitrary} (not necessarily disjoint) partitions of the state-action space $\gX_{\off} \cup \gX_{\on} = \gX$.
+%         \begin{itemize}
+%             \item Bound regret by the coverage of the behavior policy on $\gX_{\off}$  and a complexity measure for online learning on $\gX_{\on}$.
+%             \item Overall regret is characterized by the regret bound on the best possible partition -- even if the algorithm is unaware of it. 
+%         \end{itemize}
+%         \item Not specific to DISC-GOLF! Yields a general recipe for initializing generic online RL algorithms with offline data without full coverage.
+%     \end{itemize}
+
+%   \end{alertblock}
+
+\end{column}
+
+
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+  \begin{block}{Complexity Over Partitions}
+
+  \textbf{Observation:} No need to look at the behavior policy's coverage over the whole space for offline learning, just the part it explores well. 
+  
+  So partition the state-action space $\gX = [H] \times \gS \times \gA$ into $\gX_{\off}, \gX_{\on}$, and consider \textbf{partial offline and online complexity measures defined by the restrictions}:
+  
+    \textit{Partial All-Policy Concentrability Coefficient, \textcolor{blue}{restriction in blue}}
+        $$c_{\off}(\gF, \gX_{\off}) 
+    \coloneqq \max_h \sup_{f \in \gF} \frac{\|(f_h - \gT_h f_{h+1}) \tcbhighmath[colframe=blue]{\mathbbm{1}_{(\cdot, h) \in \gX_{\off}}}\|_{2, d_h^\pi}^2}{\|(f_h - \gT_h f_{h+1})\tcbhighmath[colframe=blue]{\mathbbm{1}_{(\cdot, h) \in \gX_{\off}}}\|_{2, \mu_{h}}^2}.$$
+    {\small There exists $\gX_{\off}$ so this is finite, even when the single-policy concentrability coefficient isn't.}
+
+    \textit{Partial Sequential Exploration Coefficient, \textcolor{red}{restriction in red}}
+    $$c_{\on}(\gF, \gX_{\on},T) 
+    \coloneqq \max_{h} \sup_{f^{(t)}} \sup_{\pi^{(t)}} 
+    \left\{\sum_{t=1}^T \frac{ \E_{d_h^{\pi^{(t)}}}[(f_h^{(t)} - \gT_h f_{h+1}^{(t)}) \tcbhighmath[colframe=red]{\mathbbm{1}_{(\cdot, h) \in \gX_{\on}}}]^2}{H^2 \vee \sum_{i=1}^{t-1} \E_{d_h^{\pi^{(i)}}}[(f_h^{(t)} - \gT_h f_{h+1}^{(t)})^2 \tcbhighmath[colframe=red]{\mathbbm{1}_{(\cdot, h) \in \gX_{\on}}}]}\right\}.$$
+
+  \end{block}
+
+    \begin{alertblock}{Punchline}
+        Regret of a hybrid algorithm can be decomposed into two terms depending on the offline and online complexity measures for the best possible partition $\gX_{\on}$ and $\gX_{\off}$ -- despite the algorithm not knowing the best partition, if:
+        \vspace{-3ex}
+        \begin{enumerate}
+            \item The regret can be decomposed into e.g. the sum of bonus terms/Bellman errors over all $h, t$.
+            \item In-sample error/error over offline dataset is bounded.
+            \item The original algorithm has an online-only regret bound.
+        \end{enumerate}
+    \end{alertblock}
+
+\end{column}
+
+\separatorcolumn
+
+\begin{column}{\colwidth}
+
+    \begin{alertblock}{Theorem: One such example of a regret bound}
+\label{thm:regret_bound}
+Let $\gX_{\off}, \gX_{\on}$ be an arbitrary partition over $\gX = \gS \times \gA \times [H]$. 
+If we warm-start the online exploration of GOLF \cite{jin2021bellmaneluder, xie2022role} by appending the offline data to the experience replay buffer at the beginning, the following regret bound holds with probability at least $1-\delta$: 
+\begin{align*}
+    \Reg(T)
+    \lesssim \inf_{\gX_{\on}, \gX_{\off}} \bigg(\underbrace{\sqrt{\beta H^4 c_{\off}(\gF, \gX_{\off})} T^2/N_{\off}}_{\textcolor{blue}{\text{\small{offline term}}}} + \underbrace{\sqrt{\beta H^4 N_{\on} c_{\on}(\gF, \gX_{\on}, T)}}_{\textcolor{red}{\text{\small{online term}}}}\bigg),
+\end{align*} 
+where 
+$\beta = O(\log (N H \mathcal{N}_{\mathcal{F}}(1/N) / \delta))$ and $N = T + N_{\off}$.
+\end{alertblock}
+
+
+
+    % \begin{block}{}
+    %     \textbf{Tabular:} $$\inf_{\gX_{\on}, \gX_{\off}} \Bigg(\sqrt{H^5SAN_{\on}\left(\frac{N_{\on}}{N_{\off}}\right)\sup_{\pi }\left\lVert\frac{d_h^{\pi}\mathbbm{1}_{\gX_{\off}}}{\mu_h^{\pi}}\right\rVert_{\infty}}  
+    % + \sqrt{H^5SA\max_{h \in [H]}|\gX_{\on}|N_{\on}}\Bigg).$$
+
+    % \textbf{Linear:} 
+    % $$\inf_{\gX_{\on}, \gX_{\off}} \Bigg(\sqrt{dH^5N_{\on}\left(\frac{N_{\on}}{N_{\off}}\right)\max_h \frac{1}{\lambda_{d_{\off}}(\E_{\mu_h}[ \phi_{\off}\phi_{\off}^\top])}} + \sqrt{d_{\on}dH^5N_{\on}}\Bigg).$$
+    % \end{block}
+
+  \begin{exampleblock}{Simulations: Hybrid RL Encourages Exploration}
+
+  \textbf{Does appending the offline dataset to the experience replay buffer encourage sufficient exploration for the portion of the state-action space that does not have good coverage?}
+
+  \textbf{Tabular:} Initialized UCBVI \cite{azar2017minimax} with an offline dataset of $100$ trajectories of length $20$ on a forest management simulator. 
+  %Online partition is the state-action pairs with occupancy below $1/SA$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=1]{imgs/095/biasvar.png}
+    \caption{Hybrid RL explores more of the online partition (poorly covered $s,a$) to fill in the gaps in the offline dataset than online RL does, unless the behavior policy is optimal.
+    }
+\end{figure}
+
+    \textbf{Linear:} Initialized LSVI-UCB \cite{jin2020provably} with $200$ trajectories of length $40$ on a scaled-down version of Tetris.
+
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=1]{imgs/095/optim.png}
+    \caption{Hybrid RL takes fewer online episodes than online-only RL to achieve a lower concentrability coefficient.}
+    \label{fig:linear-coverage}
+\end{figure}
+
+
+    
+  \end{exampleblock}
+
+\begin{block}{Further Work}
+    \begin{itemize}
+        \item Improving our regret bound to a guarantee based on partial single-policy concentrability would be valuable.
+        \item GOLF requires Bellman completeness, but maybe we only need realizability if we can use e.g. OLIVE \cite{du2021bilinear}.
+        \item Followup work \cite{tan2024hybridreinforcementlearningbreaks} uses this framework to show provable gains over the online-only regret bound of $\sqrt{d^2H^3T}$ in linear MDPs, 
+        $$\text{Reg}(T) \lesssim \inf _{\mathcal{X}_{\text {off}}, \mathcal{X}_{\text {on}}} \sqrt{c_{\text {off }}\left(\mathcal{X}_{\text {off }}\right)^2 d H^3 T^2 / N_{\text {off}}}+\sqrt{d_{\text {on }} d H^3 T},
+        \vspace{-0.5ex}$$
+        where $d_{\on}$ is the dimension of the online partition.
+    \end{itemize}
+\end{block}
+\vspace{-2ex}
+  
+%\vskip-1ex
+\begin{block}{}
+  \vspace{-0.2em}
+    \tiny{\bibliographystyle{plain}
+    \bibliography{paper/bib-ifad}}
+\end{block}
+
+
+
+  %\vskip-1ex
+  \vspace{0.2em}
+
+  
+  % \begin{block}{Contact Information}
+  % \vskip-0ex
+  %   %\nocite{*}
+  %   \small{{Email Address}: kevtan@wharton.upenn.edu}
+  % \end{block}
+
+\end{column}
+
+\separatorcolumn
+\end{columns}
+\end{frame}
+
+\end{document}
