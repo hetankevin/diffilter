@@ -22,10 +22,12 @@
 \newcommand{\gL}{\mathcal{L}}
 \newcommand{\Reg}{\text{Reg}}
 \usepackage[T1]{fontenc}
+\usepackage{boldline}
 \usepackage{lmodern}
 \usepackage[size=custom,width=36,height=24,scale=1]{beamerposter}
 \usetheme{gemini}
 \usecolortheme{gemini}
+\usepackage{natbib}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{tikz}
@@ -36,6 +38,10 @@
 
 \usepackage[skins,theorems]{tcolorbox}
 %\tcbset{colback=white}
+
+\definecolor{ballblue}{rgb}{0.13, 0.67, 0.8}
+\definecolor{darkred}{RGB}{139,0,0}
+
 \tcbset{highlight math style={enhanced,colframe=red,colback=white}}
 
 \usepackage{colortbl} % Add this package to use \cellcolor
@@ -121,22 +127,22 @@ for partially-observed Markov processes}
 e.g. given monthly cholera case counts, estimate number of infected and recovered people in the population, and how transmissible the disease is. 
 
   \end{block}
-  
-  \begin{block}{Problem}
-  Maximum likelihood with only a simulator, cannot evaluate $f_{X_n|X_{n-1};\theta}$.
 
+  \vspace{-1ex}
+  \begin{block}{Problem}
+  \vspace{-1.6ex}
   \begin{tcolorbox}[enhanced,colback=white!100!white,colframe=red!100!red]
   \begin{center}
-      \textbf{Cannot use the EM algorithm!}
+  Maximum likelihood with only a simulator, cannot evaluate $f_{X_n|X_{n-1};\theta}$. \textbf{Cannot use the EM algorithm!}
   \end{center}
 \end{tcolorbox}
 
-  \textbf{What to do now?} Particle filters provide a Monte Carlo approximation of the \textbf{filtering distribution} $f_{X_n|Y_{1:n};\theta}$ and the \textbf{log-likelihood} $\ell(\theta)$.
+  \textbf{What to do now?} Particle filters provide a Monte Carlo approximation of the \textbf{filtering distribution} $f_{X_n|Y_{1:n};\theta}$ and the \textbf{log-likelihood} $\ell(\theta)$ increasingly accurate in the number of particles $J$. 
   
   \textbf{Gradient descent} using autodiff (AD) on the likelihood estimate? \textcolor{red}{But:}
   \begin{enumerate}
       \item Likelihood estimate not differentiable due to Monte Carlo resampling.
-      \item Previous work \cite{corenflos21, naesseth18, scibior21} circumvents this, but computationally expensive, has uncontrolled asymptotic bias, or high variance. 
+      \item Previous work \cite{corenflos21, naesseth18, scibior21} on this, but computationally expensive \cite{corenflos21}, has uncontrolled asymptotic bias \cite{naesseth18}, or has high variance \cite{poyiadjis11}. 
   \end{enumerate}
   \end{block}
   
@@ -148,13 +154,17 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
 
     \textbf{Bias-variance tradeoff:} Discount cumulative reweighting by $\alpha \in [0,1]$.
 
+  \end{alertblock}
+
+  \vspace{-1ex}
     \begin{figure}
         \centering
-        \includegraphics[width=0.5\linewidth]{imgs/095/mop.png}
-        \caption{Caption}
+        \includegraphics[width=0.45\linewidth]{imgs/095/mop.png}
+        \includegraphics[width=0.405\linewidth]{imgs/095/biasvar.png}
+        \caption{Dhaka cholera model of \cite{king08}. \textbf{Left:} Likelihood slice for the recovery rate parameter, and smooth off-parameter reconstructions for different $\alpha$. \textbf{Right:} Bias-variance tradeoff induced by $\alpha$ for estimation of the score for the trend parameter. }
         \label{fig:enter-label}
     \end{figure}
-  \end{alertblock}
+    
 %Only simulation-based method for maximum likelihood available \cite{ionides15} gets close (\~40 nats) to the MLE quickly, but fails to find it ($\geq 7$ nats away). 
 
 % \vspace{0.5em}
@@ -181,33 +191,75 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
 
 \begin{column}{\colwidth}
 
-  \begin{block}{Complexity Over Partitions}
+  \begin{alertblock}{Guarantees}
 
-  \textbf{Observation:} No need to look at the behavior policy's coverage over the whole space for offline learning, just the part it explores well. 
-  
-  So partition the state-action space $\gX = [H] \times \gS \times \gA$ into $\gX_{\off}, \gX_{\on}$, and consider \textbf{partial offline and online complexity measures defined by the restrictions}:
-  
-    \textit{Partial All-Policy Concentrability Coefficient, \textcolor{blue}{restriction in blue}}
-        $$c_{\off}(\gF, \gX_{\off}) 
-    \coloneqq \max_h \sup_{f \in \gF} \frac{\|(f_h - \gT_h f_{h+1}) \tcbhighmath[colframe=blue]{\mathbbm{1}_{(\cdot, h) \in \gX_{\off}}}\|_{2, d_h^\pi}^2}{\|(f_h - \gT_h f_{h+1})\tcbhighmath[colframe=blue]{\mathbbm{1}_{(\cdot, h) \in \gX_{\off}}}\|_{2, \mu_{h}}^2}.$$
-    {\small There exists $\gX_{\off}$ so this is finite, even when the single-policy concentrability coefficient isn't.}
+  \textbf{Correctness:} This procedure targets the filtering distribution, $\pi_n(\theta) = f_{X_n|Y_{1:n}}(x_n|y_{1:n}^*;\theta)$, and is strongly consistent for the likelihood under $\theta$. 
+  We obtain a set of state estimates $(x_{n,j}^{F,\theta})_{j=1}^J$ and a likelihood estimate $\hat \lik_J(\theta)$ so for any $\alpha\in[0,1]$, for any measurable bounded functional $h$:
+  $$\frac{\sum_{j=1}^J h\left(x_{n, j}^{F, \theta}\right) w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{F, \theta}} \stackrel{\text{a.s.}}{\to} E_{\pi_n(\theta)}\left[h\left(X_n\right)\right], \; \hat{\mathcal{L}}_J^\alpha(\theta) \stackrel{\text{a.s.}}{\to} \mathcal{L}(\theta) \text{ as } J \to \infty.$$
 
-    \textit{Partial Sequential Exploration Coefficient, \textcolor{red}{restriction in red}}
-    $$c_{\on}(\gF, \gX_{\on},T) 
-    \coloneqq \max_{h} \sup_{f^{(t)}} \sup_{\pi^{(t)}} 
-    \left\{\sum_{t=1}^T \frac{ \E_{d_h^{\pi^{(t)}}}[(f_h^{(t)} - \gT_h f_{h+1}^{(t)}) \tcbhighmath[colframe=red]{\mathbbm{1}_{(\cdot, h) \in \gX_{\on}}}]^2}{H^2 \vee \sum_{i=1}^{t-1} \E_{d_h^{\pi^{(i)}}}[(f_h^{(t)} - \gT_h f_{h+1}^{(t)})^2 \tcbhighmath[colframe=red]{\mathbbm{1}_{(\cdot, h) \in \gX_{\on}}}]}\right\}.$$
+  \textbf{Consistent score estimates:} When $\alpha=1$, $\nabla_\theta \hat\ell_J^1(\theta) \stackrel{\text{a.s.}}{\to} \ell(\theta)$ as $J \to \infty$. Else, increasing asymptotic bias as $\alpha \to 0$ in return for lower variance.
 
+  \textbf{Encompasses other estimators:} When $\alpha=0$, $\nabla_\theta \hat\ell_J^0(\theta)$ is equivalent to the low-variance but asymptotically biased estimate of \cite{naesseth18}. When $\alpha=1$, $\nabla_\theta \hat\ell_J^1(\theta)$ is equivalent to the high-variance but consistent estimate of \cite{poyiadjis11}.
+
+  \end{alertblock}
+
+  \vspace{-2ex}
+  \begin{block}{Rates}
+  \vspace{-6.5mm}
+      \begin{table}[t]
+\centering
+\scalebox{0.85}{
+\begin{tabular}{c  c}
+\toprule & MSE 
+\tabularnewline
+\toprule 
+\vspace{0.2ex}
+$\alpha \in (0,1)$ & $\tcbhighmath[colframe=ballblue]{\min_{k \leq N} N p G^{\prime}(\theta)^2(k^2/J+(1-\epsilon)^{\lfloor k /(c \log (J))\rfloor}+k+\psi_k(\alpha))}$
+\vspace{0.2ex}
+\tabularnewline \hline
+\vspace{0.2ex}
+$\alpha=0$, equivalent to \cite{naesseth18} & $N p G'(\theta)^2(J^{-1} + (1-\epsilon)^{\lfloor 1 /(c \log (J))\rfloor})$
+\vspace{0.2ex}
+\tabularnewline
+\hline
+\vspace{0.2ex}
+$\alpha=1$, equivalent to \cite{poyiadjis11} & $N^4pG'(\theta)^2/J$
+\vspace{0.2ex}
+\tabularnewline
+\toprule
+&  Variance
+\tabularnewline
+\toprule\vspace{0.2ex}
+$\alpha \in (0,1)$ & $\tcbhighmath[colframe=ballblue]{\min _{k \leq N}\left(\frac{k^2 p G^{\prime}(\theta)^2 N p}{(1-\alpha)^2 J}+\frac{\alpha^k}{1-\alpha} N p G^{\prime}(\theta)^2\right)}$
+\vspace{0.2ex}
+\tabularnewline \hline
+\vspace{0.2ex}
+$\alpha=0$, equivalent to \cite{naesseth18} & $N p G'(\theta)^2/J$
+\vspace{0.2ex}
+\tabularnewline
+\hline
+\vspace{0.2ex}
+$\alpha=1$, equivalent to \cite{poyiadjis11} & $N^4pG'(\theta)^2/J$
+\vspace{0.2ex}
+\tabularnewline
+\toprule 
+\end{tabular}}
+\medskip
+\caption{Rates given the number of particles $J$, trajectory length $N$, dimension of parameter space $p$, bound on gradient norm $G'(\theta)$, and model-specific constant $\epsilon>0$. We define $\psi_k(\alpha)=\left(\alpha^k+\alpha^{k+1}-\alpha\right) /(1-\alpha)$. Our novel contribution of $\alpha \in (0,1)$ has a lower MSE than, and interpolates between the variances of, $\alpha=0$ \cite{naesseth18} and $\alpha=1$ \cite{poyiadjis11}.}
+\label{tab:bounds}
+\vspace{-5mm}
+\end{table}
   \end{block}
 
-    \begin{alertblock}{Punchline}
-        Regret of a hybrid algorithm can be decomposed into two terms depending on the offline and online complexity measures for the best possible partition $\gX_{\on}$ and $\gX_{\off}$ -- despite the algorithm not knowing the best partition, if:
-        \vspace{-3ex}
-        \begin{enumerate}
-            \item The regret can be decomposed into e.g. the sum of bonus terms/Bellman errors over all $h, t$.
-            \item In-sample error/error over offline dataset is bounded.
-            \item The original algorithm has an online-only regret bound.
-        \end{enumerate}
-    \end{alertblock}
+\begin{block}{Practical Maximum Likelihood Estimation}
+    \textbf{Problem:} Difficult, noisy, and nonconvex problem. Gradient descent/L-BFGS/Newton struggles with saddle points, local minima, and ridges.
+    
+    \textbf{Solution:} Warm-start gradient descent with IF2 algorithm of \cite{ionides15}. IF2 gets to a neighborhood of the MLE quickly, but fails to find it. Gradient descent does well in that neighborhood, warm-start achieves best of both worlds. 
+
+    \textbf{Theoretical guarantee:} 
+
+\end{block}
+
 
 \end{column}
 
@@ -215,27 +267,6 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
 
 \begin{column}{\colwidth}
 
-    \begin{alertblock}{Theorem: One such example of a regret bound}
-\label{thm:regret_bound}
-Let $\gX_{\off}, \gX_{\on}$ be an arbitrary partition over $\gX = \gS \times \gA \times [H]$. 
-If we warm-start the online exploration of GOLF \cite{jin2021bellmaneluder, xie2022role} by appending the offline data to the experience replay buffer at the beginning, the following regret bound holds with probability at least $1-\delta$: 
-\begin{align*}
-    \Reg(T)
-    \lesssim \inf_{\gX_{\on}, \gX_{\off}} \bigg(\underbrace{\sqrt{\beta H^4 c_{\off}(\gF, \gX_{\off})} T^2/N_{\off}}_{\textcolor{blue}{\text{\small{offline term}}}} + \underbrace{\sqrt{\beta H^4 N_{\on} c_{\on}(\gF, \gX_{\on}, T)}}_{\textcolor{red}{\text{\small{online term}}}}\bigg),
-\end{align*} 
-where 
-$\beta = O(\log (N H \mathcal{N}_{\mathcal{F}}(1/N) / \delta))$ and $N = T + N_{\off}$.
-\end{alertblock}
-
-
-
-    % \begin{block}{}
-    %     \textbf{Tabular:} $$\inf_{\gX_{\on}, \gX_{\off}} \Bigg(\sqrt{H^5SAN_{\on}\left(\frac{N_{\on}}{N_{\off}}\right)\sup_{\pi }\left\lVert\frac{d_h^{\pi}\mathbbm{1}_{\gX_{\off}}}{\mu_h^{\pi}}\right\rVert_{\infty}}  
-    % + \sqrt{H^5SA\max_{h \in [H]}|\gX_{\on}|N_{\on}}\Bigg).$$
-
-    % \textbf{Linear:} 
-    % $$\inf_{\gX_{\on}, \gX_{\off}} \Bigg(\sqrt{dH^5N_{\on}\left(\frac{N_{\on}}{N_{\off}}\right)\max_h \frac{1}{\lambda_{d_{\off}}(\E_{\mu_h}[ \phi_{\off}\phi_{\off}^\top])}} + \sqrt{d_{\on}dH^5N_{\on}}\Bigg).$$
-    % \end{block}
 
   \begin{exampleblock}{Simulations: Hybrid RL Encourages Exploration}
 
@@ -264,16 +295,7 @@ $\beta = O(\log (N H \mathcal{N}_{\mathcal{F}}(1/N) / \delta))$ and $N = T + N_{
     
   \end{exampleblock}
 
-\begin{block}{Further Work}
-    \begin{itemize}
-        \item Improving our regret bound to a guarantee based on partial single-policy concentrability would be valuable.
-        \item GOLF requires Bellman completeness, but maybe we only need realizability if we can use e.g. OLIVE \cite{du2021bilinear}.
-        \item Followup work \cite{tan2024hybridreinforcementlearningbreaks} uses this framework to show provable gains over the online-only regret bound of $\sqrt{d^2H^3T}$ in linear MDPs, 
-        $$\text{Reg}(T) \lesssim \inf _{\mathcal{X}_{\text {off}}, \mathcal{X}_{\text {on}}} \sqrt{c_{\text {off }}\left(\mathcal{X}_{\text {off }}\right)^2 d H^3 T^2 / N_{\text {off}}}+\sqrt{d_{\text {on }} d H^3 T},
-        \vspace{-0.5ex}$$
-        where $d_{\on}$ is the dimension of the online partition.
-    \end{itemize}
-\end{block}
+
 \vspace{-2ex}
   
 %\vskip-1ex
