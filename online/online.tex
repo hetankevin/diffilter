@@ -1,0 +1,49 @@
+\documentclass{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{positioning}
+
+\setlist{nosep} % to reduce space in lists
+
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0in}
+
+\input{paper/macros}
+
+\newcommand{\off}{\operatorname{off}}
+\newcommand{\on}{\operatorname{on}}
+
+\title{Online Gradient Methods for State and Parameter Estimation in State Space Models}
+\author{Kevin Tan, Giles J. Hooker, Edward L. Ionides}
+\date{}
+
+\comments=1
+
+\begin{document}
+\maketitle
+\begin{abstract}
+
+Previous work has focused on obtaining score estimates that balance a bias-variance tradeoff in the batch setting, where one filters through the entire history of observations repeatedly to perform maximum likelihood parameter estimation. We develop an extension for the online setting, where one is interested in inferring both the state of the system as well as performing system identification. We show that the online extension of the MOP-$\alpha$ algorithm of \cite{tan2024acceleratedinferencepartiallyobserved} has a natural interpretation as online gradient descent with momentum, and derive a version of Nesterov's accelerated gradient using this interpretation. Moreover, we show that constructing this estimate using the bootstrap filter bypasses the limitations of the linearly increasing variance of the online high-variance score estimate from \cite{poyiadjis11}. Numerical experiments on robot localization, autonomous driving, and disease modeling illustrate the effectiveness of our approach.
+\end{abstract}
+
+\section{Introduction}
+
+
+$\sum_{n=1}^t \alpha^{t-n}  \nabla_{\theta_t} \log f_{Y_n|X_n}(y_n^*|x_{n,j}^F\theta_t)$ against $\sum_{n=1}^t \alpha^{t-n} \nabla_{\theta_n} \ell_n(\theta_n)$, where the former corresponds to the MOP-$\alpha$ estimate for the score of the whole trajectory seen so far, while the latter corresponds to the SGD with momentum gradient update. The former requires refiltering through the trajectory seen so far to construct the gradient estimate for the log-likelihood at $\theta_t$, while the latter only requires taking the gradient of the log-measurement density observed at time $t$.
+
+
+Weird observation -- online MOP-$1$ according to Poyiadjis is is MOP-$0$ applied sequentially, in the case of the bootstrap filter. MOP-$1$ sums the log-densities of the surviving particles, while MOP-$0$ sums the log-densities of the particles at each timestep. 
+
+
+\bibliography{paper/bib-ifad}
+\bibliographystyle{apalike}
+
+\appendix
+\renewcommand{\thefigure}{A\arabic{figure}}
+\setcounter{figure}{0}
+
+\end{document}
