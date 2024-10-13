@@ -110,39 +110,38 @@
 Many scientific models involve highly nonlinear stochastic dynamic systems possessing significant random variation in both the process dynamics and the measurements.
 Commonly, the latent system is modeled as a Markov process, giving rise to a partially observed Markov process (POMP) model, also known as a hidden Markov models or a state space model.
 POMP models arise in fields as diverse as optimal control \citep{singh22}, epidemiology \citep{he10, stocks17}, ecology \citep{knape12} and finance \citep{kim08, breto14}.
-Despite their ubiquity, estimation and inference within this broad class of models remains a challenging problem.
-To tackle this, we use automatic differentiation (AD) to construct improved algorithms for inference on complex POMP models.
+Despite their ubiquity, estimation and inference for this broad class of models remains a challenging problem.
+To tackle this, we use automatic differentiation (AD) to construct improved algorithms for complex POMP models.
 
 The particle filter, also known as sequential Monte Carlo, serves as the foundation for various inference algorithms for POMP models.
 It provides an unbiased estimate of the likelihood function  \citep{delMoral04}, enabling Bayesian inference \citep{andrieu10,chopin13} and likelihood-based inference \citep{ionides06-pnas,ionides15}.
-This is desirable, as likelihood-based inference is statistically efficient \citep{pawitan01} and robust to a moderate amount of Monte Carlo error \citep{ionides17,ning21}.
-Furthermore, basic particle filter algorithms, also known as boostrap filters, do not require evaluation of the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
+Likelihood-based inference is statistically efficient \citep{pawitan01} and robust to a moderate amount of Monte Carlo error \citep{ionides17,ning21}.
+Furthermore, basic particle filters, also known as boostrap filters, do not need to evaluate the transition density of the latent Markov process, enabling an arbitrary model simulator to be plugged into the algorithm.
+
 This \textit{plug-and-play} property is useful for scientific applications \citep{he10}.
 Some plug-and-play methods depend on the construction of low-dimensional summary statistics \citep{wood10,toni09}, sacrificing statistical efficiency for computational convenience.
 Plug-and-play methods are often called likelihood-free \citep{owen15}, and it may be counter-intuitive that likelihood-based inference is possible using likelihood-free methods. 
-However, iterated filtering algorithms have shown that this is practical in various scientific investigations, such as \citep{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
+However, iterated filtering algorithms have shown that this is practical in various scientific investigations \citep{king08,blake14,pons-salort18,subramanian21,fox22,drake23}.
 Nevertheless, the Monte Carlo variability arising in iterated filtering applications becomes increasingly problematic as the size of the data and the complexity of the model increase.
 Algorithmic advances are needed to make plug-and-play likelihood maximization for POMPs more numerically efficient.
 
 
 We examine plug-and-play AD as a tool to do so by providing a likelihood gradient. Recent advances in AD for particle filters \citep{naesseth18, jonschkowski18, corenflos21, scibior21, singh22} have drawn attention to AD as a tool for inference in POMP models.
-However, existing approaches are either asymptotically biased \citep{naesseth18, jonschkowski18}, have high variance \citep{poyiadjis11, scibior21}, are computationally expensive \citep{corenflos21, chen24}, or require access to transition densities \citep{poyiadjis11, scibior21, singh22, chen24}. \cite{scibior21} showed that the estimators derived by \cite{poyiadjis11} can be attained with standard AD software using an algorithmic procedure, called a {\it stop-gradient}, which allows selected expressions to be evaluated but not differentiated.
+However, existing approaches are either asymptotically biased \citep{naesseth18, jonschkowski18}, have high variance \citep{poyiadjis11, scibior21}, are computationally expensive \citep{corenflos21, chen24}, or require access to transition densities \citep{poyiadjis11, scibior21, singh22, chen24}. 
 
-However, the algorithm of \cite{scibior21} that can be modified to have the plug-and-play property recovers an estimator with high Monte Carlo variability \citep{poyiadjis11}. Additionally, while the stop-gradient procedure is undeniably effective, the reason why the correction recovers the \cite{poyiadjis11} estimator remains somewhat unclear.
-We use \cite{scibior21} and \cite{poyiadjis11} as our starting point in developing a new approach remedying these issues.
+\cite{scibior21} showed that the estimators derived by \cite{poyiadjis11} can be attained with standard AD software using an algorithmic procedure, called a {\it stop-gradient}, which allows selected expressions to be evaluated but not differentiated.
+However, the algorithm of \cite{scibior21} that can be modified to have the plug-and-play property recovers an estimator with high Monte Carlo variability, which led the authors to reject this algorithm in favor of an approach without the plug-and-play property and with poorer scalability.
 
-We start by presenting a new construction of the gradient estimator of \cite{scibior21} and \cite{poyiadjis11}.
-Specifically, we show how this estimator can be derived as the direct derivative of a suitably weighted particle filter, which (for reasons which will be discussed later) we call a {\it Measurement Off-Parameter} (MOP) particle filter. 
-In short, \textit{instead of directly differentiating through a basic particle filter, MOP uses AD to differentiate through a series of measurement density ratios and a differentiable simulator}. 
+We start by presenting a new algorithm which (for reasons which will be discussed later) we call a {\it Measurement Off-Parameter} (MOP) particle filter. 
+In summary, \textit{instead of directly differentiating through a basic particle filter, MOP uses AD to differentiate through a series of measurement density ratios and a differentiable simulator}. 
 Our MOP algorithm differs from previous smooth particle filters \citep{svensson18,malik11} by possessing the plug-and-play property.
 Critically, we also avoid the high variance of \cite{svensson18} by generalizing the MOP particle filter to add a discount factor, $\alpha \in [0,1]$.
-This discount factor enables MOP-$\alpha$ to interpolate between the  biased gradient estimator of \cite{naesseth18}, when $\alpha=0$, and the high-variance gradient estimate from \citep{poyiadjis11, scibior21}, when $\alpha=1$ (Theorem \ref{thm:mop-functional-forms}).
+Remarkably, we show that the derivative of our algorithm coincides with the biased gradient estimator of \cite{naesseth18}, when $\alpha=0$, and the high-variance gradient estimate from \citep{poyiadjis11, scibior21}, when $\alpha=1$ (Theorem \ref{thm:mop-functional-forms}).
 The bias-variance tradeoff induced by $\alpha$ suggests, both in theory (Theorem \ref{thm:mop-biasvar}) and in practice (Figure \ref{fig:biasvar}), a choice of $\alpha$ strictly in $(0,1)$.
+Choosing $\alpha$ close to one, we obtain a low-bias, low-variance, plug-and-play gradient estimate with computational scaling linear in the number of particles.
 
-% One can simply drop terms arising from resampling when differentiating through the particle filter \cite{naesseth18}, but this leads to asymptotic bias \cite{corenflos21}.
-% Instead, MOP-$\alpha$ bypasses the seemingly incompatible paradox of differentiating through discrete Monte Carlo sampling by instead using AD to differentiate through a series of measurement density ratios and a differentiable simulator.
 MOP-$\alpha$ can provide strongly consistent estimates of the filtering distribution and the log-likelihood (Theorem \ref{thm:mop-targeting}).
-When $\alpha=1$, MOP-$\alpha$ also provides consistent score estimates (Theorem \ref{thm:mop-grad-consistency}). This enables us to derive a linear convergence rate for gradient descent using MOP-$\alpha$ in the  presence of strong convexity and smoothness (Theorem \ref{thm:mop-convergence}).
+When $\alpha=1$, MOP-$\alpha$ also provides consistent score estimates (Theorem \ref{thm:mop-grad-consistency}). This lets us derive a linear convergence rate for gradient descent with MOP-$\alpha$ in the strongly convex and smooth setting (Theorem \ref{thm:mop-convergence}).
 
 In practice, gradient descent with MOP-$\alpha$ converges quickly within a neighborhood of the maximum but struggles to reach this neighborhood in the presence of local minima and saddle points.
 That behavior is complementary to that of iterated filtering algorithms \citep{ionides06-pnas,ionides15} which provide a relatively fast and stable way to identify this neighborhood.
@@ -154,8 +153,6 @@ These improvements also extend to Bayesian inference. In Section \ref{sec:bayes}
 \arxiv{}{\vspace*{-2mm}}
 \section{Problem Setup}
 
-Consider an unobserved Markov process $\{X(t),t  \geq t_0\}$, with discrete-time observations $Y_1,...,Y_N$ realized at values $y_1^*,...,y_N^*$ at times $t_1,..., t_N$.
-The process is parameterized by an unknown parameter $\theta \in \Theta \subseteq \R^p$, where the state $X(t)$ take values in the state space $\gX \subseteq \R^d$, the observations $Y_n$ take values in $\gY,$ and we write $X_n := X(t_n)$. 
 
 % By a similar decomposition to that in \cite{doucet2009tutorial}, we find that the joint density of $X_{0:N}, Y_{1:N}$ can be factored as
 % \begin{align*}
@@ -163,13 +160,15 @@ The process is parameterized by an unknown parameter $\theta \in \Theta \subsete
 %     &=f_{X_0}\left(x_0 ; \theta\right) \prod_{n=1}^N f_{X_n \mid X_{n-1}}\left(x_n \mid x_{n-1} ; \theta\right) f_{Y_n \mid X_n}\left(y_n \mid x_n ; \theta\right).
 % \end{align*}
 
-We suppose that the discrete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$.
+
+
+Consider an unobserved Markov process $\{X(t),t  \geq t_0\}$, with discrete-time observations $Y_1,...,Y_N$ realized at values $y_1^*,...,y_N^*$ at times $t_1,..., t_N$.
+The process is parameterized by an unknown parameter $\theta \in \Theta \subseteq \R^p$, where the state $X(t)$ takes values in the state space $\gX \subseteq \R^d$, the observations $Y_n$ take values in $\gY,$ and we write $X_n := X(t_n)$. We suppose that the discrete-time latent process model has a density $f_{X_n|X_{n-1}}\left(x_{n} \mid x_{n-1}; \theta\right)$.
 The existence of this density is necessary to define the likelihood function, but plug-and-play algorithms do not explicitly evaluate this density.
 Instead, they have access to a corresponding simulator, which we, write as $\process_n\left(x_n\mid x_{n-1}; \theta\right)$.
 We set $f_{Y_n|X_n}\left(y_n \mid x_n; \theta\right)$ to be the measurement density, which  can be directly evaluated. We write $y_n^*$ for the actual values of the observations that were observed.
 We call $f_{X_{1:n}|Y_{1:n}}(x_{1:n}|y_{1:n}^*; \theta)$ the posterior distribution of states, and $f_{X_{n}|Y_{1:n}}(x_n|y_{1:n}^*; \theta)$ the filtering distribution at time $t_n$.
-$x_{n,j}^A$ denotes the ancestral trajectory of particle $j$ at time $n$,  and $k_j$
-denotes the resampling indices for particle $j$. 
+$x_{n,j}^A$ denotes the ancestral trajectory of particle $j$ at time $n$,  and $k_j$ the resampling indices for particle $j$. 
 %$a(\cdot)$ is the ancestor function that maps a particle to its parent, $j \mapsto a(j)$,
 
 The above densities are defined on a probability space $(\Omega, \Sigma, \prob)$ which is assumed to enable construction of independent replicates and all random variables defined in our algorithms.
@@ -196,6 +195,7 @@ This is intended as an analogy to {\it off-policy} learning in reinforcement lea
 Specifically, MOP-$\alpha$ evaluates the likelihood at some $\theta \in \Theta$, but instead resamples the particles according to the indices generated by a particle filter run at a {\it baseline parameter}, $\phi \in \Theta$.
 This ensures that the resampling indices are invariant in $\theta$ when $\omega$ and $\phi$ are fixed, bypassing the issue of Monte Carlo resampling.
 
+One can think of this as reconstructing local smooth approximations of the discontinuous likelihood estimates produced by a particle filter for a fixed number of particles $J$ and fixed seed $\omega$. These approximate the likelihood at $\theta$ in a neighborhood around $\phi$, with the intent that differentiating these smooth log-likelihood reconstructions yields a score estimate. This is illustrated in the left panel of Figure \ref{fig:biasvar} for various choices of $\alpha$. 
 
 Our approach has similarities with \cite{svensson18}, in which particles from a previous run at $\phi$ are reweighted to evaluate the likelihood at any sufficiently nearby parameter $\theta$ for $0$-th order optimization.
 However, their method is not plug-and-play because they use transition densities to reweight particles, and the variance of their log-likelihood estimate is $O(||\theta - \phi||_2^{2N})$ with an exponential dependence in the horizon. Our approach bypasses these issues -- the first with the \textit{reparameterization trick} to consider particle paths dependent only on $\theta$, and the second as using AD allows us to only evaluate the likelihood and score estimates when $\theta=\phi$. 
@@ -210,7 +210,7 @@ However, their method is not plug-and-play because they use transition densities
 \begin{algorithm}[htbp!]
 	\caption{MOP-$\alpha$}
     \label{alg:mop}
-	     \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process_n(x_{n+1}|x_n; \theta)$, evaluation parameter $\theta$, behavior parameter $\phi$, seed $\omega$.
+	     \textbf{Input:} Number of particles $J$, timesteps $N$, measurement model $f_{Y_n|X_n}(y_n^*|x_n, \theta)$, simulator $\process_n(\cdot|x_n; \theta)$, evaluation parameter $\theta$, baseline parameter $\phi$, seed $\omega$.
       
         \textbf{First pass:} Set $\theta=\phi$ and fix $\omega$, yielding $X_{n,j}^{P,\phi}$, $X_{n,j}^{F,\phi}$, $g^{\phi}_{n,j}$.
             
@@ -289,7 +289,7 @@ When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recover
     \vspace*{-2.5mm}
     \begin{equation} \nonumber
         \nabla_\theta \hat\ell^0(\theta) 
-        = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log\left(f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta)\right),
+        = \frac{1}{J} \sum_{n=1}^N \sum_{j=1}^J \nabla_\theta \log f_{Y_n|X_{n}}(y_n^*|x_{n,j}^{F, \theta}; \theta),
         \vspace*{-2.5mm}
     \end{equation}
     yielding \cite{naesseth18}'s estimator with the bootstrap filter. When $\alpha=1$,
@@ -299,7 +299,7 @@ When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recover
         = \frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}|X_{1:N}}\left(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}\right),
     \vspace*{-2.5mm}
     \end{equation}
-    yielding the estimator of \cite{poyiadjis11, scibior21} for the bootstrap filter.
+    yielding the estimator of \cite{poyiadjis11} for the bootstrap filter.
 \end{thm}
 
 We defer the proof to \arxiv{Appendix~\ref{appendix:functional}}{the supplementary material}. 
@@ -317,7 +317,7 @@ The result in Theorem \ref{thm:mop-functional-forms} provides mathematical intui
   \centering
     \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2}}]{imgs/095/mop.png}
     \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.2}}]{imgs/095/biasvar.png}
-    \caption{\textbf{Left:} Non‐differentiable likelihood estimates and our smooth off‐parameter reconstructions. \textbf{Right:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission at the MLE.}
+    \caption{\textbf{Left:} Non‐differentiable likelihood estimates and our smooth off‐parameter approximations that hold locally around the baseline parameter $\phi$. \textbf{Right:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission at the MLE. Our novel contribution of $\alpha \in (0,1)$ significantly improves the quality of the likelihood approximation, and therefore the gradient estimates. }
     \label{fig:biasvar}
     \arxiv{}{\vspace*{-1ex}}
 \end{figure}
@@ -443,7 +443,7 @@ where $M_n=\gamma\int_{t_{n-1}}^{t_n}I(s)\, ds$ is the modeled cholera deaths in
 \subsection{Results}
 
 We tested IFAD against IF2 on a global search problem for the Dhaka cholera model.
-We re-implemented IF2 to do so, but we also compare our results with the results of \cite{ionides15} (labeled "IF2 2015").
+We re-implemented IF2 to do so, but we also compare our results with the results of \cite{ionides15} (labeled ``IF2 2015'').
 Our re-implementation reaches a better log-likelihood than that of \cite{ionides15} due to a better choice of algorithmic parameters.
 For each method, we performed 100 searches, initialized with 100 starting parameter vectors drawn uniformly from the same wide bounding box used in \cite{ionides15}. We summarize our findings below. 
 

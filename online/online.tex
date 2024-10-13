@@ -35,9 +35,22 @@ Previous work has focused on obtaining score estimates that balance a bias-varia
 
 $\sum_{n=1}^t \alpha^{t-n}  \nabla_{\theta_t} \log f_{Y_n|X_n}(y_n^*|x_{n,j}^F\theta_t)$ against $\sum_{n=1}^t \alpha^{t-n} \nabla_{\theta_n} \ell_n(\theta_n)$, where the former corresponds to the MOP-$\alpha$ estimate for the score of the whole trajectory seen so far, while the latter corresponds to the SGD with momentum gradient update. The former requires refiltering through the trajectory seen so far to construct the gradient estimate for the log-likelihood at $\theta_t$, while the latter only requires taking the gradient of the log-measurement density observed at time $t$.
 
+That is, the online MOP-$\alpha$ update is given by
+$$\theta_{t+1} \gets \theta_t + \eta_t \sum_{n=1}^t \alpha^{t-n} \nabla_{\theta_n} \ell_n(\theta_n),$$
+which, defining $m_t = $ can be written 
+
+\begin{gathered}
+\theta_{t+1}=\theta_t+\mu_t v_t-\varepsilon_t \nabla f\left(\theta_t\right) \\
+v_{t+1}=\mu_t v_t-\varepsilon_t \nabla f\left(\theta_t\right)
+\end{gathered}
 
 Weird observation -- online MOP-$1$ according to Poyiadjis is is MOP-$0$ applied sequentially, in the case of the bootstrap filter. MOP-$1$ sums the log-densities of the surviving particles, while MOP-$0$ sums the log-densities of the particles at each timestep. 
 
+Note that the particles now depend on past parameter values -- $x_{n,j}^{F, \theta_{1:n,j}}$
+
+Nesterov may not buy you much in the general adversarial online convex optimization setting, but if we have some stationarity+mixing assumptions on the system, then the losses are effectively the same in some sense! Maybe there is some sense of acceleration we can achieve here. 
+
+Question -- MOP-0 is inconsistent, but presumably the online analogue that optimizes conditional log-likelihoods yields a consistent estimate. What's with this? Does taking the online gradient imply we ignore the resampling gradient when thought of as a batch update?
 
 \bibliography{paper/bib-ifad}
 \bibliographystyle{apalike}
