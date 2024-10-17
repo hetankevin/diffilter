@@ -130,7 +130,7 @@ We examine plug-and-play AD as a tool to do so by providing a likelihood gradien
 However, existing approaches are either asymptotically biased \citep{naesseth18, jonschkowski18}, have high variance \citep{poyiadjis11, scibior21}, are computationally expensive \citep{corenflos21, chen24}, or require access to transition densities \citep{poyiadjis11, scibior21, singh22, chen24}. 
 
 \cite{scibior21} showed that the estimators derived by \cite{poyiadjis11} can be attained with standard AD software using an algorithmic procedure, called a {\it stop-gradient}, which allows selected expressions to be evaluated but not differentiated.
-However, the algorithm of \cite{scibior21} that can be modified to have the plug-and-play property recovers an estimator with high Monte Carlo variability, which led the authors to reject this algorithm in favor of an approach without the plug-and-play property and with poorer scalability.
+However, the algorithm of \cite{scibior21} that can be modified to have the plug-and-play property recovers an estimator with high Monte Carlo variability, which led the authors to reject this algorithm in favor of an approach without the plug-and-play property and with inferior scalability.
 
 We start by presenting a new algorithm which (for reasons which will be discussed later) we call a {\it Measurement Off-Parameter} (MOP) particle filter. 
 In summary, \textit{instead of directly differentiating through a basic particle filter, MOP uses AD to differentiate through a series of measurement density ratios and a differentiable simulator}. 
@@ -378,7 +378,7 @@ This result shows that particle estimates for the gradient can enjoy the same li
 
 We therefore see that the second stage of IFAD converges linearly to the MLE if (1) the log-likelihood surface is well-conditioned in a neighborhood of the MLE and (2) the first stage of IFAD successfully reaches a (high-probability) basin of attraction of the MLE.
 Within a neighborhood of the MLE that grows as more data become available \citep{ning21}, local quadratic approximations such as local asymptotic normality apply under general conditions \citep{lecam00}.
-This suggests that the linear convergence may occur reasonably often in practice.
+This suggests that the linear convergence may occur often in practice.
 
 %% This happens fairly often in practice, for example, when local asymptotic normality of the MLE holds. We conjecture that this applies to the entirety of IFAD, as IF2 converges very quickly to a neighborhood of the MLE, and will explore this in future work.
 
@@ -392,7 +392,7 @@ This suggests that the linear convergence may occur reasonably often in practice
 	\caption{IFAD}
     \label{alg:ifad}
 	    \textbf{Input:} Number of particles $J$, timesteps $N$, IF2 cooling schedule $\eta_m$, MOP-$\alpha$ discounting parameter $\alpha$, $\theta_0$, $m=0.$\newline
-        Run IF2 until initial "convergence" under cooling schedule $\eta_m$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_m := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
+        Run IF2 until initial ``convergence'' under cooling schedule $\eta_m$ to obtain $\{\Theta_j, j=1,...,J\}$, set $\theta_m := \frac{1}{J}\sum_{j=1}^J \Theta_j.$\newline
 		\textbf{While} procedure not converged: \newline
 		\hspace*{4mm} Run Algorithm \ref{alg:mop} to obtain $\hat\loglik(\theta_m).$ \newline
 		\hspace*{4mm} $g(\theta_m) := \nabla_{\theta}(-\hat\loglik(\theta_m))$, $H(\theta_m)$ s.t. $\lambda_{\min}(H(\theta_m)) \geq c$. \newline
