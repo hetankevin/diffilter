@@ -36,7 +36,7 @@
 %% optional argument [theorem] produces theorem numbering sequence instead of independent numbers for Proposition
 \newtheorem{proposition}[theorem]{Proposition}%
 %%\newtheorem{proposition}{Proposition}% to get separate numbers for theorem and proposition etc.
-\theoremstyle{thmstyletwo}%
+\theoremstyle{thmstyletwo}%w
 \newtheorem{example}{Example}%
 \newtheorem{remark}{Remark}%
 \theoremstyle{thmstylethree}%
@@ -51,6 +51,7 @@
 \AtEndDocument{\refstepcounter{defn}\label{finaldefn}}
 \AtEndDocument{\refstepcounter{prop}\label{finalprop}}
 \AtEndDocument{\refstepcounter{aspt}\label{finalaspt}}
+\AtEndDocument{\refstepcounter{figure}\label{finalfig}}
 
 
 \begin{document}

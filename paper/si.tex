@@ -1,7 +1,30 @@
 \documentclass[numsec,webpdf,modern,medium,namedate]{oup-authoring-template}
+\onecolumn
 
+
+\usepackage{booktabs}
+\newcommand{\description}{}
+\usepackage{enumitem}
+\usepackage{tabto}
+
+\theoremstyle{thmstyleone}%
+\newtheorem{theorem}{Theorem}%  meant for continuous numbers
+%%\newtheorem{theorem}{Theorem}[section]% meant for sectionwise numbers
+%% optional argument [theorem] produces theorem numbering sequence instead of independent numbers for Proposition
+\newtheorem{proposition}[theorem]{Proposition}%
+%%\newtheorem{proposition}{Proposition}% to get separate numbers for theorem and proposition etc.
+\theoremstyle{thmstyletwo}%
+\newtheorem{example}{Example}%
+\newtheorem{remark}{Remark}%
+\theoremstyle{thmstylethree}%
+\newtheorem{definition}{Definition}
+\usepackage[doublespacing]{setspace}
+\usepackage[fontsize=12pt]{fontsize}
+
+
+\input{macros}
 % Use the lineno option to display guide line numbers if required.
-\usepackage{xr}
+\usepackage{xr, refcount}
 \makeatletter
 \newcommand*{\addFileDependency}[1]{% argument=file name and extension
   \typeout{(#1)}
@@ -17,44 +40,66 @@
 }
 \externaldocument{ms}
 
-%\templatetype{pnassupportinginfo}
-\input{macros}
-\usepackage{refcount}
 
-\setcounter{thm}{\getrefnumber{finalthm}}
-\addtocounter{thm}{-1}
 
-\setcounter{lem}{\getrefnumber{finallem}}
-\addtocounter{lem}{-1}
 
-\setcounter{defn}{\getrefnumber{finaldefn}}
-\addtocounter{defn}{-1}
 
-\setcounter{prop}{\getrefnumber{finalprop}}
-\addtocounter{prop}{-1}
+\journaltitle{Journals of the Royal Statistical Society}
+\DOI{DOI HERE}
+\copyrightyear{XXXX}
+\pubyear{XXXX}
+\access{Advance Access Publication Date: Day Month Year}
+\appnotes{Original article}
 
-\setcounter{aspt}{\getrefnumber{finalaspt}}
-\addtocounter{aspt}{-1}
+\firstpage{1}
+
+%\subtitle{Subject Section}
+\title[AD for POMPs]{Web-Based Supporting Materials for Automatic Differentiation Accelerates Inference for Partially Observed Markov Processes}
+
+\author[1,$\ast$]{Kevin Tan}
+\author[1]{Giles Hooker}
+\author[2]{Edward L. Ionides}
+%\author[4]{Fifth Author\ORCID{0000-0000-0000-0000}}
+\authormark{Tan et al.}
+
+\address[1]{\orgdiv{Department of Statistics and Data Science}, \orgname{University of Pennsylvania}, \orgaddress{\street{265 South 37th Street, 3rd \& 4th Floors}, \postcode{19104}, \state{Pennsylvania}, \country{United States of America}}}
+\address[2]{\orgdiv{Department of Statistics}, \orgname{University of Michigan}, \orgaddress{\street{323 West Hall, 1085 S University Ave}, \postcode{48109}, \state{Michigan}, \country{United States of America}}}
+
+\corresp[$\ast$]{Address for correspondence. Kevin Tan, University of Pennsylvania, Philadelphia, 19104, USA. \href{Email:kevtan@wharton.upenn.edu}{kevtan@wharton.upenn.edu}}
+
+% \received{Date}{0}{Year}
+% \revised{Date}{0}{Year}
+% \accepted{Date}{0}{Year}
+\AtBeginDocument{\setcounter{thm}{\getrefnumber{finalthm}}}
+\AtBeginDocument{\setcounter{lem}{\getrefnumber{finallem}}}
+\AtBeginDocument{\setcounter{defn}{\getrefnumber{finaldefn}}}
+\AtBeginDocument{\setcounter{prop}{\getrefnumber{finalprop}}}
+\AtBeginDocument{\setcounter{aspt}{\getrefnumber{finalaspt}}}
+\AtBeginDocument{\setcounter{figure}{\getrefnumber{finalfig}}}
+
 
 \begin{document}
 
-
-\title{Automatic Differentiation Accelerates Inference for Partially Observed Markov Processes}
-\author{Kevin Tan, Giles Hooker, Edward L. Ionides}
-\correspondingauthor{Corresponding Author name.\\E-mail: ionides@umich.edu}
+%\addtocounter{thm}{-1}
 
 
+%\addtocounter{lem}{-1}
+
+
+%\addtocounter{defn}{-1}
+
+
+%\addtocounter{prop}{-1}
+
+
+%\addtocounter{aspt}{-1}
 
 
 
-%% Comment out or remove this line before generating final copy for submission; this will also remove the warning re: "Consecutive odd pages found".
-%\instructionspage  
+\abstract{Although automatic differentiation (AD) has driven many recent advances in machine learning, partially observed nonlinear stochastic dynamical systems have proved resistant to AD techniques because widely used particle filter algorithms yield an estimated likelihood that is discontinuous in the model parameters. To resolve this, we create a theoretical framework that embeds two existing AD particle filter methods within a new class of algorithms. This new class permits a bias-variance tradeoff and a mean squared error substantially lower than the existing algorithms. This allows us to develop likelihood maximization algorithms suited to the Monte Carlo properties of the AD gradient estimate. Our algorithms require only a differentiable simulator for the latent dynamic system while most previous approaches require access to the system's transition probabilities. Numerical results show that using AD to refine a coarse solution from an iterated filtering algorithm shows substantial improvement on current state-of-the-art methods on a challenging scientific benchmark problem.}
+
 
 \maketitle
-
-%% Adds the main heading for the SI text. Comment out this line if you do not have any supporting information text.
-\SItext
-
 
 
 
@@ -92,6 +137,8 @@
 
 %%% Each figure should be on its own page
 
+\bibliographystyle{apalike}
 \bibliography{paper/bib-ifad}
+
 
 \end{document}
