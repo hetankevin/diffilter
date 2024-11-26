@@ -117,4 +117,25 @@
 \def\gX{{\mathcal{X}}}
 \def\gY{{\mathcal{Y}}}
 
+\usepackage{placeins}
+% \makeatletter
+% \newcommand*{\addFileDependency}[1]{% argument=file name and extension
+% \typeout{(#1)}% latexmk will find this if $recorder=0
+% % however, in that case, it will ignore #1 if it is a .aux or 
+% % .pdf file etc and it exists! If it doesn't exist, it will appear 
+% % in the list of dependents regardless)
+% %
+% % Write the following if you want it to appear in \listfiles 
+% % --- although not really necessary and latexmk doesn't use this
+% %
+% \@addtofilelist{#1}
+% %
+% % latexmk will find this message if #1 doesn't exist (yet)
+% \IfFileExists{#1}{}{\typeout{No file #1.}}
+% }\makeatother
 
+% \newcommand*{\myexternaldocument}[1]{%
+% \externaldocument{#1}%
+% \addFileDependency{#1.tex}%
+% \addFileDependency{#1.aux}%
+% }

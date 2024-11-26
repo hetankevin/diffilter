@@ -22,10 +22,21 @@
 \newcommand{\gL}{\mathcal{L}}
 \newcommand{\Reg}{\text{Reg}}
 \usepackage[T1]{fontenc}
+<<<<<<< HEAD
+=======
+%\renewcommand{\thefootnote}{\arabic{footnote}}
+\usepackage{boldline}
+\usepackage{color}
+%\usepackage[symbol]{footmisc}
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
 \usepackage{lmodern}
 \usepackage[size=custom,width=36,height=24,scale=1]{beamerposter}
 \usetheme{gemini}
 \usecolortheme{gemini}
+<<<<<<< HEAD
+=======
+\usepackage{natbib}
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{tikz}
@@ -36,6 +47,13 @@
 
 \usepackage[skins,theorems]{tcolorbox}
 %\tcbset{colback=white}
+<<<<<<< HEAD
+=======
+
+\definecolor{ballblue}{rgb}{0.13, 0.67, 0.8}
+\definecolor{darkred}{RGB}{139,0,0}
+
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
 \tcbset{highlight math style={enhanced,colframe=red,colback=white}}
 
 \usepackage{colortbl} % Add this package to use \cellcolor
@@ -112,6 +130,7 @@ for partially-observed Markov processes}
 \textbf{Inference for continuous-time, continuous-state hidden Markov models.}
 
 \begin{tcolorbox}[enhanced,colback=white!100!white,colframe=red!100!red]
+<<<<<<< HEAD
 \textbf{\textcolor{red}{Partially-Observed Markov Process (POMP)}}: 
 \begin{itemize}
     \item Unknown Markov process $\{X_t, t \geq t_0\}$, but we have observations $y_1^*,...,y_N^*$ at timesteps $t_1,..., t_N$.  
@@ -138,12 +157,42 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
       \item Likelihood estimate not differentiable due to Monte Carlo resampling.
       \item Previous work \cite{corenflos21, naesseth18, scibior21} circumvents this, but computationally expensive, has uncontrolled asymptotic bias, or high variance. 
   \end{enumerate}
+=======
+\textbf{\textcolor{red}{Partially-Observed Markov Process}}: 
+
+Unknown Markov process $(X_t)$, observations $y_1^*,...,y_N^*$ at $t_1,..., t_N$. \\
+Estimate latent state of the system $x_{1:N}$ and system parameters $\theta \in \Theta$. 
+\end{tcolorbox}
+\small{e.g. given monthly cholera case counts, estimate number of infected and recovered people in the population, and how transmissible the disease is.}
+  \end{block}
+
+
+  \begin{block}{Problem}
+  \vspace{-1.6ex}
+  \begin{tcolorbox}[enhanced,colback=white!100!white,colframe=red!100!red]
+  \begin{center}
+  Maximum likelihood with only a simulator, cannot evaluate $f_{X_n|X_{n-1};\theta}$. \textbf{Cannot use the EM algorithm!}
+  \end{center}
+\end{tcolorbox}
+
+  \textbf{What to do now?} Particle filters give a Monte Carlo approximation of the \textbf{filtering distribution} $f_{X_n|Y_{1:n};\theta}$ and the \textbf{log-likelihood} $\ell(\theta)$ increasingly accurate in the number of particles $J$. 
+  %\vspace{1ex}
+  
+  \textbf{Idea:} Gradient descent using autodiff (AD) on the likelihood estimate? \textcolor{red}{But:}
+  \vspace{-2.6ex}
+  \begin{enumerate}
+      \item Likelihood estimate not differentiable due to Monte Carlo resampling.
+      \item Previous work \cite{corenflos21, naesseth18, poyiadjis11, scibior21} on this is computationally expensive \cite{corenflos21}, has uncontrolled asymptotic bias \cite{naesseth18}, or has high variance \cite{poyiadjis11, scibior21}. 
+  \end{enumerate}
+  \vspace{1ex}
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
   \end{block}
   
   \begin{alertblock}{Solution: Off-Parameter Resampling}
 
     \textbf{Reconstruct likelihood} at $\theta$ by cumulatively reweighting particles resampled at a \textbf{baseline parameter} $\phi \in \Theta$. Take gradient at $\theta=\phi$.
 
+<<<<<<< HEAD
     When treating the particles at $\phi$ as constants, you're now differentiating through (1) a differentiable simulator and (2) a series of measurement density ratios, so the resulting likelihood estimate is smooth!
 
     \textbf{Bias-variance tradeoff:} Discount cumulative reweighting by $\alpha \in [0,1]$.
@@ -155,6 +204,24 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
         \label{fig:enter-label}
     \end{figure}
   \end{alertblock}
+=======
+    \textbf{Smooth approximation:} Treating the particles at $\phi$ as constants, this is a function of a differentiable simulator and measurement density ratios, so the resulting likelihood estimate is smooth!
+
+    \textbf{Bias-variance tradeoff:} Discount cumulative reweighting by $\alpha \in [0,1]$.
+
+  \end{alertblock}
+
+  \vspace{1ex}
+    \begin{figure}
+        \centering
+        \includegraphics[width=0.52\linewidth]{imgs/095/mop.png}
+        \includegraphics[width=0.472\linewidth]{imgs/095/biasvar.png}
+        \caption{\textbf{Left:} Non-differentiable likelihood estimates and our smooth off-parameter reconstructions. 
+        \textbf{Right:} Bias-variance tradeoff in score estimation induced by $\alpha$.}
+        \label{fig:enter-label}
+    \end{figure}
+    
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
 %Only simulation-based method for maximum likelihood available \cite{ionides15} gets close (\~40 nats) to the MLE quickly, but fails to find it ($\geq 7$ nats away). 
 
 % \vspace{0.5em}
@@ -181,6 +248,7 @@ e.g. given monthly cholera case counts, estimate number of infected and recovere
 
 \begin{column}{\colwidth}
 
+<<<<<<< HEAD
   \begin{block}{Complexity Over Partitions}
 
   \textbf{Observation:} No need to look at the behavior policy's coverage over the whole space for offline learning, just the part it explores well. 
@@ -274,11 +342,137 @@ $\beta = O(\log (N H \mathcal{N}_{\mathcal{F}}(1/N) / \delta))$ and $N = T + N_{
         where $d_{\on}$ is the dimension of the online partition.
     \end{itemize}
 \end{block}
+=======
+  \begin{alertblock}{Guarantees}
+    \begin{enumerate}
+        \item \textbf{Correctness:} Procedure targets the filtering distribution $\pi_n(\theta)$, and is strongly consistent for the likelihood under $\theta$.\footnotemark[1]\footnotetext{\tiny{1. We also showed a more general result holds, that of a particle triangular array SLLN corrected for arbitrary off-target resampling.}}
+        
+        Obtains state estimates $x_{n,1:J}^{F,\theta}$ and a likelihood estimate $\hat \lik_J^\alpha(\theta)$ so for any $\alpha\in[0,1]$ and measurable bounded functional $h$, as $J \to \infty$:
+        
+  $$\frac{\sum_{j=1}^J h\left(x_{n, j}^{F, \theta}\right) w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{F, \theta}} \stackrel{\text{a.s.}}{\to} \E_{\pi_n(\theta)}[h(X_n)], \qquad \hat{\mathcal{L}}_J^\alpha(\theta) \stackrel{\text{a.s.}}{\to} \mathcal{L}(\theta).$$
+  \vspace{1.5ex}
+  
+  \item \textbf{Consistent score estimates:} When $\alpha=1$, $$\nabla_\theta \hat\ell_J^1(\theta) \stackrel{\text{a.s.}}{\to} \ell(\theta) \text{ as } J \to \infty.$$ Else, increasing asymptotic bias as $\alpha \to 0$, but lower variance.
+  \vspace{2ex}
+  \item \textbf{Encompasses and interpolates between other estimators:}\\
+  \textbf{$\alpha=0$:} $\nabla_\theta \hat\ell_J^0(\theta)$ is \cite{naesseth18}'s low-variance/asymptotically biased estimate. \\
+  \textbf{$\alpha=1$:} $\nabla_\theta \hat\ell_J^1(\theta)$ is \cite{poyiadjis11}'s high-variance/consistent estimate.
+  \vspace{2ex}
+  \item \textbf{Linear convergence for gradient descent/quasi-Newton/Newton:} \\Early-stopped particle gradient descent with learning rate $\eta$, large $\alpha, J$ converges linearly if log-likelihood strongly convex and smooth:
+  $$\ell\left(\theta^*\right)-\ell\left(\theta_{m+1}\right) \leq\left(1- O(\eta)\right)\left(\ell\left(\theta^*\right)-\ell\left(\theta_m\right)\right).$$
+    \end{enumerate}
+  \end{alertblock}
+
+  %\vspace{-2.5ex}
+  \begin{block}{Rates for Score Estimates}
+  \vspace{-1.5ex}
+      \begin{table}[t]
+\centering
+\scalebox{1}{
+\begin{tabular}{c  c}
+\toprule \multicolumn{2}{c}{\textbf{MSE}} 
+\tabularnewline
+\toprule 
+\vspace{1.2ex}
+$\alpha \in (0,1)$ & \qquad$\tcbhighmath[colframe=ballblue]{\min_{k \leq N} N p (k^2/J+
+\begingroup
+\color{ballblue}\underbracket[1pt][1pt]{\color{black}
+(1-\epsilon)^{\lfloor k /(c \log (J))\rfloor}}_{\text{\textcolor{blue}{\tiny{controllable bias}}}}
+\endgroup
++k+\psi_k(\alpha))}$\qquad
+\vspace{0.2ex}
+\tabularnewline \hline
+\vspace{0.2ex}
+$\alpha=0$ \cite{naesseth18} & $N p (1/J + 
+\begingroup
+\color{red}\underbracket[1pt][1pt]{\color{black}(1-\epsilon)^{\lfloor 1 /(c \log (J))\rfloor}}_{\text{\textcolor{red}{\tiny{uncontrollable bias}}}}
+\endgroup
+)$
+\vspace{0.2ex}
+\tabularnewline
+\hline
+\vspace{0.2ex}
+$\alpha=1$ \cite{poyiadjis11} & $N^4p/J$
+\vspace{0.2ex}
+\tabularnewline
+\toprule
+  \multicolumn{2}{c}{\textbf{Variance}}
+\tabularnewline
+\toprule\vspace{0.2ex}
+$\alpha \in (0,1)$ & $\tcbhighmath[colframe=ballblue]{\min _{k \leq N}Np\left(\frac{k^2}{(1-\alpha)^2 J}+\frac{\alpha^k}{1-\alpha} \right)}$
+\vspace{0.2ex}
+\tabularnewline \hline
+\vspace{0.2ex}
+$\alpha=0$ \cite{naesseth18} & $N p /J$
+\vspace{0.2ex}
+\tabularnewline
+\hline
+\vspace{0.2ex}
+$\alpha=1$ \cite{poyiadjis11} & $N^4p/J$
+\vspace{0.2ex}
+\tabularnewline
+\toprule 
+\end{tabular}}
+\medskip
+\caption{Rates given the trajectory length $N$, number of particles $J$, parameter space dimension $p$, model-specific constant $\epsilon>0$, where $\psi_k(\alpha)=\left(\alpha^k+\alpha^{k+1}-\alpha\right) /(1-\alpha)$. 
+\textcolor{red}{Our $\alpha \in (0,1)$ has a better rate for the MSE than $\alpha=0$ \cite{naesseth18} and $\alpha=1$ \cite{poyiadjis11}.}}
+\label{tab:bounds}
+\vspace{-5mm}
+\end{table}
+  \end{block}
+
+\end{column}
+
+\separatorcolumn
+\begin{column}{\colwidth}
+
+\vspace{-2ex}
+\begin{figure}[H]
+    \centering{\includegraphics[scale=1]{imgs/095/tikzcholera.png}}
+    \vspace{-2ex}
+    \caption{Diagram of the stochastic SIRS model in \cite{king08}. 
+    }
+\end{figure}
+
+\vspace{.5ex}
+  \begin{exampleblock}{Case Study: Cholera Epidemic in Dhaka, Bangladesh}
+
+  \textbf{Dhaka, 1821-1940:} Stochastic SIRS model from \cite{king08}. Cholera dynamics governed by SDEs. Seasonality, trend in infection modeled with splines.
+
+  \textbf{In practice:} Gradient descent got stuck. Needed a warm-start with IF2 \cite{ionides15} to get to a neighborhood of the MLE quickly and find the MLE.
+  \vspace{0.8ex}
+  
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=1.15]{imgs/095/pairs.png}
+    \includegraphics[scale=0.915]{imgs/095/boxplot_all.png}
+    \caption{\textbf{Left:} Scatterplot depicting paired searches from the same starting point. \textbf{Right:} Raincloud plot of all searches. Our method outperforms the benchmark, IF2. }
+    \label{fig:scatter-raincloud}
+\end{figure}
+%\vspace{1ex}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.815]{imgs/095/optim.png}
+    \includegraphics[scale=0.562]{imgs/pmcmc/nuts_eb.png}
+    \caption{\textbf{Left:} Optimization progress of IFAD (ours) and IF2 \cite{ionides15} over 100 trials. \textbf{Right:} Application to Bayesian inference. 
+    }
+\end{figure}
+
+    \textbf{Application to Bayesian inference:} Using our score estimate for a No U-Turn Sampler for particle MCMC, with an informative prior from the IF2 warm-start, reduces burn-in time from 700,000 \cite{fasiolo16} to 500 iterations.
+  \end{exampleblock}
+
+
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
 \vspace{-2ex}
   
 %\vskip-1ex
 \begin{block}{}
+<<<<<<< HEAD
   \vspace{-0.2em}
+=======
+  \vspace{-0.5ex}
+>>>>>>> bb47da537396042900c7565973a3027eb5348dfa
     \tiny{\bibliographystyle{plain}
     \bibliography{paper/bib-ifad}}
 \end{block}
