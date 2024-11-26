@@ -202,10 +202,10 @@ One can think of this as reconstructing local smooth approximations of the disco
 
 \begin{figure}[htbp!]
   \centering
-    \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2}}]{imgs/095/mop.png}
+    \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.2}}]{imgs/095/mop.png}
     \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.2}}]{imgs/095/biasvar.png}
     \arxiv{}{\vspace*{-3ex}}
-    \caption{\textbf{Left:} Non‐differentiable likelihood estimates and our smooth off‐parameter approximations that hold locally around the baseline parameter $\phi$. \textbf{Right:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission at the MLE. Our novel contribution of $\alpha \in (0,1)$ significantly improves the quality of the likelihood approximation, and therefore the gradient estimates. }
+    \caption{\textbf{A:} Non‐differentiable likelihood estimates and our smooth off‐parameter approximations that hold locally around the baseline parameter $\phi$. \textbf{B:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission at the MLE. Our novel contribution of $\alpha \in (0,1)$ significantly improves the quality of the likelihood approximation, and therefore the gradient estimates. }
     \label{fig:biasvar}
     \arxiv{}{\vspace*{-4ex}}
 \end{figure}
@@ -495,7 +495,7 @@ The results for this basic implementation already showcase the merits of the app
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/pairs.png}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/qq.png}
     %\arxiv{}{\vspace*{-1mm}}
-    \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{Left:} Paired searches from the same starting point. Tuning $\alpha$ allows IFAD-$0.97$ to strictly improve on IF2, \cite{poyiadjis11}, and \cite{naesseth18}, on almost every initialization. \textbf{Right:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. IFAD performs best on average, and approaches the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. The dotted red line shows the true maximized log-likelihood. }
+    \caption{Scatterplots depicting the performance of IFAD against that of IF2. \textbf{A:} Paired searches from the same starting point. Tuning $\alpha$ allows IFAD-$0.97$ to strictly improve on IF2, \cite{poyiadjis11}, and \cite{naesseth18}, on almost every initialization. \textbf{B:} Q-Q plot of ranked IFAD searches against ranked IF2 searches. IFAD performs best on average, and approaches the MLE while no IF2 search successfully gets within 7 log-likelihood units of it. The dotted red line shows the true maximized log-likelihood. }
     \label{fig:scatter}
     \arxiv{}{\vspace*{-4mm}}
 \end{figure}
@@ -509,7 +509,7 @@ The results for this basic implementation already showcase the merits of the app
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/boxplot.png}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/boxplot_all.png}
     %\arxiv{}{\vspace*{-1mm}}
-    \caption{\textbf{Left:} Raincloud plot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, representing the common procedure of running a few searches and choosing the best one. \textbf{Right:} Raincloud plot of all searches. IFAD outperforms all other methods.
+    \caption{\textbf{A:} Raincloud plot depicting the performance of IFAD and IF2 where we plot the results of the best run out of every ten runs, representing the common procedure of running a few searches and choosing the best one. \textbf{B:} Raincloud plot of all searches. IFAD outperforms all other methods.
     The dotted red line shows the true maximized log-likelihood.}
     \label{fig:boxplot}
     \arxiv{}{\vspace*{-5mm}}
