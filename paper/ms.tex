@@ -202,12 +202,14 @@ One can think of this as reconstructing local smooth approximations of the disco
 
 \begin{figure}[htbp!]
   \centering
+  
+    \arxiv{}{\vspace*{0.15ex}}
     \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.2}}]{imgs/095/mop.png}
-    \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.2}}]{imgs/095/biasvar.png}
-    \arxiv{}{\vspace*{-3ex}}
-    \caption{\textbf{A:} Non‐differentiable likelihood estimates and our smooth off‐parameter approximations that hold locally around the baseline parameter $\phi$. \textbf{B:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$, on the Dhaka cholera model of \cite{king08}. We display the MSE of score estimates for the trend in transmission at the MLE. Our novel contribution of $\alpha \in (0,1)$ significantly improves the quality of the likelihood approximation, and therefore the gradient estimates. }
+    \includegraphics[width=\arxiv{10cm}{\textwidth/\real{2.21}}]{imgs/095/biasvar.png}
+    \arxiv{}{\vspace*{-2ex}}
+    \caption{\textbf{A:} Non‐differentiable likelihood estimates and smooth off‐parameter approximations that hold locally around the baseline parameter $\phi$. \textbf{B:} Illustration of the bias-variance tradeoff induced by the discounting hyperparameter $\alpha$. We display the MSE of score estimates for the trend in transmission at the MLE for the Dhaka cholera model of \cite{king08}. Our novel contribution of $\alpha \in (0,1)$ significantly improves the quality of the likelihood approximation and the score estimates.}
     \label{fig:biasvar}
-    \arxiv{}{\vspace*{-4ex}}
+    \arxiv{}{\vspace*{-2ex}}
 \end{figure}
 
 
@@ -318,8 +320,7 @@ When $\alpha=0$, MOP-$0$ considers only single-step transition dynamics, recover
 \end{thm}
 
 We defer the proof to \arxiv{Appendix~\ref{appendix:functional}}{the supplementary material}. 
-The argument relies on a useful decomposition of the after-resampling estimate $L_n^{A,\theta,\alpha}$. 
-Repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting $\theta=\phi$ implies that $w_{n,j}^{P,\theta}$ evaluates to $1$. 
+The argument relies on a useful decomposition of the after-resampling estimate $L_n^{A,\theta,\alpha}$, repeated applications of the log-derivative identity that $\nabla_x \log(f(x)) = (\nabla_x f(x))/f(x)$, and noting $\theta=\phi$ implies that $w_{n,j}^{P,\theta}$ evaluates to $1$. 
 
 The result in Theorem \ref{thm:mop-functional-forms} provides mathematical intuition for why \cite{scibior21}'s use of the stop-gradient procedure in the particle filter recovers the estimate of \cite{poyiadjis11}. When $\theta=\phi$, the correction $g_{n,k_j}^\theta/g_{n,k_j}^\phi$ is equivalent to $g_{n,k_j}^\theta / \text{stop\_gradient}(g_{n,k_j}^\theta)$, and is implemented in this way in practice. As such, the use of the stop-gradient in \cite{scibior21} can be seen as the MOP-$\alpha$ weight correction for $\alpha=1, \theta=\phi$.
 
@@ -442,11 +443,11 @@ The measurement model for observed monthly cholera deaths is
 where $M_n=\gamma\int_{t_{n-1}}^{t_n}I(s)\, ds$ is the modeled cholera deaths in that month.
 
 
-\begin{figure}
+\begin{figure}[htbp!]
     \centering
     \includegraphics[width=\arxiv{14cm}{\textwidth}]{imgs/095/tikzcholera.png}
     \vspace*{-7mm}
-    \caption{A compartment flow diagram for the Dhaka cholera model from \cite{king08}.}
+    \caption{A compartment flow diagram for the \cite{king08} Dhaka cholera model.}
     \label{fig:tikz-cholera}
     \arxiv{}{\vspace*{-3mm}}
 \end{figure}
@@ -461,7 +462,7 @@ For each method, we performed 100 searches, initialized with 100 starting parame
 
 % \kevin{Dynamically save to a tex file and load from there}
   
-\arxiv{}{\vspace*{-1mm}}
+%\arxiv{}{\vspace*{-1mm}}
 \begin{table}[htbp!]
 \centering
 \input{imgs/095/table}
@@ -506,6 +507,7 @@ The results for this basic implementation already showcase the merits of the app
   
 \begin{figure}[ht]
     \centering
+    \arxiv{}{\vspace*{0.1ex}}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/boxplot.png}
     \includegraphics[width=\arxiv{8cm}{\textwidth/\real{2.2}}]{imgs/095/boxplot_all.png}
     %\arxiv{}{\vspace*{-1mm}}
