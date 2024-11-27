@@ -423,7 +423,7 @@ In this case, the compartment $R(t)$ is further subdivided into
 %. where the population at time $t$, $H_t$, is divided into the susceptible compartment $S_t$, infected compartment $I_t$, and
 three recovered compartments $R^1(t)$, $R^2(t)$, $R^3(t)$ denoting varying degrees of cholera immunity.
 We write $P(t)$ for the total population, and $M_n$ for the cholera deaths in each month.
-As in \citep{king08, ionides15}, the transition dynamics follow a series of stochastic differential equations:
+As in \cite{king08}, the transition dynamics follow a series of stochastic differential equations:
 \vspace*{-1mm}
 \begin{align*}
     dS&=\big(k \epsilon R^k+\delta(P-S)-\lambda(t) S\big)\, dt+d P-({\sigma S I}/{P})\, dB, \\
@@ -609,7 +609,7 @@ This is a strong law of large numbers for triangular arrays of particles resampl
 
 \subsection{MOP-$1$ Score Estimate Is Consistent}
 
-Although we have shown the MOP-$1$ gradient estimate yields the estimate of \citep{poyiadjis11, scibior21} when applied to the bootstrap filter, \cite{poyiadjis11, scibior21} estimate the Fisher score by 
+Although we have shown the MOP-$1$ gradient estimate yields the estimate of \cite{poyiadjis11} and \cite{scibior21} when applied to the bootstrap filter, those authors estimate the Fisher score by 
 $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{X_{0:N}, Y_{1:N}}(x_{0:n,j}^{A, F,\theta}, y_{1:N}^* ; \theta)$ and not
 $\frac{1}{J}\sum_{j=1}^J \nabla_\theta \log f_{Y_{1:N}| X_{1:N}}(y_{1:N}^* | x_{1:n,j}^{A, F,\theta}; \theta).$
 It is therefore not immediately apparent that these two converge to the same thing. As such we directly show the consistency of the MOP-$1$ gradient estimate below. 
@@ -694,7 +694,7 @@ MOP-$\alpha$ and IFAD therefore share the same $O(NJ)$ time complexity as the pa
 %%In practice,
 
 
-Our implementation of the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \cite{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. This has since spurred the development of a new open source Python library named \texttt{pypomp}\footnote{The package can be found at \href{https://pypi.org/project/pypomp/}{https://pypi.org/project/pypomp/}. The source code for this paper and original implementation can be found at \href{https://github.com/hetankevin/diffPomp}{https://github.com/hetankevin/diffPomp}.}, which incorporates the improvements in methodology and computation described within this paper.
+Our implementation of the particle filter, simulator, and MOP-$\alpha$ in \texttt{JAX} \citep{jax} enabled us to take advantage of just-in-time compilation and GPU acceleration, even with a simulator written in Python. This led to a 16x speedup (379ms vs 6.29s on a Intel i9-13900K CPU and NVIDIA RTX3090 GPU) over the CPU-only implementation of the particle filter (with a simulator written in C++) in the \texttt{pomp} package of \cite{king16}. This has since spurred the development of a new open source Python library named \texttt{pypomp}\footnote{The package can be found at \href{https://pypi.org/project/pypomp/}{https://pypi.org/project/pypomp/}. The source code for this paper and original implementation can be found at \href{https://github.com/hetankevin/diffPomp}{https://github.com/hetankevin/diffPomp}.}, which incorporates the improvements in methodology and computation described within this paper.
 
 %\kevin{Write about new open source library that brings pomp to python with AD. There are implementations in tfp under the jax substrate, but these are not plug and play -- they require you to supply the transition densities. }
 

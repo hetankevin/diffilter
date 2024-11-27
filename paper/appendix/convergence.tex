@@ -7,7 +7,7 @@ The analysis in this section roughly follows the analysis in \cite{mahoney16}, e
 For simplicity, we only provide the argument for MOP-$1$ and note that the general case follows as the required $\epsilon$-approximation can still be obtained for sufficiently large $\alpha$. 
 When $\alpha=1$, the required $J$ is given in the below lemmas. 
 
-The convergence analysis in Theorem \ref{thm:mop-convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Though it is true that in a neighborhood of the optimum local asymptotic normality holds and the log-likelihood is strongly convex in this neighborhood, in practice likelihood surfaces for POMPs are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
+The convergence analysis in Theorem \ref{thm:mop-convergence} is limited to the case where $-\ell$ is $\gamma$-strongly convex. Under regularity conditions, we expect the log-likelihood to be approximately quadratic in a neighborhood of its maximum, though in practice the likelihood surfaces for POMP models are often highly nonconvex globally. The convergence to an optimum, local or global, must therefore be sensitive to initialization.  
 
 \subsection{Bounding the Gradient}
 %\kevin{Add a few words to explain that the gradient of the log-likelihood w.r.t. parameters is a functional of the particle measure under boundedness assumptions and fixed parameters, appeal to authority and say doucet did it too. }
@@ -34,14 +34,14 @@ Equivalently, with probability at least $1-\delta$, it holds that
 \begin{proof}
 
 
-We will seek to use the concentration inequality of \cite{delMoral11} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. Fix $\theta = \phi$.
+We use the concentration inequality of \cite{delMoral11} to bound the deviation of the gradient estimate from the gradient of the negative log-likelihood in the sup norm with a union bound. Fix $\theta = \phi$.
 From the decomposition in the proof of Lemma \ref{lem:mop-1-formula}, as $w_{N, j}^{F, \theta}=1$ when $\theta=\phi$, we have that
 \begin{equation}
 \nabla_\theta \hat{\ell}(\theta):=\frac{1}{J} \sum_{j=1}^J \nabla_\theta w_{N, j}^{F, \theta}=\frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N  w_{N, k_j}^{P, \theta} \nabla_\theta \log g_{n,k_j}^{A,\theta} = \frac{1}{J} \sum_{j=1}^J\sum_{n=1}^N \nabla_\theta \log g_{n,k_j}^{A,\theta}.
 \end{equation}
 Define $\varphi_n^i(x_{n,j}^{F,\theta}) := \frac{\partial}{\partial\theta_i} \log g_{n,k_j}^{A,\theta}$, which is a functional of the filtering particles $x_{n,j}^{F,\theta} = x_{n,k_j}^{P,\theta}$. These are bounded measurable functionals bounded by $G'(\theta)$ by Assumption \ref{assump:bounded-measurement}. Therefore, these have bounded oscillation, satisfying the requirement that $\text{osc} \left(\frac{\partial}{\partial\theta_i} \varphi_i(x_{n,j}^{P,\theta}) \right) \leq G'(\theta)$. Note that \cite{delMoral11} in fact assume $\text{osc}(f) \leq 1$, so we simply scale their bound accordingly.
 
-Now we apply the Hoeffding-type concentration inequality from Del Moral and Rio \cite{delMoral11} and a union bound over each $\varphi_n^i(x_{n,j}^{F,\theta})$, totaling $N$ timesteps and $p$ parameters, to find that
+Now we apply the Hoeffding-type concentration inequality from \cite{delMoral11} and a union bound over each $\varphi_n^i(x_{n,j}^{F,\theta})$, totaling $N$ timesteps and $p$ parameters, to find that
 \begin{align}
     \max_{n=1,...,N} \left\lVert\frac{1}{J}\sum_{j=1}^J\nabla_\theta \log g_{n,k_j}^{A,\theta} - \nabla_\theta \ell_n(\theta) \right\rVert_{\infty} \leq G'(\theta)\left(\frac{r_N}{J}(1+h^{-1}(t)) + \sqrt{\frac{2t}{J}}\beta_N \right)
 \end{align}
@@ -115,12 +115,12 @@ for $\hat{H}(\theta)$ to be invertible and positive definite with minimum eigenv
 \begin{proof}
 In this analysis, we largely follow the proof of Theorem 6 in \cite{mahoney16}.
 Define $\theta_\eta = \theta_m + \eta p_m$, where $p_m=-(H(\theta_m))^{-1}g(\theta_m)$. 
-As in Roosta-Khorasani and Mahoney \cite{mahoney16}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
+As in \cite{mahoney16}, we want to show there is some iteration-independent $\tilde{\eta}>0$ such that the Armijo condition
 \begin{equation}
     f(\theta_m+\eta p_m) \leq f(\theta_m) + \eta\beta \, p_m^T \, g(\theta_m),
 \end{equation}
 holds for any $0< \eta < \tilde{\eta}$ and some $\beta \in (0,1)$.
-By an argument found in the beginning of the proof of Theorem 6 in \cite{mahoney16}, we have that choosing $J$ such that $\|\nabla_\theta\hat{\ell}(\theta_m) - \nabla_\theta \ell(\theta_m)\| \leq \epsilon$ and $\lambda_{\min}(H(\theta_m)) \geq c>0$ for each $m$, yields
+By an argument found in the beginning of the proof of Theorem 6 of \cite{mahoney16}, we have that choosing $J$ such that $\|\nabla_\theta\hat{\ell}(\theta_m) - \nabla_\theta \ell(\theta_m)\| \leq \epsilon$ and $\lambda_{\min}(H(\theta_m)) \geq c>0$ for each $m$, yields
 \begin{align}
     f(\theta_\eta)-f(\theta_m) \leq \eta p_m^T\, g(\theta_m) + \epsilon\eta\|p_m\| + \eta^2 \Gamma \|p_m\|^2 / 2,
 \end{align}
