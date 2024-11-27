@@ -46,14 +46,12 @@ When $\theta=\phi$,
 \hat{\mathcal{L}}(\theta):=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J w_{n, j}^{P, \theta}}=\prod_{n=1}^N L_n^{A, \theta, \alpha}=\prod_{n=1}^N L_n^\phi \cdot \frac{\sum_{j=1}^J w_{n, j}^{F, \theta}}{\sum_{j=1}^J (w_{n-1, j}^{F, \theta})^\alpha}.
 \end{equation}
 Now, to illustrate the proof strategy for the general case in an easier context, we first analyze the special case when $\alpha=0.$ We now prove the variance bound for this case, presented below. To our knowledge, this result for the variance of the gradient estimate of \cite{naesseth18} is novel. 
-
 \begin{thm}[Variance of MOP-$0$ Gradient Estimate]
 The variance of the gradient estimate from MOP-$0$, i.e. the algorithm of \cite{naesseth18}, is:
  \begin{equation}
      \Var(\nabla_\theta \hat\ell^0(\theta)) \lesssim \frac{Np \, G'(\theta)^2}{J}.
  \end{equation}
 \end{thm}
-
 \begin{proof}
 When $\alpha=0$, we have:
 \begin{align}
@@ -184,6 +182,7 @@ This lets us bound the cumulative weight discrepancies by
 \end{align}
 where the second-last line follows from Assumption \ref{assump:bounded-measurement}.
 We can then bound $\|\nabla_\theta\hat\ell^\alpha(\theta) - \nabla_\theta \hat s_k^\alpha(\theta)\|$ as follows:
+{\small
 \begin{align}
     &\left\lVert\nabla_\theta\hat\ell^\alpha(\theta) - \nabla_\theta \hat s_k^\alpha(\theta) \right\rVert_2^2
     \\ \nonumber
@@ -200,6 +199,7 @@ We can then bound $\|\nabla_\theta\hat\ell^\alpha(\theta) - \nabla_\theta \hat s
     \\ 
     & \qquad\qquad +\sum_{n=1}^N \left\lVert\nabla_\theta \left(\log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,\alpha}\right) + \log\left(\sum_{j=1}^Jw_{n-1,j}^{A, F,\theta,\alpha,k}\right)\right)\right\rVert_2^2,
 \end{align}
+}
 and each of these two terms is bounded by $\frac{\alpha^k}{1-\alpha}Np \, G'(\theta)^2$. So we now know that
 \begin{equation}\left\lVert\nabla_\theta\hat\ell^\alpha(\theta) - \nabla_\theta \hat s_k^\alpha(\theta) \right\rVert_2^2 \leq  \frac{2\alpha^k}{1-\alpha}Np \, G'(\theta)^2,\end{equation}
 which is our desired error bound. 
@@ -355,7 +355,7 @@ We bound the first term of Equation \ref{eq:mse-decomp} , $\sum_{n=1}^N\|\nabla_
 \nonumber
 \hspace{-10mm} \sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2 &\leq&
 \\
-&& \hspace{-40mm}
+&& \hspace{-65mm}
 \sum_{n=1}^N \|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta)\|_2^2 + \sum_{n=1}^N \|\nabla_\theta\hat s_{n,k|\hat\pi_{n-k}=\pi_{n-k}}^1(\theta) - \nabla_\theta\hat s_{n,k}^1(\theta)\|_2^2.
 \end{eqnarray}
 The first term of Equation \ref{eq:mse-decomp} is a particle approximation dependent on $k$ timesteps, so by Lemma 2 of \cite{karjalainen23}, this is bounded by
@@ -473,8 +473,8 @@ Therefore, our decomposition yields the MSE bound
     
 As before, we bound the first term, $\sum_{n=1}^N\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\|_2^2$, by decomposing it into two terms, 
 \begin{eqnarray} \nonumber
-\hspace{-10mm} \sum_{n=1}^N\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2 &\leq 
-\\ &&\hspace{-45mm} 
+\hspace{-5mm} \sum_{n=1}^N\big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2 &\leq 
+\\ &&\hspace{-70mm} 
 \sum_{n=1}^N \big\|\nabla_\theta\ell_n(\theta) - \nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta)\big\|_2^2 + \sum_{n=1}^N \big\|\nabla_\theta\hat s_{n,1|\hat\pi_{n-1}=\pi_{n-1}}^1(\theta) - \nabla_\theta\hat s_{n,1}^1(\theta)\big\|_2^2.
 \end{eqnarray}
 The first term is a particle approximation dependent on $1$ timesteps, so by Lemma 2 of \cite{karjalainen23}, this is bounded by
