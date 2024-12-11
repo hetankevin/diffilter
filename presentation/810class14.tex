@@ -259,16 +259,16 @@
 \end{frame}
 
 \begin{frame}{What is this reweighting?}
-    Ordinarily, the likelihood estimate for $\phi$ is 
-    $$\hat\lik(\phi) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J \left(\underbrace{f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi)}_{\textcolor{blue}{\text{Measurement Model}}}
+    The properly weighted estimate at $\theta$ with proposal from $\phi$ is 
+    $$\hat\lik(\theta) = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J \left(\underbrace{f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \theta)}_{\textcolor{blue}{\text{Measurement Model}}}
     \cdot 
-    \underbrace{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi)}_{\textcolor{red}{\text{Process model}}}\right).$$
+    \frac{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \theta)}{f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi)}
+    \right).$$
     \pause
-    So to estimate the likelihood for $\theta$, we can correct 
-    $$
+    Which we write as
+        $$
         \hat\lik(\theta) 
-        = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi) \cdot 
-        f_{X_n|X_{n-1}}(x_{n,j}^{P, \phi} | x_{n-1,j}^{F,\phi}, \phi) 
+        = \prod_{n=1}^N \frac{1}{J} \sum_{j=1}^J f_{Y_n|X_n}(y_n^* | x_{n,j}^{P,\phi}, \phi) 
         \cdot \underbrace{s_{n,j} \cdot r_{n,j}}_{\text{Correction Term}},
     $$
     \pause
@@ -496,7 +496,7 @@
     \caption{\\
     -- \textbf{Left:} Results of best run out of every ten runs, simulating procedure of running a few searches and choosing the best one. \\
     -- \textbf{Right:} MOP alone drastically underperforms all other methods, failing to get close to the MLE. \\
-    -- IF2 warm-start necessary in challenging nonconvex and noisy problems.}
+    -- IF2 warm start necessary in challenging nonconvex and noisy problems.}
     \label{fig:boxplot-search}
 \end{figure}
 
@@ -519,7 +519,7 @@
 \begin{figure}[u!]
     \centering
     \includegraphics[scale=0.35]{imgs/095/hist.png}
-    \caption{Histogram comparison of IFAD, IF2, and MOP alone. Right is better.}
+    \caption{Histogram comparison of IFAD (with various $\alpha$) and IF2. Right is better.}
     \label{fig:hist-all}
 \end{figure}
 \end{frame}
@@ -528,7 +528,7 @@
     \begin{enumerate}
         \item IF2 converges quickly to a neighborhood of the MLE but fails to find the MLE.
         \item \pause Gradient steps perform better at fine-grained refinement.
-        \item \pause Performing gradient steps alone without a warm-start leads to the search getting stuck in local minima and saddle points.
+        \item \pause Performing gradient steps alone without a warm start leads to the search getting stuck in local minima and saddle points.
         \item \pause IFAD combines the best of IF2 and MOP, approaching the MLE quickly and successfully performing refinement -- even on a very difficult global search problem.
     \end{enumerate}
 \end{frame}
